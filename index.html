@@ -11,8 +11,8 @@
         <h1 class="text-3xl font-bold mb-6 text-emerald-800">InsureGPTE Practice Quiz</h1>
         
         <div class="mb-6 flex gap-4">
-            <button onclick="fetchQuestions('IC01')" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-01</button>
-            <button onclick="fetchQuestions('IC11')" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-11</button>
+            <button id="btn-ic01" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-01</button>
+            <button id="btn-ic11" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-11</button>
         </div>
 
         <div id="quiz-container">
@@ -22,18 +22,15 @@
     </div>
 
     <script>
-        // CONFIGURATION
         const supabaseUrl = 'https://tvjsivuibvzybdbjtesq.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // GLOBAL FUNCTION
-        window.fetchQuestions = async function(subjectCode) {
-            console.log("Loading subject:", subjectCode);
+        async function loadQuestion(subjectCode) {
             const container = document.getElementById('options-container');
             const qText = document.getElementById('q-text');
-            container.innerHTML = '';
-            qText.innerText = "Loading " + subjectCode + "...";
+            container.innerHTML = 'Loading...';
+            qText.innerText = "Fetching question for " + subjectCode + "...";
 
             try {
                 const { data: subject } = await supabase.from('subjects').select('id').eq('code', subjectCode).single();
@@ -44,6 +41,7 @@
 
                 if (data && data.length > 0) {
                     qText.innerText = data[0].question_text;
+                    container.innerHTML = '';
                     const btn = document.createElement('button');
                     btn.className = "bg-emerald-100 p-3 rounded text-left hover:bg-emerald-200 border border-emerald-300";
                     btn.innerText = "Show Answer";
@@ -53,7 +51,11 @@
             } catch (err) {
                 qText.innerText = "Error: " + err.message;
             }
-        };
+        }
+
+        // Direct listeners
+        document.getElementById('btn-ic01').onclick = () => loadQuestion('IC01');
+        document.getElementById('btn-ic11').onclick = () => loadQuestion('IC11');
     </script>
 </body>
 </html>
