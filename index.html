@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>InsureGPTE | Practice Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Supabase once -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-emerald-50 p-8">
@@ -11,27 +12,25 @@
         <h1 class="text-3xl font-bold mb-6 text-emerald-800">InsureGPTE Practice Quiz</h1>
         
         <div class="mb-6 flex gap-4">
-            <button id="btn-ic01" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-01</button>
-            <button id="btn-ic11" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-11</button>
+            <button id="btn-ic01" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-01</button>
+            <button id="btn-ic11" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-11</button>
         </div>
 
-        <div id="quiz-container">
+        <div id="quiz-container" class="mt-4">
             <p id="q-text" class="text-xl mb-4 font-semibold text-emerald-900">Select a subject to begin.</p>
             <div id="options-container" class="flex flex-col gap-3"></div>
         </div>
     </div>
 
     <script>
-        const supabaseUrl = 'https://tvjsivuibvzybdbjtesq.supabase.co'; 
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        // Initialize client only once
+        const supabase = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
         async function loadQuestion(subjectCode) {
             const container = document.getElementById('options-container');
             const qText = document.getElementById('q-text');
             container.innerHTML = 'Loading...';
-            qText.innerText = "Fetching question for " + subjectCode + "...";
-
+            
             try {
                 const { data: subject } = await supabase.from('subjects').select('id').eq('code', subjectCode).single();
                 if (!subject) throw new Error("Subject not found");
@@ -47,15 +46,17 @@
                     btn.innerText = "Show Answer";
                     btn.onclick = () => alert("Explanation: " + data[0].explanation);
                     container.appendChild(btn);
+                } else {
+                    qText.innerText = "No questions found.";
                 }
             } catch (err) {
                 qText.innerText = "Error: " + err.message;
             }
         }
 
-        // Direct listeners
-        document.getElementById('btn-ic01').onclick = () => loadQuestion('IC01');
-        document.getElementById('btn-ic11').onclick = () => loadQuestion('IC11');
+        // Attach listeners after DOM loads
+        document.getElementById('btn-ic01').addEventListener('click', () => loadQuestion('IC01'));
+        document.getElementById('btn-ic11').addEventListener('click', () => loadQuestion('IC11'));
     </script>
 </body>
 </html>
