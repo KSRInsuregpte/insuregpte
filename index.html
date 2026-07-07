@@ -2,27 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE | Practice Quiz</title>
-    <!-- Tailwind CSS for elegant design -->
+    <title>InsureGPTE | IC-01 Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #f0fdf4; color: #064e3b; font-family: sans-serif; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="p-8">
-    <div class="max-w-2xl mx-auto card p-8">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-800">IC-01 Practice Quiz</h1>
+<body class="bg-emerald-50 p-8">
+    <div id="app" class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8">
+        <h1 class="text-3xl font-bold mb-6 text-emerald-800">IC-01 Principles of Insurance</h1>
         <div id="quiz-container">
-            <p id="question" class="text-xl mb-4 font-semibold">Loading questions...</p>
-            <div id="options" class="flex flex-col gap-3"></div>
+            <p id="q-text" class="text-xl mb-4 text-emerald-900">Loading your question...</p>
+            <div id="options-container" class="space-y-3"></div>
         </div>
     </div>
 
     <script>
-        // Placeholder for Supabase connection logic
-        // We will integrate your specific Supabase URL and Key in the next step
-        console.log("Ready to fetch from Supabase");
+        // These variables will be filled by Vercel automatically
+        const supabaseUrl = 'YOUR_SUPABASE_URL'; 
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function loadQuestion() {
+            const { data, error } = await supabase.from('questions').select('*').limit(1);
+            if (data) {
+                document.getElementById('q-text').innerText = data[0].question_text;
+                // Add button logic here for correct/incorrect feedback
+            }
+        }
+        loadQuestion();
     </script>
 </body>
 </html>
