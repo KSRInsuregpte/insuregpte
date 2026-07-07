@@ -10,40 +10,64 @@
     <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8">
         <h1 class="text-3xl font-bold mb-6 text-emerald-800">InsureGPTE Practice Quiz</h1>
         
-        <!-- Navigation -->
         <div class="mb-6 flex gap-4">
-            <button onclick="fetchQuestions('IC01')" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-01</button>
-            <button onclick="fetchQuestions('IC11')" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-11</button>
+            <button onclick="fetchQuestions('IC01')" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-01</button>
+            <button onclick="fetchQuestions('IC11')" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-11</button>
         </div>
 
-        <div id="quiz-container">
+        <div id="quiz-container" class="mt-4">
             <p id="q-text" class="text-xl mb-4 font-semibold text-emerald-900">Select a subject to begin.</p>
             <div id="options-container" class="flex flex-col gap-3"></div>
         </div>
     </div>
 
     <script>
-        const supabase = supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+        // REPLACE THESE WITH YOUR ACTUAL SUPABASE KEYS
+        const supabaseUrl = 'https://tvjsivuibvzybdbjtesq.supabase.co'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function fetchQuestions(subjectCode) {
+            console.log("Button clicked for subject:", subjectCode); // This helps us debug
+            
             const container = document.getElementById('options-container');
             const qText = document.getElementById('q-text');
+            
+            qText.innerText = "Loading " + subjectCode + "...";
             container.innerHTML = '';
-            qText.innerText = "Loading...";
 
-            const { data, error } = await supabase
-                .from('questions')
-                .select('*, subjects!inner(code)')
-                .eq('subjects.code', subjectCode)
-                .limit(1);
+            try {
+                // Fetch the subject ID first
+                const { data: subject, error: subError } = await supabase
+                    .from('subjects')
+                    .select('id')
+                    .eq('code', subjectCode)
+                    .single();
 
-            if (data && data.length > 0) {
-                qText.innerText = data[0].question_text;
-                const btn = document.createElement('button');
-                btn.className = "bg-emerald-100 p-3 rounded hover:bg-emerald-200";
-                btn.innerText = data[0].correct_option;
-                btn.onclick = () => alert("Correct! " + data[0].explanation);
-                container.appendChild(btn);
+                if (subError) throw subError;
+
+                // Fetch questions for that subject
+                const { data, error } = await supabase
+                    .from('questions')
+                    .select('*')
+                    .eq('subject_id', subject.id)
+                    .limit(1);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    qText.innerText = data[0].question_text;
+                    const btn = document.createElement('button');
+                    btn.className = "bg-emerald-100 p-3 rounded text-left hover:bg-emerald-200 border border-emerald-300";
+                    btn.innerText = data[0].correct_option;
+                    btn.onclick = () => alert("Explanation: " + data[0].explanation);
+                    container.appendChild(btn);
+                } else {
+                    qText.innerText = "No questions found for this subject.";
+                }
+            } catch (err) {
+                console.error(err);
+                qText.innerText = "Error: " + err.message;
             }
         }
     </script>
