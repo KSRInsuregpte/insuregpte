@@ -24,32 +24,40 @@
     <script>
         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
-        async function loadAllQuestions(subjectCode) {
+       async function loadAllQuestions(subjectCode) {
     const container = document.getElementById('options-container');
     const qText = document.getElementById('q-text');
     container.innerHTML = 'Loading...';
     qText.innerText = "Questions for " + subjectCode;
 
     try {
-        // We look for the ID based on the code provided
-        const { data: subject, error: subError } = await client
-            .from('subjects')
-            .select('id')
-            .eq('code', subjectCode)
-            .single();
-
-        if (subError) throw new Error("Subject not found: " + subError.message);
-
+        // We will fetch ALL questions directly. 
+        // We will filter by the subject_id manually in JavaScript.
+        // This avoids the complex API filtering that is causing the 406 error.
         const { data, error } = await client
             .from('questions')
-            .select('*')
-            .eq('subject_id', subject.id);
+            .select('*, subjects!inner(code)');
             
         if (error) throw error;
-        
-        // ... (rest of your display logic remains the same)
+
+        // Filter the results in the browser
+        const filteredData = data.filter(q => q.subjects.code === subjectCode);
+
+        container.innerHTML = '';
+        if (filteredData && filteredData.length > 0) {
+            filteredData.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-emerald-50 rounded border border-emerald-200";
+                div.innerHTML = `<p class="font-bold">${index + 1}. ${q.question_text}</p>
+                                 <button class="mt-2 text-emerald-700 font-semibold underline" onclick="alert('${q.explanation.replace(/'/g, "\\'")}')">Show Answer</button>`;
+                container.appendChild(div);
+            });
+        } else {
+            container.innerHTML = "No questions found for this subject.";
+        }
     } catch (err) {
         container.innerHTML = "Error: " + err.message;
+        console.error("Supabase Error details:", err);
     }
 }
 
