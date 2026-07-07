@@ -76,18 +76,24 @@
             }
         }
 
-        function freeze(selectedRadio, correct, explanation) {
+       function freeze(selectedRadio, correct, explanation) {
             const parentDiv = selectedRadio.closest('div.p-4');
             const feedback = parentDiv.querySelector('.feedback');
             parentDiv.querySelectorAll('input').forEach(r => r.disabled = true);
             
+            // Fix: We assume the database has the actual ANSWER TEXT in correct_option.
+            // If you have mixed data (sometimes text, sometimes C/A/B/D), 
+            // the quiz will always have this problem.
+            
             const isCorrect = (selectedRadio.value.trim() === correct.trim());
+            
             feedback.innerHTML = (isCorrect ? 
                 `<p class='text-green-800 font-bold'>Correct!</p>` : 
                 `<p class='text-red-800 font-bold'>Incorrect.</p><p>Correct Answer: ${correct}</p>`) + 
                 `<p class='mt-1 font-normal'>${explanation}</p>`;
             feedback.className = "feedback mt-3 p-3 rounded " + (isCorrect ? "bg-green-100" : "bg-red-100");
             feedback.classList.remove('hidden');
+        }
         }
 
         fetchSubjects(); // Call this when page loads
