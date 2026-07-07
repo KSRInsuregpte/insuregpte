@@ -2,14 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE - Insurance Exam Prep</title>
+    <title>InsureGPTE | Practice Quiz</title>
+    <!-- Tailwind CSS for elegant design -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #f0fdf4; font-family: sans-serif; color: #064e3b; text-align: center; padding: 50px; }
-        h1 { color: #047857; }
+        body { background-color: #f0fdf4; color: #064e3b; font-family: sans-serif; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
 </head>
-<body>
-    <h1>Welcome to InsureGPTE.in</h1>
-    <p>Your portal for III Exam Preparation is under construction.</p>
+<body class="p-8">
+    <div class="max-w-2xl mx-auto card p-8">
+        <h1 class="text-3xl font-bold mb-6 text-emerald-800">IC-01 Practice Quiz</h1>
+        <div id="quiz-container">
+            <p id="question" class="text-xl mb-4 font-semibold">Loading questions...</p>
+            <div id="options" class="flex flex-col gap-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // Placeholder for Supabase connection logic
+        // We will integrate your specific Supabase URL and Key in the next step
+        console.log("Ready to fetch from Supabase");
+    </script>
 </body>
 </html>
