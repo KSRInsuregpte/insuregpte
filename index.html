@@ -43,7 +43,7 @@
                 container.appendChild(div);
             });
         }
-
+</script>
         <script>
     function freeze(selectedRadio, correct, explanation) {
         const container = selectedRadio.closest('div.space-y-2');
@@ -62,7 +62,7 @@
         feedback.className = "feedback mt-3 p-3 rounded " + (isCorrect ? "bg-green-100" : "bg-red-100");
         feedback.classList.remove('hidden');
     }
-</script>
+
         }
 
         document.getElementById('btn-ic01').addEventListener('click', () => loadAllQuestions('IC01'));
