@@ -7,31 +7,54 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-emerald-50 p-8">
-    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8" id="quiz-app">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8">
         <h1 class="text-3xl font-bold mb-6 text-emerald-800">InsureGPTE Practice Quiz</h1>
-        <div class="mb-6 flex gap-4">
-            <button id="btn-ic01" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-01</button>
-            <button id="btn-ic11" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-11</button>
+        
+        <div id="subject-menu" class="mb-6 flex flex-wrap gap-2">
+            <p>Loading subjects...</p>
         </div>
-        <div id="options-container" class="space-y-6"></div>
+
+        <div id="quiz-container" class="mt-4">
+            <p id="q-text" class="text-xl mb-4 font-semibold text-emerald-900">Select a subject to begin.</p>
+            <div id="options-container" class="space-y-6"></div>
+        </div>
     </div>
 
-   <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+    <script>
+           const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
-
-        async function loadAllQuestions(subjectCode) {
-            const container = document.getElementById('options-container');
-            container.innerHTML = 'Loading questions...';
+       // Automatically fetch subjects on load
+        async function fetchSubjects() {
+            const menu = document.getElementById('subject-menu');
+            const { data, error } = await client.from('subjects').select('*').order('id');
             
+            if (error) { menu.innerHTML = "Error loading subjects."; return; }
+
+            menu.innerHTML = '';
+            data.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition";
+                btn.innerText = sub.code;
+                btn.onclick = () => loadAllQuestions(sub.id, sub.code);
+                menu.appendChild(btn);
+            });
+        }
+
+        async function loadAllQuestions(subjectId, subjectCode) {
+            const container = document.getElementById('options-container');
+            const qText = document.getElementById('q-text');
+            container.innerHTML = 'Shuffling 50 random questions...';
+            qText.innerText = "Questions for " + subjectCode;
+
             try {
-                const { data, error } = await client.from('questions').select('*, subjects!inner(code)');
+                const { data, error } = await client.from('questions').select('*').eq('subject_id', subjectId);
                 if (error) throw error;
 
-                const filtered = data.filter(q => q.subjects.code === subjectCode);
-                container.innerHTML = '';
+                // Shuffle and pick 50
+                const shuffled = data.sort(() => 0.5 - Math.random()).slice(0, 50);
                 
-                filtered.forEach((q, idx) => {
+                container.innerHTML = '';
+                shuffled.forEach((q, idx) => {
                     const div = document.createElement('div');
                     div.className = "p-4 bg-white border rounded shadow-sm";
                     div.innerHTML = `
@@ -50,32 +73,24 @@
                 });
             } catch (err) {
                 container.innerHTML = "Error loading questions.";
-                console.error(err);
             }
         }
 
         function freeze(selectedRadio, correct, explanation) {
-            const parentDiv = selectedRadio.closest('div.p-4'); // Finds the main question box
-            const feedback = parentDiv.querySelector('.feedback'); // Finds the feedback div inside that box
-            const allRadios = parentDiv.querySelectorAll('input');
+            const parentDiv = selectedRadio.closest('div.p-4');
+            const feedback = parentDiv.querySelector('.feedback');
+            parentDiv.querySelectorAll('input').forEach(r => r.disabled = true);
             
-            // Disable all radio buttons
-            allRadios.forEach(r => r.disabled = true);
-            
-            // Show feedback
             const isCorrect = (selectedRadio.value.trim() === correct.trim());
-            
             feedback.innerHTML = (isCorrect ? 
                 `<p class='text-green-800 font-bold'>Correct!</p>` : 
                 `<p class='text-red-800 font-bold'>Incorrect.</p><p>Correct Answer: ${correct}</p>`) + 
                 `<p class='mt-1 font-normal'>${explanation}</p>`;
-                
             feedback.className = "feedback mt-3 p-3 rounded " + (isCorrect ? "bg-green-100" : "bg-red-100");
             feedback.classList.remove('hidden');
         }
 
-        document.getElementById('btn-ic01').addEventListener('click', () => loadAllQuestions('IC01'));
-        document.getElementById('btn-ic11').addEventListener('click', () => loadAllQuestions('IC11'));
+        fetchSubjects(); // Call this when page loads
     </script>
 </body>
 </html>
