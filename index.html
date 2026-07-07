@@ -44,18 +44,25 @@
             });
         }
 
-        function freeze(selectedRadio, correct, explanation) {
-            const container = selectedRadio.closest('div.space-y-2');
-            const feedback = selectedRadio.closest('div').querySelector('.feedback');
+        <script>
+    function freeze(selectedRadio, correct, explanation) {
+        const container = selectedRadio.closest('div.space-y-2');
+        const feedback = selectedRadio.closest('div').querySelector('.feedback');
+        
+        // Disable all radios
+        container.querySelectorAll('input').forEach(r => r.disabled = true);
+        
+        // Show feedback
+        const isCorrect = (selectedRadio.value.trim() === correct.trim());
+        feedback.innerHTML = (isCorrect ? 
+            `<p class='text-green-800 font-bold'>Correct!</p>` : 
+            `<p class='text-red-800 font-bold'>Incorrect.</p><p>Correct Answer: ${correct}</p>`) + 
+            `<p class='mt-1'>${explanation}</p>`;
             
-            // Disable all radios in this question
-            container.querySelectorAll('input').forEach(r => r.disabled = true);
-            
-            // Show feedback
-            const isCorrect = (selectedRadio.value === correct);
-            feedback.innerText = (isCorrect ? "Correct! " : "Incorrect. ") + explanation;
-            feedback.className = "feedback mt-3 font-semibold p-2 " + (isCorrect ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800");
-            feedback.classList.remove('hidden');
+        feedback.className = "feedback mt-3 p-3 rounded " + (isCorrect ? "bg-green-100" : "bg-red-100");
+        feedback.classList.remove('hidden');
+    }
+</script>
         }
 
         document.getElementById('btn-ic01').addEventListener('click', () => loadAllQuestions('IC01'));
