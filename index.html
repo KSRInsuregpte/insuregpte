@@ -1,24 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>InsureGPTE | Practice Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-emerald-50 p-8">
-    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8" id="quiz-app">
         <h1 class="text-3xl font-bold mb-6 text-emerald-800">InsureGPTE Practice Quiz</h1>
-        
         <div class="mb-6 flex gap-4">
-            <button id="btn-ic01" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-01</button>
-            <button id="btn-ic11" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">IC-11</button>
+            <button id="btn-ic01" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-01</button>
+            <button id="btn-ic11" class="bg-emerald-600 text-white px-4 py-2 rounded">IC-11</button>
         </div>
-
-        <div id="quiz-container" class="mt-4">
-            <p id="q-text" class="text-xl mb-4 font-semibold text-emerald-900">Select a subject to begin.</p>
-            <div id="options-container" class="space-y-4"></div>
-        </div>
+        <div id="options-container" class="space-y-6"></div>
     </div>
 
     <script>
@@ -26,49 +19,42 @@
 
         async function loadAllQuestions(subjectCode) {
             const container = document.getElementById('options-container');
-            const qText = document.getElementById('q-text');
             container.innerHTML = 'Loading questions...';
-            qText.innerText = "Questions for " + subjectCode;
+            
+            const { data } = await client.from('questions').select('*, subjects!inner(code)');
+            const filtered = data.filter(q => q.subjects.code === subjectCode);
 
-            try {
-                const { data, error } = await client.from('questions').select('*, subjects!inner(code)');
-                if (error) throw error;
-
-                const filteredData = data.filter(q => q.subjects.code === subjectCode);
-                container.innerHTML = '';
-                
-                if (filteredData.length > 0) {
-                    filteredData.forEach((q, index) => {
-                        const div = document.createElement('div');
-                        div.className = "p-4 bg-emerald-50 rounded border border-emerald-200";
-                        div.innerHTML = `
-                            <p class="font-bold mb-3">${index + 1}. ${q.question_text}</p>
-                            <div class="grid grid-cols-1 gap-2">
-                                <button onclick="checkAnswer(this, '${q.correct_option}', '${q.explanation}')" class="p-2 border rounded hover:bg-emerald-100 bg-white">${q.option_a || 'Option A'}</button>
-                                <button onclick="checkAnswer(this, '${q.correct_option}', '${q.explanation}')" class="p-2 border rounded hover:bg-emerald-100 bg-white">${q.option_b || 'Option B'}</button>
-                                <button onclick="checkAnswer(this, '${q.correct_option}', '${q.explanation}')" class="p-2 border rounded hover:bg-emerald-100 bg-white">${q.option_c || 'Option C'}</button>
-                                <button onclick="checkAnswer(this, '${q.correct_option}', '${q.explanation}')" class="p-2 border rounded hover:bg-emerald-100 bg-white">${q.option_d || 'Option D'}</button>
-                            </div>
-                            <div class="feedback mt-3 font-semibold hidden"></div>
-                        `;
-                        container.appendChild(div);
-                    });
-                } else {
-                    container.innerHTML = "No questions found for this subject.";
-                }
-            } catch (err) {
-                container.innerHTML = "Error: " + err.message;
-            }
+            container.innerHTML = '';
+            filtered.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-white border rounded shadow-sm";
+                div.innerHTML = `
+                    <p class="font-bold mb-3">${idx + 1}. ${q.question_text}</p>
+                    <div class="space-y-2">
+                        ${['a','b','c','d'].map(opt => `
+                            <label class="flex items-center space-x-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                <input type="radio" name="q${q.id}" value="${q['option_'+opt]}" onclick="freeze(this, '${q.correct_option}', '${q.explanation}')">
+                                <span>${q['option_'+opt]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div class="feedback mt-3 hidden font-semibold p-2 rounded"></div>
+                `;
+                container.appendChild(div);
+            });
         }
 
-        function checkAnswer(btn, correct, explanation) {
-            const parent = btn.parentElement.parentElement;
-            const feedback = parent.querySelector('.feedback');
-            // We compare button text to the correct answer stored in DB
-            const isCorrect = (btn.innerText === correct);
+        function freeze(selectedRadio, correct, explanation) {
+            const container = selectedRadio.closest('div.space-y-2');
+            const feedback = selectedRadio.closest('div').querySelector('.feedback');
             
-            feedback.innerText = isCorrect ? "Correct! " + explanation : "Incorrect. The answer is: " + correct + ". " + explanation;
-            feedback.className = "feedback mt-3 font-semibold " + (isCorrect ? "text-green-700" : "text-red-700");
+            // Disable all radios in this question
+            container.querySelectorAll('input').forEach(r => r.disabled = true);
+            
+            // Show feedback
+            const isCorrect = (selectedRadio.value === correct);
+            feedback.innerText = (isCorrect ? "Correct! " : "Incorrect. ") + explanation;
+            feedback.className = "feedback mt-3 font-semibold p-2 " + (isCorrect ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800");
             feedback.classList.remove('hidden');
         }
 
