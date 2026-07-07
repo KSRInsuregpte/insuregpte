@@ -16,7 +16,7 @@
         <div id="options-container" class="space-y-6"></div>
     </div>
 
-    <script>
+   <script>
         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
 
@@ -39,8 +39,8 @@
                         <div class="space-y-2">
                             ${['a','b','c','d'].map(opt => `
                                 <label class="flex items-center space-x-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input type="radio" name="q${q.id}" value="${q['option_'+opt] || ''}" onclick="freeze(this, '${q.correct_option}', '${q.explanation}')">
-                                    <span>${q['option_'+opt] || 'Loading...'}</span>
+                                    <input type="radio" name="q${q.id}" value="${q['option_'+opt] || ''}" onclick="freeze(this, '${q.correct_option.replace(/'/g, "\\'")}', '${q.explanation.replace(/'/g, "\\'")}')">
+                                    <span>${q['option_'+opt] || 'Option not set'}</span>
                                 </label>
                             `).join('')}
                         </div>
@@ -49,20 +49,22 @@
                     container.appendChild(div);
                 });
             } catch (err) {
-                container.innerHTML = "Error loading questions. Please check console.";
+                container.innerHTML = "Error loading questions.";
                 console.error(err);
             }
         }
 
         function freeze(selectedRadio, correct, explanation) {
-            const container = selectedRadio.closest('div.space-y-2');
-            const feedback = selectedRadio.closest('div').querySelector('.feedback');
+            const parentDiv = selectedRadio.closest('div.p-4'); // Finds the main question box
+            const feedback = parentDiv.querySelector('.feedback'); // Finds the feedback div inside that box
+            const allRadios = parentDiv.querySelectorAll('input');
             
-            // Disable all radio buttons in this question set
-            container.querySelectorAll('input').forEach(r => r.disabled = true);
+            // Disable all radio buttons
+            allRadios.forEach(r => r.disabled = true);
             
             // Show feedback
             const isCorrect = (selectedRadio.value.trim() === correct.trim());
+            
             feedback.innerHTML = (isCorrect ? 
                 `<p class='text-green-800 font-bold'>Correct!</p>` : 
                 `<p class='text-red-800 font-bold'>Incorrect.</p><p>Correct Answer: ${correct}</p>`) + 
