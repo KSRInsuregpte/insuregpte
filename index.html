@@ -2,30 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE | IC-01 Quiz</title>
+    <title>InsureGPTE | Practice Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-emerald-50 p-8">
     <div id="app" class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-800">IC-01 Principles of Insurance</h1>
+        <h1 class="text-3xl font-bold mb-6 text-emerald-800">InsureGPTE Practice Quiz</h1>
         <div id="quiz-container">
             <p id="q-text" class="text-xl mb-4 text-emerald-900">Loading your question...</p>
-            <div id="options-container" class="space-y-3"></div>
         </div>
     </div>
 
     <script>
-        // These variables will be filled by Vercel automatically
-        const supabaseUrl = 'YOUR_SUPABASE_URL'; 
-        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        // PASTE YOUR ACTUAL KEYS HERE:
+        const supabaseUrl = 'https://tvjsivuibvzybdbjtesq.supabase.co'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
+        
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function loadQuestion() {
-            const { data, error } = await supabase.from('questions').select('*').limit(1);
-            if (data) {
-                document.getElementById('q-text').innerText = data[0].question_text;
-                // Add button logic here for correct/incorrect feedback
+            try {
+                const { data, error } = await supabase.from('questions').select('*').limit(1);
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    document.getElementById('q-text').innerText = data[0].question_text;
+                } else {
+                    document.getElementById('q-text').innerText = "No questions found in the database.";
+                }
+            } catch (err) {
+                document.getElementById('q-text').innerText = "Connection Error: " + err.message;
             }
         }
         loadQuestion();
