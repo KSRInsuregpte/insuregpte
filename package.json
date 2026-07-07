@@ -1,0 +1,7 @@
+{
+  "name": "insuregpte",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "echo 'Site deployed!'"
+  }
+}
