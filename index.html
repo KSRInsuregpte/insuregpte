@@ -21,36 +21,39 @@
     </div>
 
     <script>
-           const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
-       // Automatically fetch subjects on load
+
+        // Fetch all subjects dynamically
         async function fetchSubjects() {
             const menu = document.getElementById('subject-menu');
-            const { data, error } = await client.from('subjects').select('*').order('id');
-            
-            if (error) { menu.innerHTML = "Error loading subjects."; return; }
-
-            menu.innerHTML = '';
-            data.forEach(sub => {
-                const btn = document.createElement('button');
-                btn.className = "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition";
-                btn.innerText = sub.code;
-                btn.onclick = () => loadAllQuestions(sub.id, sub.code);
-                menu.appendChild(btn);
-            });
+            try {
+                const { data, error } = await client.from('subjects').select('id, code').order('id');
+                if (error) throw error;
+                
+                menu.innerHTML = '';
+                data.forEach(sub => {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition";
+                    btn.innerText = sub.code;
+                    btn.onclick = () => loadAllQuestions(sub.id, sub.code);
+                    menu.appendChild(btn);
+                });
+            } catch (err) {
+                menu.innerHTML = "Error loading subjects.";
+            }
         }
 
         async function loadAllQuestions(subjectId, subjectCode) {
             const container = document.getElementById('options-container');
             const qText = document.getElementById('q-text');
-            container.innerHTML = 'Shuffling 50 random questions...';
+            container.innerHTML = 'Shuffling random questions...';
             qText.innerText = "Questions for " + subjectCode;
 
             try {
                 const { data, error } = await client.from('questions').select('*').eq('subject_id', subjectId);
                 if (error) throw error;
 
-                // Shuffle and pick 50
                 const shuffled = data.sort(() => 0.5 - Math.random()).slice(0, 50);
                 
                 container.innerHTML = '';
@@ -76,28 +79,24 @@
             }
         }
 
-       function freeze(selectedRadio, correct, explanation) {
+        function freeze(selectedRadio, correct, explanation) {
             const parentDiv = selectedRadio.closest('div.p-4');
             const feedback = parentDiv.querySelector('.feedback');
             parentDiv.querySelectorAll('input').forEach(r => r.disabled = true);
             
-            // Fix: We assume the database has the actual ANSWER TEXT in correct_option.
-            // If you have mixed data (sometimes text, sometimes C/A/B/D), 
-            // the quiz will always have this problem.
-            
+            // Compare radio button value to database correct_option string
             const isCorrect = (selectedRadio.value.trim() === correct.trim());
             
             feedback.innerHTML = (isCorrect ? 
                 `<p class='text-green-800 font-bold'>Correct!</p>` : 
                 `<p class='text-red-800 font-bold'>Incorrect.</p><p>Correct Answer: ${correct}</p>`) + 
                 `<p class='mt-1 font-normal'>${explanation}</p>`;
+            
             feedback.className = "feedback mt-3 p-3 rounded " + (isCorrect ? "bg-green-100" : "bg-red-100");
             feedback.classList.remove('hidden');
         }
-    
-        }
 
-        fetchSubjects(); // Call this when page loads
+        fetchSubjects();
     </script>
 </body>
 </html>
