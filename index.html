@@ -1,75 +1,71 @@
-<!DOCTYPE html>
+
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE | Secure Assessment</title>
+    <title>InsureGPTE | Secure Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .quiz-card { max-width: 600px; margin: 0 auto; }
-    </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800">
+<body class="bg-slate-50 min-h-screen">
 
-    <div id="view-auth" class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 w-full max-w-md text-center">
-            <h1 class="text-3xl font-extrabold text-emerald-900 mb-2">InsureGPTE</h1>
-            <p class="text-slate-500 mb-8">Secure Assessment Portal</p>
-            <input id="email" type="email" placeholder="Email" class="w-full p-4 mb-4 border border-slate-200 rounded-xl">
-            <input id="password" type="password" placeholder="Password" class="w-full p-4 mb-6 border border-slate-200 rounded-xl">
-            <button onclick="handleAuth()" id="btn-auth" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold">Sign In</button>
+    <div id="view-login" class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md text-center">
+            <h1 class="text-2xl font-bold mb-6">InsureGPTE Portal</h1>
+            <input id="login-email" type="email" placeholder="Email" class="w-full p-4 mb-4 border rounded-xl">
+            <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 mb-6 border rounded-xl">
+            <button onclick="loginUser()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold mb-4">Sign In</button>
+            <button onclick="showView('register')" class="text-slate-500 underline">New user? Register here</button>
         </div>
     </div>
 
-    <div id="view-main" class="hidden min-h-screen p-6">
-        <div class="max-w-4xl mx-auto">
-            <div id="dashboard-header" class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold">Training Dashboard</h2>
-                <button onclick="logout()" class="text-slate-400 hover:text-red-600">Logout</button>
-            </div>
-            <div id="subject-menu" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
-            <div id="quiz-area" class="quiz-card"></div>
+    <div id="view-register" class="hidden max-w-2xl mx-auto p-10 bg-white shadow-xl rounded-3xl mt-10">
+        <h2 class="text-2xl font-bold mb-6">Registration</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <input id="reg-fname" placeholder="First Name" class="p-4 border rounded-xl">
+            <input id="reg-lname" placeholder="Last Name" class="p-4 border rounded-xl">
+            <input id="reg-email" placeholder="Email" class="p-4 border rounded-xl col-span-2">
+            <input id="reg-pass" type="password" placeholder="Password" class="p-4 border rounded-xl col-span-2">
+            <input id="reg-mobile" placeholder="Mobile" class="p-4 border rounded-xl col-span-2">
+            <input id="reg-company" placeholder="Company Name" class="p-4 border rounded-xl col-span-2">
+            <textarea id="reg-address" placeholder="Address" class="p-4 border rounded-xl col-span-2"></textarea>
         </div>
+        <button onclick="registerUser()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-xl font-bold">Register & Submit for Approval</button>
+        <button onclick="showView('login')" class="w-full mt-4 text-slate-500">Back to Login</button>
     </div>
 
     <script>
-                const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
-        // View Management: Only shows what should be seen
-        function setView(view) {
-            document.getElementById('view-auth').classList.add('hidden');
-            document.getElementById('view-main').classList.add('hidden');
+                     const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+
+        function showView(view) {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-register').classList.add('hidden');
             document.getElementById('view-' + view).classList.remove('hidden');
         }
 
-        client.auth.onAuthStateChange((event, session) => {
-            if (session) setView('main');
-            else setView('auth');
-        });
+        async function registerUser() {
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-pass').value;
+            
+            const { data, error } = await client.auth.signUp({ email, password });
+            if (error) return alert(error.message);
 
-        async function loadQuiz(sid) {
-            // Clear dashboard header
-            document.getElementById('dashboard-header').classList.add('hidden');
-            document.getElementById('subject-menu').classList.add('hidden');
-            
-            const { data } = await client.from('questions').select('*').eq('subject_id', sid).order('random()').limit(50);
-            
-            document.getElementById('quiz-area').innerHTML = `
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                    ${data.map((q, i) => `
-                        <div class="mb-8 q-container" data-id="${q.id}">
-                            <p class="font-bold mb-4">${i+1}. ${q.question_text}</p>
-                            <div class="space-y-3">
-                                ${['a','b','c','d'].map(o => `
-                                    <label class="block p-4 border rounded-xl hover:border-emerald-500 cursor-pointer">
-                                        <input type="radio" name="q${q.id}" value="${q['option_'+o]}" class="mr-2"> ${q['option_'+o]}
-                                    </label>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                    <button onclick="submitQuiz()" class="w-full bg-emerald-900 text-white py-4 rounded-xl font-bold">Submit Assessment</button>
-                </div>
-            `;
+            await client.from('profiles').insert([{
+                id: data.user.id,
+                first_name: document.getElementById('reg-fname').value,
+                last_name: document.getElementById('reg-lname').value,
+                mobile: document.getElementById('reg-mobile').value,
+                company_name: document.getElementById('reg-company').value,
+                address: document.getElementById('reg-address').value,
+                status: 'pending'
+            }]);
+            alert("Registration successful! Admin will verify your profile.");
+            showView('login');
+        }
+
+        async function loginUser() {
+            // After login, add code here to check profile status before showing dashboard
+            alert("Logging in...");
         }
     </script>
 </body>
