@@ -2,101 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE | Practice Quiz</title>
+    <title>InsureGPTE | Secure Assessment</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .quiz-card { max-width: 600px; margin: 0 auto; }
+    </style>
 </head>
-<body class="bg-emerald-50 p-8">
-    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-8">
-        <h1 class="text-3xl font-bold mb-6 text-emerald-800">InsureGPTE Practice Quiz</h1>
-        
-        <div id="subject-menu" class="mb-6 flex flex-wrap gap-2">
-            <p>Loading subjects...</p>
-        </div>
+<body class="bg-slate-50 font-sans text-slate-800">
 
-        <div id="quiz-container" class="mt-4">
-            <p id="q-text" class="text-xl mb-4 font-semibold text-emerald-900">Select a subject to begin.</p>
-            <div id="options-container" class="space-y-6"></div>
+    <div id="view-auth" class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 w-full max-w-md text-center">
+            <h1 class="text-3xl font-extrabold text-emerald-900 mb-2">InsureGPTE</h1>
+            <p class="text-slate-500 mb-8">Secure Assessment Portal</p>
+            <input id="email" type="email" placeholder="Email" class="w-full p-4 mb-4 border border-slate-200 rounded-xl">
+            <input id="password" type="password" placeholder="Password" class="w-full p-4 mb-6 border border-slate-200 rounded-xl">
+            <button onclick="handleAuth()" id="btn-auth" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold">Sign In</button>
+        </div>
+    </div>
+
+    <div id="view-main" class="hidden min-h-screen p-6">
+        <div class="max-w-4xl mx-auto">
+            <div id="dashboard-header" class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold">Training Dashboard</h2>
+                <button onclick="logout()" class="text-slate-400 hover:text-red-600">Logout</button>
+            </div>
+            <div id="subject-menu" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+            <div id="quiz-area" class="quiz-card"></div>
         </div>
     </div>
 
     <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
-
-
-        // Fetch all subjects dynamically
-        async function fetchSubjects() {
-            const menu = document.getElementById('subject-menu');
-            try {
-                const { data, error } = await client.from('subjects').select('id, code').order('id');
-                if (error) throw error;
-                
-                menu.innerHTML = '';
-                data.forEach(sub => {
-                    const btn = document.createElement('button');
-                    btn.className = "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition";
-                    btn.innerText = sub.code;
-                    btn.onclick = () => loadAllQuestions(sub.id, sub.code);
-                    menu.appendChild(btn);
-                });
-            } catch (err) {
-                menu.innerHTML = "Error loading subjects.";
-            }
+                const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+        // View Management: Only shows what should be seen
+        function setView(view) {
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-main').classList.add('hidden');
+            document.getElementById('view-' + view).classList.remove('hidden');
         }
 
-        async function loadAllQuestions(subjectId, subjectCode) {
-            const container = document.getElementById('options-container');
-            const qText = document.getElementById('q-text');
-            container.innerHTML = 'Shuffling random questions...';
-            qText.innerText = "Questions for " + subjectCode;
+        client.auth.onAuthStateChange((event, session) => {
+            if (session) setView('main');
+            else setView('auth');
+        });
 
-            try {
-                const { data, error } = await client.from('questions').select('*').eq('subject_id', subjectId);
-                if (error) throw error;
-
-                const shuffled = data.sort(() => 0.5 - Math.random()).slice(0, 50);
-                
-                container.innerHTML = '';
-                shuffled.forEach((q, idx) => {
-                    const div = document.createElement('div');
-                    div.className = "p-4 bg-white border rounded shadow-sm";
-                    div.innerHTML = `
-                        <p class="font-bold mb-3">${idx + 1}. ${q.question_text}</p>
-                        <div class="space-y-2">
-                            ${['a','b','c','d'].map(opt => `
-                                <label class="flex items-center space-x-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input type="radio" name="q${q.id}" value="${q['option_'+opt] || ''}" onclick="freeze(this, '${q.correct_option.replace(/'/g, "\\'")}', '${q.explanation.replace(/'/g, "\\'")}')">
-                                    <span>${q['option_'+opt] || 'Option not set'}</span>
-                                </label>
-                            `).join('')}
+        async function loadQuiz(sid) {
+            // Clear dashboard header
+            document.getElementById('dashboard-header').classList.add('hidden');
+            document.getElementById('subject-menu').classList.add('hidden');
+            
+            const { data } = await client.from('questions').select('*').eq('subject_id', sid).order('random()').limit(50);
+            
+            document.getElementById('quiz-area').innerHTML = `
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                    ${data.map((q, i) => `
+                        <div class="mb-8 q-container" data-id="${q.id}">
+                            <p class="font-bold mb-4">${i+1}. ${q.question_text}</p>
+                            <div class="space-y-3">
+                                ${['a','b','c','d'].map(o => `
+                                    <label class="block p-4 border rounded-xl hover:border-emerald-500 cursor-pointer">
+                                        <input type="radio" name="q${q.id}" value="${q['option_'+o]}" class="mr-2"> ${q['option_'+o]}
+                                    </label>
+                                `).join('')}
+                            </div>
                         </div>
-                        <div class="feedback mt-3 hidden p-3 rounded font-semibold"></div>
-                    `;
-                    container.appendChild(div);
-                });
-            } catch (err) {
-                container.innerHTML = "Error loading questions.";
-            }
+                    `).join('')}
+                    <button onclick="submitQuiz()" class="w-full bg-emerald-900 text-white py-4 rounded-xl font-bold">Submit Assessment</button>
+                </div>
+            `;
         }
-
-        function freeze(selectedRadio, correct, explanation) {
-            const parentDiv = selectedRadio.closest('div.p-4');
-            const feedback = parentDiv.querySelector('.feedback');
-            parentDiv.querySelectorAll('input').forEach(r => r.disabled = true);
-            
-            // Compare radio button value to database correct_option string
-            const isCorrect = (selectedRadio.value.trim() === correct.trim());
-            
-            feedback.innerHTML = (isCorrect ? 
-                `<p class='text-green-800 font-bold'>Correct!</p>` : 
-                `<p class='text-red-800 font-bold'>Incorrect.</p><p>Correct Answer: ${correct}</p>`) + 
-                `<p class='mt-1 font-normal'>${explanation}</p>`;
-            
-            feedback.className = "feedback mt-3 p-3 rounded " + (isCorrect ? "bg-green-100" : "bg-red-100");
-            feedback.classList.remove('hidden');
-        }
-
-        fetchSubjects();
     </script>
 </body>
 </html>
