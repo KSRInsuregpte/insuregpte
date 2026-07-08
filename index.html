@@ -31,7 +31,13 @@
         </div>
         <button id="btn-reg" onclick="registerUser()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-xl font-bold">Register & Submit for Approval</button>
     </div>
-
+    <div id="view-admin" class="hidden max-w-5xl mx-auto p-10 bg-white shadow-xl rounded-3xl mt-10">
+        <h2 class="text-2xl font-bold mb-6">Admin Approval Console</h2>
+        <table class="w-full text-left">
+            <thead><tr class="border-b"><th>Name</th><th>Email</th><th>Company</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="admin-table-body"></tbody>
+        </table>
+    </div>
     <script>
         // Use your actual credentials here
        
@@ -75,35 +81,37 @@
         }
 
         async function registerUser() {
-            if (!client) return alert("System initializing, please wait...");
-            
-            const btn = document.getElementById('btn-reg');
-            btn.innerText = "Processing...";
-            
-            try {
-                const email = document.getElementById('reg-email').value;
-                const password = document.getElementById('reg-pass').value;
-                const { data, error: authError } = await client.auth.signUp({ email, password });
-                
-                if (authError) throw authError;
+    const btn = document.getElementById('btn-reg');
+    btn.innerText = "Processing...";
+    
+    try {
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-pass').value;
+        
+        // 1. Sign up
+        const { data: authData, error: authError } = await client.auth.signUp({ email, password });
+        if (authError) throw authError;
 
-                await client.from('profiles').insert([{
-                    id: data.user.id,
-                    first_name: document.getElementById('reg-fname').value,
-                    last_name: document.getElementById('reg-lname').value,
-                    mobile: document.getElementById('reg-mobile').value,
-                    company_name: document.getElementById('reg-company').value,
-                    address: document.getElementById('reg-address').value,
-                    status: 'pending'
-                }]);
-                
-                alert("Registration successful! Admin will verify your profile.");
-                showView('login');
-            } catch (err) {
-                alert("Error: " + err.message);
-                btn.innerText = "Register & Submit for Approval";
-            }
-        }
+        // 2. IMPORTANT: Use the ID from the new auth user
+        const { error: profileError } = await client.from('profiles').insert([{
+            id: authData.user.id, // This links them correctly
+            first_name: document.getElementById('reg-fname').value,
+            last_name: document.getElementById('reg-lname').value,
+            mobile: document.getElementById('reg-mobile').value,
+            company_name: document.getElementById('reg-company').value,
+            address: document.getElementById('reg-address').value,
+            status: 'pending'
+        }]);
+        
+        if (profileError) throw profileError;
+
+        alert("Registration successful!");
+        showView('login');
+    } catch (err) {
+        alert("Error: " + err.message);
+        btn.innerText = "Register & Submit";
+    }
+}
     </script>
 </body>
 </html>
