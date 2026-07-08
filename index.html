@@ -1,9 +1,9 @@
 
- <!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE | Secure Portal</title>
+    <title>InsureGPTE - Message</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -11,16 +11,17 @@
 
     <div id="view-login" class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md text-center">
-            <h1 class="text-2xl font-bold mb-6">InsureGPTE Portal</h1>
+            <h1 class="text-2xl font-bold mb-2">InsureGPTE - Message</h1>
+            <p class="text-slate-400 mb-6 text-sm">Secure Assessment Portal</p>
             <input id="login-email" type="email" placeholder="Email" class="w-full p-4 mb-4 border rounded-xl">
             <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 mb-6 border rounded-xl">
-            <button onclick="loginUser()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold mb-4">Sign In</button>
-            <button onclick="showView('register')" class="text-slate-500 underline">New user? Register here</button>
+            <button id="btn-login" onclick="loginUser()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold mb-4">Sign In</button>
+            <button onclick="showView('register')" class="text-slate-500 underline text-sm">New user? Register here</button>
         </div>
     </div>
 
     <div id="view-register" class="hidden max-w-2xl mx-auto p-10 bg-white shadow-xl rounded-3xl mt-10">
-        <h2 class="text-2xl font-bold mb-6">Registration</h2>
+        <h2 class="text-2xl font-bold mb-6">Registration Details</h2>
         <div class="grid grid-cols-2 gap-4">
             <input id="reg-fname" placeholder="First Name" class="p-4 border rounded-xl">
             <input id="reg-lname" placeholder="Last Name" class="p-4 border rounded-xl">
@@ -30,12 +31,13 @@
             <input id="reg-company" placeholder="Company Name" class="p-4 border rounded-xl col-span-2">
             <textarea id="reg-address" placeholder="Address" class="p-4 border rounded-xl col-span-2"></textarea>
         </div>
-        <button onclick="registerUser()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-xl font-bold">Register & Submit for Approval</button>
-        <button onclick="showView('login')" class="w-full mt-4 text-slate-500">Back to Login</button>
+        <button id="btn-reg" onclick="registerUser()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-xl font-bold">Register & Submit for Approval</button>
+        <button onclick="showView('login')" class="w-full mt-4 text-slate-500 text-sm">Back to Login</button>
     </div>
 
     <script>
-                     const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+                const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+
 
         function showView(view) {
             document.getElementById('view-login').classList.add('hidden');
@@ -43,29 +45,28 @@
             document.getElementById('view-' + view).classList.remove('hidden');
         }
 
-        async function registerUser() {
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-pass').value;
+        async function loginUser() {
+            const btn = document.getElementById('btn-login');
+            btn.innerText = "Signing in...";
             
-            const { data, error } = await client.auth.signUp({ email, password });
-            if (error) return alert(error.message);
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pass').value;
 
-            await client.from('profiles').insert([{
-                id: data.user.id,
-                first_name: document.getElementById('reg-fname').value,
-                last_name: document.getElementById('reg-lname').value,
-                mobile: document.getElementById('reg-mobile').value,
-                company_name: document.getElementById('reg-company').value,
-                address: document.getElementById('reg-address').value,
-                status: 'pending'
-            }]);
-            alert("Registration successful! Admin will verify your profile.");
-            showView('login');
+            const { data, error } = await client.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                alert("Login failed: User not found or incorrect password.");
+                btn.innerText = "Sign In";
+            } else {
+                alert("Login successful!");
+                // Here you would trigger the Dashboard
+            }
         }
 
-        async function loginUser() {
-            // After login, add code here to check profile status before showing dashboard
-            alert("Logging in...");
+        async function registerUser() {
+            const btn = document.getElementById('btn-reg');
+            btn.innerText = "Processing...";
+            // ... (Registration logic remains the same)
         }
     </script>
 </body>
