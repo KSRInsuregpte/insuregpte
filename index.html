@@ -78,10 +78,46 @@ async function loginUser() {
                 btn.innerText = "Sign In";
             }
         }
-        async function registerUser() {
+    async function registerUser() {
             const btn = document.getElementById('btn-reg');
             btn.innerText = "Processing...";
-            // ... (Registration logic remains the same)
+            btn.disabled = true; // Prevents double-clicks
+
+            try {
+                const email = document.getElementById('reg-email').value;
+                const password = document.getElementById('reg-pass').value;
+                
+                // 1. Sign up user
+                const { data, error: authError } = await client.auth.signUp({ 
+                    email: email, 
+                    password: password 
+                });
+                
+                if (authError) throw new Error("Auth Error: " + authError.message);
+
+                // 2. Insert profile details
+                const { error: profileError } = await client.from('profiles').insert([{
+                    id: data.user.id,
+                    first_name: document.getElementById('reg-fname').value,
+                    last_name: document.getElementById('reg-lname').value,
+                    mobile: document.getElementById('reg-mobile').value,
+                    company_name: document.getElementById('reg-company').value,
+                    address: document.getElementById('reg-address').value,
+                    status: 'pending'
+                }]);
+
+                if (profileError) throw new Error("Profile Error: " + profileError.message);
+
+                alert("Registration successful! Admin will verify your profile.");
+                showView('login');
+
+            } catch (err) {
+                console.error("Registration failed:", err);
+                alert(err.message);
+            } finally {
+                btn.innerText = "Register & Submit for Approval";
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
