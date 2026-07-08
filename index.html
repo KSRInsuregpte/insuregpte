@@ -45,24 +45,39 @@
             document.getElementById('view-' + view).classList.remove('hidden');
         }
 
-        async function loginUser() {
+   
+async function loginUser() {
             const btn = document.getElementById('btn-login');
             btn.innerText = "Signing in...";
             
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-pass').value;
 
+            // 1. Authenticate
             const { data, error } = await client.auth.signInWithPassword({ email, password });
             
             if (error) {
                 alert("Login failed: User not found or incorrect password.");
                 btn.innerText = "Sign In";
-            } else {
+                return;
+            }
+
+            // 2. Check Approval Status
+            const { data: profile, error: profileError } = await client
+                .from('profiles')
+                .select('status')
+                .eq('id', data.user.id)
+                .single();
+
+            if (profile && profile.status === 'approved') {
                 alert("Login successful!");
                 // Here you would trigger the Dashboard
+            } else {
+                alert("Your account is pending Admin approval. Please try again later.");
+                await client.auth.signOut();
+                btn.innerText = "Sign In";
             }
         }
-
         async function registerUser() {
             const btn = document.getElementById('btn-reg');
             btn.innerText = "Processing...";
