@@ -1,4 +1,9 @@
-<!DOCTYPE html>
+// Use your actual credentials here
+// const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+// const SUPABASE_URL = 'https://tvjsivuibvzybdbjtesq.supabase.co';
+// const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
+        
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -29,89 +34,93 @@
             <input id="reg-company" placeholder="Company Name" class="p-4 border rounded-xl col-span-2">
             <textarea id="reg-address" placeholder="Address" class="p-4 border rounded-xl col-span-2"></textarea>
         </div>
-        <button id="btn-reg" onclick="registerUser()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-xl font-bold">Register & Submit for Approval</button>
+        <button id="btn-reg" onclick="registerUser()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-xl font-bold">Register & Submit</button>
+        <button onclick="showView('login')" class="w-full mt-4 text-slate-500 text-sm">Back to Login</button>
     </div>
+
     <div id="view-admin" class="hidden max-w-5xl mx-auto p-10 bg-white shadow-xl rounded-3xl mt-10">
         <h2 class="text-2xl font-bold mb-6">Admin Approval Console</h2>
         <table class="w-full text-left">
             <thead><tr class="border-b"><th>Name</th><th>Email</th><th>Company</th><th>Status</th><th>Action</th></tr></thead>
             <tbody id="admin-table-body"></tbody>
         </table>
+        <button onclick="showView('login')" class="mt-6 text-slate-500 underline">Back</button>
     </div>
-    <script>
-        // Use your actual credentials here
-       
-// const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
-        const SUPABASE_URL = 'https://tvjsivuibvzybdbjtesq.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
-        
-        let client;
-        
-        // Initialize client safely
-        window.addEventListener('DOMContentLoaded', () => {
-            if (window.supabase) {
-                client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            }
-        });
+    <script>
+       const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
         function showView(view) {
-            document.getElementById('view-login').classList.add('hidden');
-            document.getElementById('view-register').classList.add('hidden');
-            document.getElementById('view-' + view).classList.remove('hidden');
+            ['login', 'register', 'admin'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
+            document.getElementById('view-'+view).classList.remove('hidden');
         }
 
         async function loginUser() {
-            if (!client) return alert("System initializing, please wait...");
-            
             const btn = document.getElementById('btn-login');
             btn.innerText = "Signing in...";
-            
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-pass').value;
 
             const { data, error } = await client.auth.signInWithPassword({ email, password });
+            if (error) { alert(error.message); btn.innerText = "Sign In"; return; }
+
+            const { data: profile } = await client.from('profiles').select('status, role').eq('id', data.user.id).single();
             
-            if (error) {
-                alert("Login failed: " + error.message);
-                btn.innerText = "Sign In";
+            if (profile?.role === 'admin') {
+                loadAdmin();
+                showView('admin');
+            } else if (profile?.status === 'approved') {
+                alert("Login Successful! Redirecting to Dashboard...");
             } else {
-                alert("Login successful!");
+                alert("Your account is pending Admin approval.");
+                client.auth.signOut();
+                btn.innerText = "Sign In";
             }
         }
 
         async function registerUser() {
-    const btn = document.getElementById('btn-reg');
-    btn.innerText = "Processing...";
-    
-    try {
-        const email = document.getElementById('reg-email').value;
-        const password = document.getElementById('reg-pass').value;
-        
-        // 1. Sign up
-        const { data: authData, error: authError } = await client.auth.signUp({ email, password });
-        if (authError) throw authError;
+            const btn = document.getElementById('btn-reg');
+            btn.innerText = "Processing...";
+            try {
+                const { data, error: authError } = await client.auth.signUp({ 
+                    email: document.getElementById('reg-email').value, 
+                    password: document.getElementById('reg-pass').value 
+                });
+                if (authError) throw authError;
 
-        // 2. IMPORTANT: Use the ID from the new auth user
-        const { error: profileError } = await client.from('profiles').insert([{
-            id: authData.user.id, // This links them correctly
-            first_name: document.getElementById('reg-fname').value,
-            last_name: document.getElementById('reg-lname').value,
-            mobile: document.getElementById('reg-mobile').value,
-            company_name: document.getElementById('reg-company').value,
-            address: document.getElementById('reg-address').value,
-            status: 'pending'
-        }]);
-        
-        if (profileError) throw profileError;
+                await client.from('profiles').insert([{
+                    id: data.user.id,
+                    first_name: document.getElementById('reg-fname').value,
+                    last_name: document.getElementById('reg-lname').value,
+                    mobile: document.getElementById('reg-mobile').value,
+                    company_name: document.getElementById('reg-company').value,
+                    address: document.getElementById('reg-address').value,
+                    status: 'pending',
+                    role: 'user'
+                }]);
+                alert("Registration successful! Pending Admin approval.");
+                showView('login');
+            } catch (err) { alert(err.message); btn.innerText = "Register & Submit"; }
+        }
 
-        alert("Registration successful!");
-        showView('login');
-    } catch (err) {
-        alert("Error: " + err.message);
-        btn.innerText = "Register & Submit";
-    }
-}
+        async function loadAdmin() {
+            const { data: profiles } = await client.from('profiles').select('*');
+            document.getElementById('admin-table-body').innerHTML = profiles.map(p => `
+                <tr class="border-b">
+                    <td>${p.first_name} ${p.last_name}</td>
+                    <td>${p.mobile}</td>
+                    <td>${p.company_name}</td>
+                    <td>${p.status}</td>
+                    <td><button onclick="approveUser('${p.id}')" class="bg-blue-500 text-white px-2 rounded">Approve</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function approveUser(uid) {
+            await client.from('profiles').update({ status: 'approved' }).eq('id', uid);
+            alert("User Approved!");
+            loadAdmin();
+        }
     </script>
 </body>
 </html>
