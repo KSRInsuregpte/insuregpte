@@ -89,20 +89,25 @@ async function handleRegister() {
 
     console.log("Attempting to save:", profileData);
 
-    // 3. UPSERT
-    const { error: dbError } = await client.from('profiles').upsert(profileData);
+// REPLACE your old upsert block with this:
+const { error: rpcError } = await client.rpc('save_user_profile', {
+    user_id: authData.user.id,
+    fname: document.getElementById('fname').value,
+    lname: document.getElementById('lname').value,
+    mob: document.getElementById('mobile').value,
+    prof: document.getElementById('prof').value,
+    bldg: document.getElementById('bldg').value,
+    st: document.getElementById('street').value,
+    ar: document.getElementById('area').value,
+    ct: document.getElementById('city').value,
+    pin: document.getElementById('pin').value,
+    cnt: document.getElementById('country').value,
+    subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
+});
 
-    if (dbError) {
-        console.error("Database Error Details:", dbError);
-        alert("DB Save Failed! Check Console (F12) for details.");
-        btn.disabled = false; btn.innerText = "Register";
-    } else {
-        console.log("Database Save Successful!");
-        document.getElementById('modal-success').classList.remove('hidden');
-        btn.disabled = false; btn.innerText = "Register";
-    }
-}
-        async function handleLogin() {
+if (rpcError) throw rpcError;
+
+async function handleLogin() {
             const { data, error } = await client.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value });
             if (error) return alert(error.message);
             alert("Login Successful!");
