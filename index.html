@@ -12,7 +12,7 @@
         <h2 class="text-2xl font-bold mb-6 text-center text-blue-800">InsureGPTE Login</h2>
         <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-4 border rounded">
         <input id="login-pass" type="password" placeholder="Password" class="w-full p-3 mb-6 border rounded">
-        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Sign In</button>
+        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded font-bold">Sign In</button>
         <p class="mt-4 text-center text-sm">New user? <button onclick="toggleView()" class="text-blue-600 font-bold underline">Register Here</button></p>
     </div>
 
@@ -38,7 +38,7 @@
             <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
 
             <div class="col-span-2">
-                <label class="font-bold block mb-2">Areas of Business Interested:</label>
+                <label class="font-bold block mb-2">Interested Areas of Study:</label>
                 <div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div>
             </div>
         </div>
@@ -56,13 +56,13 @@
 
     <script>
         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
-        // UI Navigation
+
+        
         function toggleView() {
             document.getElementById('login-view').classList.toggle('hidden');
             document.getElementById('reg-view').classList.toggle('hidden');
         }
 
-        // Load Subjects
         async function loadSubjects() {
             const { data } = await client.from('subjects').select('code, title');
             document.getElementById('subject-list').innerHTML = data.map(s => `
@@ -71,25 +71,44 @@
         }
         loadSubjects();
 
-        // Registration Flow
         async function handleRegister() {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
             const subjects = Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value);
             
+            // 1. Sign up (This automatically triggers the Supabase confirmation email)
             const { data, error } = await client.auth.signUp({ 
                 email: email, 
-                password: pass,
-                options: { data: { first_name: document.getElementById('fname').value } }
+                password: pass 
             });
-            if (error) return alert(error.message);
             
-            // Update profile with subjects
-            await client.from('profiles').update({ interested_business_areas: subjects }).eq('id', data.user.id);
-            alert("Registration successful! Check your email to verify.");
+            if (error) {
+                alert("Error: " + error.message);
+                return;
+            }
+            
+            // 2. Update profile with extra details
+            await client.from('profiles').update({ 
+                interested_business_areas: subjects,
+                first_name: document.getElementById('fname').value,
+                last_name: document.getElementById('lname').value,
+                mobile: document.getElementById('mobile').value,
+                profession: document.getElementById('prof').value,
+                building_name: document.getElementById('bldg').value,
+                street_name: document.getElementById('street').value,
+                area: document.getElementById('area').value,
+                city: document.getElementById('city').value,
+                pin_code: document.getElementById('pin').value,
+                country: document.getElementById('country').value
+            }).eq('id', data.user.id);
+
+            // 3. Display the formal message on the screen
+            alert("Registration accepted, an email sent to your email id for confirmation");
+            
+            // 4. Redirect to Login
+            toggleView(); 
         }
 
-        // Login Flow
         async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
@@ -102,4 +121,4 @@
         }
     </script>
 </body>
-</html>
+</html>	
