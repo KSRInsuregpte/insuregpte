@@ -2,88 +2,59 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InsureGPTE Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100 p-4">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
 
-    <div id="login-view" class="max-w-md mx-auto mt-20 p-8 bg-white rounded-xl shadow-lg border">
-        <h2 class="text-2xl font-bold mb-6 text-center text-blue-800">InsureGPTE Login</h2>
-        <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-4 border rounded">
-        <input id="login-pass" type="password" placeholder="Password" class="w-full p-3 mb-6 border rounded">
-        <button id="btn-login" onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Sign In</button>
-        <p class="mt-4 text-center text-sm">New user? <button onclick="toggleView()" class="text-blue-600 font-bold underline">Register Here</button></p>
+    <div id="login-view" class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+        <h2 class="text-3xl font-extrabold text-blue-900 mb-2">Welcome Back</h2>
+        <p class="text-slate-500 mb-8">Sign in to access your dashboard</p>
+        <input id="login-email" type="email" placeholder="Email Address" class="w-full p-4 mb-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+        <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 mb-6 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+        <button id="btn-login" onclick="handleLogin()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition">Sign In</button>
+        <p class="mt-6 text-center text-slate-600">Don't have an account? <button onclick="toggleView()" class="text-blue-600 font-bold hover:underline">Register Now</button></p>
     </div>
 
-    <div id="reg-view" class="hidden max-w-2xl mx-auto my-10 p-8 bg-white rounded-xl shadow-lg border">
-        <h2 class="text-2xl font-bold mb-6 text-blue-800">New User Registration</h2>
-        <form id="reg-form" class="grid grid-cols-2 gap-4">
-            <input id="fname" placeholder="First Name *" class="p-3 border rounded">
-            <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
-            <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
-            <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded col-span-2">
-            <select id="prof" class="p-3 border rounded col-span-2"><option value="">Select Profession *</option><option>Student</option><option>Working Professional</option><option>House Wife</option></select>
-            <input id="mobile" placeholder="Mobile *" class="p-3 border rounded col-span-2">
-            <input id="city" placeholder="City *" class="p-3 border rounded">
-            <input id="pin" placeholder="PIN Code *" class="p-3 border rounded">
-            <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
-            <div class="col-span-2"><label class="font-bold block mb-2">Interested Areas:</label><div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div></div>
+    <div id="reg-view" class="hidden w-full max-w-2xl bg-white p-10 rounded-2xl shadow-xl border border-slate-100">
+        <h2 class="text-3xl font-extrabold text-blue-900 mb-6">Create Account</h2>
+        <form id="reg-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input id="fname" placeholder="First Name" class="p-4 border rounded-xl">
+            <input id="lname" placeholder="Last Name" class="p-4 border rounded-xl">
+            <input id="email" placeholder="Email Address" class="p-4 border rounded-xl md:col-span-2">
+            <input id="pass" type="password" placeholder="Password" class="p-4 border rounded-xl md:col-span-2">
+            <select id="prof" class="p-4 border rounded-xl md:col-span-2 bg-white"><option value="">Select Profession</option><option>Student</option><option>Working Professional</option></select>
+            <input id="mobile" placeholder="Mobile Number" class="p-4 border rounded-xl md:col-span-2">
+            <input id="city" placeholder="City" class="p-4 border rounded-xl">
+            <input id="pin" placeholder="PIN Code" class="p-4 border rounded-xl">
+            <div class="md:col-span-2 mt-4"><label class="font-bold text-slate-700 block mb-3">Interested Areas:</label><div id="subject-list" class="grid grid-cols-2 gap-3 text-sm"></div></div>
         </form>
-        <button id="btn-register" onclick="handleRegister()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
-        <button onclick="toggleView()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
-    </div>
-
-    <div id="msg-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg w-full max-w-sm text-center shadow-2xl">
-            <h3 id="msg-title" class="font-bold text-xl mb-4">Message</h3>
-            <button onclick="document.getElementById('msg-modal').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button>
-        </div>
+        <button id="btn-register" onclick="handleRegister()" class="w-full mt-8 bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition">Complete Registration</button>
+        <button onclick="toggleView()" class="w-full mt-4 text-slate-400 hover:text-slate-600">Back to Login</button>
     </div>
 
     <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU'); 
-        
+         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU'); 
         async function loadSubjects() {
             const { data } = await client.from('subjects').select('code, title');
-            document.getElementById('subject-list').innerHTML = data.map(s => `<label><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
+            document.getElementById('subject-list').innerHTML = data.map(s => `<label class="flex items-center gap-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer"><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
         }
         loadSubjects();
-
         function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
-
         async function handleRegister() {
             const btn = document.getElementById('btn-register');
-            btn.disabled = true; btn.innerText = "Processing...";
-            
-            const { data: auth, error: authErr } = await client.auth.signUp({ 
-                email: document.getElementById('email').value, 
-                password: document.getElementById('pass').value 
-            });
+            btn.disabled = true; btn.innerText = "Saving...";
+            const { data: auth, error: authErr } = await client.auth.signUp({ email: document.getElementById('email').value, password: document.getElementById('pass').value });
             if (authErr) { btn.disabled = false; btn.innerText = "Register"; alert(authErr.message); return; }
-
-            const { error: rpcErr } = await client.rpc('save_user_profile', {
-                user_id: auth.user.id,
-                fname: document.getElementById('fname').value,
-                lname: document.getElementById('lname').value,
-                mob: document.getElementById('mobile').value,
-                prof: document.getElementById('prof').value,
-                bldg: '', st: '', ar: '',
-                ct: document.getElementById('city').value,
-                pin: document.getElementById('pin').value,
-                cnt: document.getElementById('country').value,
-                subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
-            });
-
-            btn.disabled = false; btn.innerText = "Register";
-            alert(rpcErr ? "Save Error: " + rpcErr.message : "Success! You can now login.");
+            const { error: rpcErr } = await client.rpc('save_user_profile', { user_id: auth.user.id, fname: document.getElementById('fname').value, lname: document.getElementById('lname').value, mob: document.getElementById('mobile').value, prof: document.getElementById('prof').value, bldg: '', st: '', ar: '', ct: document.getElementById('city').value, pin: document.getElementById('pin').value, cnt: 'India', subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value) });
+            btn.disabled = false; btn.innerText = "Complete Registration";
+            alert(rpcErr ? "Error: " + rpcErr.message : "Success! Redirecting to login...");
+            if(!rpcErr) toggleView();
         }
-
         async function handleLogin() {
-            const { error } = await client.auth.signInWithPassword({ 
-                email: document.getElementById('login-email').value, 
-                password: document.getElementById('login-pass').value 
-            });
+            const { error } = await client.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value });
             if (error) alert("Login Failed: " + error.message);
             else window.location.href = "dashboard.html";
         }
