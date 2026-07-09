@@ -51,28 +51,43 @@
             document.getElementById('view-'+view).classList.remove('hidden');
         }
 
-        async function loginUser() {
-            const btn = document.getElementById('btn-login');
-            btn.innerText = "Signing in...";
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-pass').value;
+       async function loginUser() {
+    const btn = document.getElementById('btn-login');
+    btn.innerText = "Signing in...";
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-pass').value;
 
-            const { data, error } = await client.auth.signInWithPassword({ email, password });
-            if (error) { alert(error.message); btn.innerText = "Sign In"; return; }
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) { alert(error.message); btn.innerText = "Sign In"; return; }
 
-            const { data: profile } = await client.from('profiles').select('status, role').eq('id', data.user.id).single();
-            
-            if (profile?.role === 'admin') {
-                loadAdmin();
-                showView('admin');
-            } else if (profile?.status === 'approved') {
-                alert("Login Successful! Redirecting to Dashboard...");
-            } else {
-                alert("Your account is pending Admin approval.");
-                client.auth.signOut();
-                btn.innerText = "Sign In";
-            }
-        }
+    // Fetch the profile
+    const { data: profile, error: pError } = await client
+        .from('profiles')
+        .select('status, role')
+        .eq('id', data.user.id)
+        .single();
+    
+    // Log the error to console if the profile wasn't found
+    if (pError || !profile) {
+        console.error("Profile fetch error:", pError);
+        alert("Account exists, but your profile record is missing. Please contact admin.");
+        client.auth.signOut();
+        btn.innerText = "Sign In";
+        return;
+    }
+
+    if (profile.role === 'admin') {
+        loadAdmin();
+        showView('admin');
+    } else if (profile.status === 'approved') {
+        alert("Login Successful!");
+        // Trigger dashboard
+    } else {
+        alert("Your account status is: " + profile.status + ". Please wait for approval.");
+        client.auth.signOut();
+        btn.innerText = "Sign In";
+    }
+}
 
         async function registerUser() {
             const btn = document.getElementById('btn-reg');
