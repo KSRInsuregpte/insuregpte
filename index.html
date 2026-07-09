@@ -49,46 +49,16 @@
     </div>
 
     <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
+         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
+        async function loadSubjects() {
+            const { data } = await client.from('subjects').select('code, title');
+            const container = document.getElementById('subject-list');
+            if (data) {
+                container.innerHTML = data.map(s => `<label class="flex items-center gap-2"><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
+            }
+        }
+        loadSubjects();
 
-         // Load Subjects into Checklist
-    async function loadSubjects() {
-        const { data } = await client.from('subjects').select('code, title');
-        const container = document.getElementById('subject-list');
-        container.innerHTML = data.map(s => `
-            <label><input type="checkbox" value="${s.code}"> ${s.title}</label>
-        `).join('');
-    }
-    loadSubjects();	
-
-        async function register() {
-        // 1. Password Validation Regex
-        const pass = document.getElementById('pass').value;
-        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\$@#&])[A-Za-z\d\$@#&]{8,15}$/;
-        if (!regex.test(pass)) return alert("Password does not meet policy requirements!");
-
-        // 2. Get Subjects
-        const selectedSubjects = Array.from(document.querySelectorAll('#subject-list input:checked'))
-                                      .map(cb => cb.value);
-        // 3. Register Flow
-        const { data, error } = await client.auth.signUp({ 
-            email: document.getElementById('email').value, 
-            password: pass 
-        });
-        
-        if (error) return alert(error.message);
-        await client.from('profiles').update({
-            first_name: document.getElementById('fname').value,
-            last_name: document.getElementById('lname').value,
-            mobile: document.getElementById('mobile').value,
-            profession: document.getElementById('profession').value,
-            city: document.getElementById('city').value,
-            pin_code: document.getElementById('pin').value,
-            interested_business_areas: selectedSubjects // Stores as JSON array
-        }).eq('id', data.user.id);
-
-        alert("Registration Successful. Please check your email for verification.");
-    }
         function showPopup(title, body) {
             document.getElementById('msg-title').innerText = title;
             document.getElementById('msg-body').innerText = body;
@@ -96,12 +66,12 @@
         }
 
         function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
-        
         function goBack() { document.getElementById('reg-form').reset(); toggleView(); }
 
+        // REMOVED the redundant 'register()' function that was causing conflicts
+        
         async function handleRegister() {
             const btn = document.getElementById('btn-register');
-            // Basic Validation
             const fields = ['fname', 'lname', 'email', 'pass', 'prof', 'mobile', 'city', 'pin', 'country'];
             for(let f of fields) { if(!document.getElementById(f).value.trim()) return showPopup('Warning', 'Please fill all mandatory fields *'); }
 
@@ -113,6 +83,7 @@
             });
             if (authError) { btn.disabled = false; btn.innerText = "Register"; return showPopup('Error', authError.message); }
 
+            // Using the RPC function defined in your database
             const { error: rpcError } = await client.rpc('save_user_profile', {
                 user_id: authData.user.id,
                 fname: document.getElementById('fname').value,
@@ -142,7 +113,7 @@
             });
             btn.disabled = false; btn.innerText = "Sign In";
             if (error) showPopup('Login Failed', 'Incorrect username or password. Please retry.');
-            else window.location.href = "/dashboard.html"; // Redirect to your next page
+            else window.location.href = "/dashboard.html";
         }
     </script>
 </body>
