@@ -1,125 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>InsureGPTE Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InsureGPTE Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-100 p-4">
+<div id="login-view" class="max-w-md mx-auto mt-20 p-8 bg-white rounded-xl shadow">
+<h2 class="text-2xl font-bold mb-4">InsureGPTE Login</h2>
+<input id="login-email" type="email" class="w-full p-3 border rounded mb-3" placeholder="Email">
+<input id="login-pass" type="password" class="w-full p-3 border rounded mb-3" placeholder="Password">
+<button id="btn-login" class="w-full bg-blue-600 text-white p-3 rounded" onclick="handleLogin()">Sign In</button>
+<p class="mt-4">New User? <button class="text-blue-600 underline" onclick="toggleView()">Register</button></p>
+</div>
 
-    <div id="login-view" class="max-w-md mx-auto mt-20 p-8 bg-white rounded-xl shadow-lg border">
-        <h2 class="text-2xl font-bold mb-6 text-center text-blue-800">InsureGPTE Login</h2>
-        <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-4 border rounded">
-        <input id="login-pass" type="password" placeholder="Password" class="w-full p-3 mb-6 border rounded">
-        <button id="btn-login" onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Sign In</button>
-        <p class="mt-4 text-center text-sm">New user? <button onclick="toggleView()" class="text-blue-600 font-bold underline">Register Here</button></p>
-    </div>
+<div id="reg-view" class="hidden max-w-2xl mx-auto mt-8 p-8 bg-white rounded-xl shadow">
+<h2 class="text-2xl font-bold mb-4">Registration</h2>
+<div class="grid grid-cols-2 gap-3">
+<input id="fname" class="p-2 border rounded" placeholder="First Name *">
+<input id="lname" class="p-2 border rounded" placeholder="Last Name *">
+<input id="email" type="email" class="p-2 border rounded col-span-2" placeholder="Email *">
+<input id="pass" type="password" class="p-2 border rounded col-span-2" placeholder="Password *">
+<select id="prof" class="p-2 border rounded col-span-2"><option value="">Profession *</option><option>Student</option><option>Working Professional</option></select>
+<input id="mobile" class="p-2 border rounded col-span-2" placeholder="Mobile *">
+<input id="bldg" class="p-2 border rounded col-span-2" placeholder="Building">
+<input id="street" class="p-2 border rounded col-span-2" placeholder="Street">
+<input id="area" class="p-2 border rounded col-span-2" placeholder="Area">
+<input id="city" class="p-2 border rounded" placeholder="City *">
+<input id="pin" class="p-2 border rounded" placeholder="PIN *">
+<input id="country" class="p-2 border rounded col-span-2" placeholder="Country *">
+<div class="col-span-2"><b>Subjects</b><div id="subject-list"></div></div>
+</div>
+<button id="btn-register" onclick="handleRegister()" class="w-full bg-green-600 text-white p-3 rounded mt-4">Register</button>
+<button onclick="goBack()" class="mt-3 underline">Back</button>
+</div>
 
-    <div id="reg-view" class="hidden max-w-2xl mx-auto my-10 p-8 bg-white rounded-xl shadow-lg border">
-        <h2 class="text-2xl font-bold mb-6 text-blue-800">New User Registration</h2>
-        <form id="reg-form" class="grid grid-cols-2 gap-4">
-            <input id="fname" placeholder="First Name *" class="p-3 border rounded">
-            <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
-            <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
-            <div class="relative col-span-2">
-                <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded">
-                <button type="button" onclick="showPopup('Password Policy', 'Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &')" class="absolute right-3 top-3 w-6 h-6 border-2 border-blue-500 rounded-full text-blue-500 font-bold text-xs">i</button>
-            </div>
-            <select id="prof" class="p-3 border rounded col-span-2"><option value="">Select Profession *</option><option>Student</option><option>Working Professional</option><option>House Wife</option></select>
-            <input id="mobile" placeholder="Mobile (ISD/STD) *" class="p-3 border rounded col-span-2">
-            <input id="bldg" placeholder="Building Name/No" class="p-3 border rounded col-span-2">
-            <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
-            <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
-            <input id="city" placeholder="City *" class="p-3 border rounded">
-            <input id="pin" placeholder="PIN Code *" class="p-3 border rounded">
-            <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
-            <div class="col-span-2"><label class="font-bold block mb-2">Interested Areas of Study:</label><div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div></div>
-        </form>
-        <button id="btn-register" onclick="handleRegister()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
-        <button onclick="goBack()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
-    </div>
+<div id="msg-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center">
+<div class="bg-white p-6 rounded shadow max-w-sm w-full">
+<h3 id="msg-title" class="font-bold text-xl mb-2"></h3>
+<p id="msg-body" class="mb-4"></p>
+<button class="bg-blue-600 text-white p-2 rounded w-full" onclick="document.getElementById('msg-modal').classList.add('hidden')">Close</button>
+</div></div>
 
-    <div id="msg-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg w-full max-w-sm shadow-2xl">
-            <h3 id="msg-title" class="font-bold text-xl mb-2 text-blue-800">Message</h3>
-            <p id="msg-body" class="mb-6">Content</p>
-            <button onclick="document.getElementById('msg-modal').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button>
-        </div>
-    </div>
+<script>
+const SUPABASE_URL="https://tvjsivuibvzybdbjtesq.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU";
 
-    <script>
-         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
-        async function loadSubjects() {
-            const { data } = await client.from('subjects').select('code, title');
-            const container = document.getElementById('subject-list');
-            if (data) {
-                container.innerHTML = data.map(s => `<label class="flex items-center gap-2"><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
-            }
-        }
-        loadSubjects();
+const client=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
-        function showPopup(title, body) {
-            document.getElementById('msg-title').innerText = title;
-            document.getElementById('msg-body').innerText = body;
-            document.getElementById('msg-modal').classList.remove('hidden');
-        }
+function showPopup(t,b){msg-title.innerText=t;msg-body.innerText=b;document.getElementById('msg-modal').classList.remove('hidden');}
+function toggleView(){login-view.classList.toggle('hidden');reg-view.classList.toggle('hidden');}
+function goBack(){document.getElementById('reg-view').classList.add('hidden');document.getElementById('login-view').classList.remove('hidden');}
 
-        function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
-        function goBack() { document.getElementById('reg-form').reset(); toggleView(); }
+async function loadSubjects(){
+ const {data,error}=await client.from('subjects').select('code,title');
+ if(error){showPopup("Error","Unable to load subjects.");return;}
+ subject-list.innerHTML=data.map(s=>`<label><input type="checkbox" value="${s.code}"> ${s.title}</label><br>`).join("");
+}
+loadSubjects();
 
-        // REMOVED the redundant 'register()' function that was causing conflicts
-        
-        async function handleRegister() {
-            const btn = document.getElementById('btn-register');
-            const fields = ['fname', 'lname', 'email', 'pass', 'prof', 'mobile', 'city', 'pin', 'country'];
-            for(let f of fields) { if(!document.getElementById(f).value.trim()) return showPopup('Warning', 'Please fill all mandatory fields *'); }
-
-            btn.disabled = true; btn.innerText = "Processing..."; btn.style.cursor = "wait";
-            
-            const { data: authData, error: authError } = await client.auth.signUp({ 
-                email: document.getElementById('email').value, 
-                password: document.getElementById('pass').value 
-            })
-   
-            if (authError) { btn.disabled = false; btn.innerText = "Register"; return showPopup('Error', authError.message); }
-
-            // Using the RPC function defined in your database
-            const { error: rpcError } = await client.rpc('save_user_profile', {
-                user_id: authData.user.id,
-                fname: document.getElementById('fname').value,
-                lname: document.getElementById('lname').value,
-                mob: document.getElementById('mobile').value,
-                prof: document.getElementById('prof').value,
-                bldg: document.getElementById('bldg').value,
-                st: document.getElementById('street').value,
-                ar: document.getElementById('area').value,
-                ct: document.getElementById('city').value,
-                pin: document.getElementById('pin').value,
-                cnt: document.getElementById('country').value,
-                subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
-                         // In your handleRegister() function, update the Success popup:
-else {
-    showPopup('Success', 'Registration successful! You are now ready to login.');
-});
-            });
-
-            btn.disabled = false; btn.innerText = "Register"; btn.style.cursor = "pointer";
-            if (rpcError) showPopup('Save Error', rpcError.message);
-            else showPopup('Success', 'Registration successful! Please check your email.');
-        }
-
-        async function handleLogin() {
-            const btn = document.getElementById('btn-login');
-            btn.disabled = true; btn.innerText = "Signing in...";
-            const { data, error } = await client.auth.signInWithPassword({ 
-                email: document.getElementById('login-email').value, 
-                password: document.getElementById('login-pass').value 
-            });
-            btn.disabled = false; btn.innerText = "Sign In";
-            if (error) showPopup('Login Failed', 'Incorrect username or password. Please retry.');
-            else window.location.href = "/dashboard.html";
-        }
-    </script>
-</body>
-</html>
+async function handleRegister(){
+ const email=document.getElementById('email').value.trim();
+ const pwd=document.getElementById('pass').value;
+ const registeredEmail=email;
+ const re=/^(?=.*[A-Z])(?=.*\d)(?=.*[$@#&])[A-Za-z\d$@#&]{8,15}$/;
+ if(!re.test(pwd)){showPopup("Invalid Password","Must be 8-15 chars with uppercase, number and $, @, # or &.");return;}
+ const {data,error}=await client.auth.signUp({email:email,password:pwd});
+ if(error){showPopup("Registration Failed",error.message);return;}
+ const {error:rpcError}=await client.rpc('save_user_profile',{
+ user_id:data.user.id,fname:fname.value,lname:lname.value,mob:mobile.value,prof:prof.value,bldg:bldg.value,st:street.value,ar:area.value,ct:city.value,pin:pin.value,cnt:country.value,
+ subjects:Array.from(document.querySelectorAll('#subject-list input:checked')).map(x=>x.value)
+ });
+ if(rpcError){showPopup("Profile Save Error",rpcError.message);return;}
+ document.querySelector('#reg-view form')?.reset();
+ showPopup("Success","Registration successful! You are now ready to login.");
+ goBack();
+ document.getElementById('login-email').value=registeredEmail;
+}
+async function handleLogin(){
+ const {error}=await client.auth.signInWithPassword({email:login-email.value,password:login-pass.value});
+ if(error){showPopup("Login Failed",error.message);return;}
+ location.href="./dashboard.html";
+}
+</script>
+</body></html>
