@@ -94,24 +94,33 @@
     btn.innerText = "Processing...";
     
     try {
-        const { data, error } = await client.auth.signUp({ 
-            email: document.getElementById('reg-email').value, 
-            password: document.getElementById('reg-pass').value 
-        });
-        if (error) throw error;
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-pass').value;
+        
+        // 1. Sign up
+        const { data, error: authError } = await client.auth.signUp({ email, password });
+        if (authError) throw authError;
 
-        // Use UPDATE instead of INSERT, because the trigger already created the row
-        await client.from('profiles').update({
-            first_name: document.getElementById('reg-fname').value,
-            last_name: document.getElementById('reg-lname').value,
-            mobile: document.getElementById('reg-mobile').value,
-            company_name: document.getElementById('reg-company').value,
-            address: document.getElementById('reg-address').value
-        }).eq('id', data.user.id);
+        // 2. Update profile (the trigger already created the row!)
+        const { error: updateError } = await client
+            .from('profiles')
+            .update({
+                first_name: document.getElementById('reg-fname').value,
+                last_name: document.getElementById('reg-lname').value,
+                mobile: document.getElementById('reg-mobile').value,
+                company_name: document.getElementById('reg-company').value,
+                address: document.getElementById('reg-address').value
+            })
+            .eq('id', data.user.id);
+            
+        if (updateError) throw updateError;
         
         alert("Registration successful! Admin will verify your profile.");
         showView('login');
-    } catch (err) { alert(err.message); btn.innerText = "Register & Submit"; }
+    } catch (err) { 
+        alert("Registration Error: " + err.message); 
+        btn.innerText = "Register & Submit"; 
+    }
 }
 
         async function loadAdmin() {
