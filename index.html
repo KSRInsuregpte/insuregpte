@@ -1,78 +1,90 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE | Secure Assessment</title>
+    <title>InsureGPTE Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .quiz-card { max-width: 600px; margin: 0 auto; }
-    </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800">
+<body class="bg-gray-50 p-6">
 
-    <div id="view-auth" class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 w-full max-w-md text-center">
-            <h1 class="text-3xl font-extrabold text-emerald-900 mb-2">InsureGPTE</h1>
-            <p class="text-slate-500 mb-8">Secure Assessment Portal</p>
-            <input id="email" type="email" placeholder="Email" class="w-full p-4 mb-4 border border-slate-200 rounded-xl">
-            <input id="password" type="password" placeholder="Password" class="w-full p-4 mb-6 border border-slate-200 rounded-xl">
-            <button onclick="handleAuth()" id="btn-auth" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold">Sign In</button>
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-bold mb-6">User Registration</h2>
+    
+    <div id="reg-form" class="grid grid-cols-2 gap-4">
+        <input id="fname" placeholder="First Name *" class="p-3 border rounded">
+        <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
+        <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
+        
+        <div class="col-span-2 relative">
+            <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded">
+            <span title="Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &" class="absolute right-3 top-3 cursor-help font-bold text-blue-600">i</span>
+        </div>
+
+        <select id="profession" class="p-3 border rounded col-span-2">
+            <option value="">Select Profession</option>
+            <option>Student</option><option>Working Professional</option><option>House Wife</option>
+        </select>
+        
+        <input id="mobile" placeholder="Mobile (with ISD code)" class="p-3 border rounded col-span-2">
+        <input id="bname" placeholder="Building Name" class="p-3 border rounded col-span-2">
+        <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
+        <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
+        <input id="city" placeholder="City *" class="p-3 border rounded">
+        <input id="pin" placeholder="PIN Code *" class="p-3 border rounded">
+        <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
+
+        <div class="col-span-2">
+            <label class="block mb-2 font-bold">Areas of Business Interested:</label>
+            <div id="subject-list" class="grid grid-cols-2 gap-2"></div>
         </div>
     </div>
 
-    <div id="view-main" class="hidden min-h-screen p-6">
-        <div class="max-w-4xl mx-auto">
-            <div id="dashboard-header" class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold">Training Dashboard</h2>
-                <button onclick="logout()" class="text-slate-400 hover:text-red-600">Logout</button>
-            </div>
-            <div id="subject-menu" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
-            <div id="quiz-area" class="quiz-card"></div>
-        </div>
-    </div>
+    <button onclick="register()" class="w-full mt-6 bg-blue-600 text-white py-3 rounded font-bold">Register</button>
+</div>
 
-    <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+<script>
+    const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+    // Load Subjects into Checklist
+    async function loadSubjects() {
+        const { data } = await client.from('subjects').select('code, title');
+        const container = document.getElementById('subject-list');
+        container.innerHTML = data.map(s => `
+            <label><input type="checkbox" value="${s.code}"> ${s.title}</label>
+        `).join('');
+    }
+    loadSubjects();
 
-        // View Management: Only shows what should be seen
-        function setView(view) {
-            document.getElementById('view-auth').classList.add('hidden');
-            document.getElementById('view-main').classList.add('hidden');
-            document.getElementById('view-' + view).classList.remove('hidden');
-        }
+    async function register() {
+        // 1. Password Validation Regex
+        const pass = document.getElementById('pass').value;
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\$@#&])[A-Za-z\d\$@#&]{8,15}$/;
+        if (!regex.test(pass)) return alert("Password does not meet policy requirements!");
 
-        client.auth.onAuthStateChange((event, session) => {
-            if (session) setView('main');
-            else setView('auth');
+        // 2. Get Subjects
+        const selectedSubjects = Array.from(document.querySelectorAll('#subject-list input:checked'))
+                                      .map(cb => cb.value);
+
+        // 3. Register Flow
+        const { data, error } = await client.auth.signUp({ 
+            email: document.getElementById('email').value, 
+            password: pass 
         });
+        
+        if (error) return alert(error.message);
 
-        async function loadQuiz(sid) {
-            // Clear dashboard header
-            document.getElementById('dashboard-header').classList.add('hidden');
-            document.getElementById('subject-menu').classList.add('hidden');
-            
-            const { data } = await client.from('questions').select('*').eq('subject_id', sid).order('random()').limit(50);
-            
-            document.getElementById('quiz-area').innerHTML = `
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                    ${data.map((q, i) => `
-                        <div class="mb-8 q-container" data-id="${q.id}">
-                            <p class="font-bold mb-4">${i+1}. ${q.question_text}</p>
-                            <div class="space-y-3">
-                                ${['a','b','c','d'].map(o => `
-                                    <label class="block p-4 border rounded-xl hover:border-emerald-500 cursor-pointer">
-                                        <input type="radio" name="q${q.id}" value="${q['option_'+o]}" class="mr-2"> ${q['option_'+o]}
-                                    </label>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                    <button onclick="submitQuiz()" class="w-full bg-emerald-900 text-white py-4 rounded-xl font-bold">Submit Assessment</button>
-                </div>
-            `;
-        }
-    </script>
+        await client.from('profiles').update({
+            first_name: document.getElementById('fname').value,
+            last_name: document.getElementById('lname').value,
+            mobile: document.getElementById('mobile').value,
+            profession: document.getElementById('profession').value,
+            city: document.getElementById('city').value,
+            pin_code: document.getElementById('pin').value,
+            interested_business_areas: selectedSubjects // Stores as JSON array
+        }).eq('id', data.user.id);
+
+        alert("Registration Successful. Please check your email for verification.");
+    }
+</script>
 </body>
 </html>
