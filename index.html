@@ -55,10 +55,9 @@
     </div>
 
     <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
-
-        
-        function toggleView() {
+        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
+  
+    function toggleView() {
             document.getElementById('login-view').classList.toggle('hidden');
             document.getElementById('reg-view').classList.toggle('hidden');
         }
@@ -71,23 +70,20 @@
         }
         loadSubjects();
 
+        function closeSuccess() {
+            document.getElementById('modal-success').classList.add('hidden');
+            toggleView(); // Switches back to Login View
+        }
+
         async function handleRegister() {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
             const subjects = Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value);
             
-            // 1. Sign up (This automatically triggers the Supabase confirmation email)
-            const { data, error } = await client.auth.signUp({ 
-                email: email, 
-                password: pass 
-            });
+            const { data, error } = await client.auth.signUp({ email, password: pass });
+            if (error) return alert("Error: " + error.message);
             
-            if (error) {
-                alert("Error: " + error.message);
-                return;
-            }
-            
-            // 2. Update profile with extra details
+  // 2. Update profile with extra details
             await client.from('profiles').update({ 
                 interested_business_areas: subjects,
                 first_name: document.getElementById('fname').value,
@@ -100,16 +96,16 @@
                 city: document.getElementById('city').value,
                 pin_code: document.getElementById('pin').value,
                 country: document.getElementById('country').value
-            }).eq('id', data.user.id);
-
-            // 3. Display the formal message on the screen
-            alert("Registration accepted, an email sent to your email id for confirmation");
-            
-            // 4. Redirect to Login
-            toggleView(); 
+            }).eq('id', data.user.id)
+             
+// 3. Display the formal message on the screen
+            // Show Centered Success Modal
+            document.getElementById('modal-success').classList.remove('hidden');
+	
+// 4. Redirect to Login
+            toggleView();
         }
-
-        async function handleLogin() {
+async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
             const { data, error } = await client.auth.signInWithPassword({ email, pass });
@@ -119,6 +115,7 @@
             if (p.status === 'approved') alert("Login Successful!");
             else alert("Account pending approval.");
         }
+        // Load subjects... (rest of your logic remains the same)
     </script>
 </body>
-</html>	
+</html>
