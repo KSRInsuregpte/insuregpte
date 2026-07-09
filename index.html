@@ -59,14 +59,27 @@
             const btn = document.getElementById('btn-register');
             btn.disabled = true; btn.innerText = "Processing...";
             
-            const { data: auth, error: authErr } = await client.auth.signUp({ 
-                email: document.getElementById('email').value, 
-                password: document.getElementById('pass').value 
-            });
-            if (authErr) { btn.disabled = false; btn.innerText = "Register"; alert(authErr.message); return; }
+           const { data: auth, error: authErr } = await client.auth.signUp({
+    email: document.getElementById('email').value,
+    password: document.getElementById('pass').value
+});
 
-            const { error: rpcErr } = await client.rpc('save_user_profile', {
-                user_id: auth.user.id,
+if (authErr) {
+    btn.disabled = false;
+    btn.innerText = "Register";
+    alert(authErr.message);
+    return;
+}
+
+if (!auth.user) {
+    btn.disabled = false;
+    btn.innerText = "Register";
+    alert("Registration failed. User record was not created.");
+    return;
+}
+
+const { error: rpcErr } = await client.rpc('save_user_profile', {
+    user_id: auth.user.id,
                 fname: document.getElementById('fname').value,
                 lname: document.getElementById('lname').value,
                 mob: document.getElementById('mobile').value,
@@ -79,7 +92,12 @@
             });
 
             btn.disabled = false; btn.innerText = "Register";
-            alert(rpcErr ? "Save Error: " + rpcErr.message : "Success! You can now login.");
+            if (rpcErr) {
+    console.error(rpcErr);
+    alert("Save Error: " + (rpcErr.message || JSON.stringify(rpcErr)));
+} else {
+    alert("Success! You can now login.");
+}
         }
 
         async function handleLogin() {
