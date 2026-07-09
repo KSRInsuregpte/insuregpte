@@ -80,7 +80,11 @@
             const { data: authData, error: authError } = await client.auth.signUp({ 
                 email: document.getElementById('email').value, 
                 password: document.getElementById('pass').value 
-            });
+            }
+            // In your handleRegister() function, update the Success popup:
+else {
+    showPopup('Success', 'Registration successful! You are now ready to login.');
+});
             if (authError) { btn.disabled = false; btn.innerText = "Register"; return showPopup('Error', authError.message); }
 
             // Using the RPC function defined in your database
