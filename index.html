@@ -22,103 +22,70 @@
             <input id="fname" placeholder="First Name *" class="p-3 border rounded">
             <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
             <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
-            <div class="relative col-span-2">
-                <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded">
-                <button type="button" onclick="showPopup('Password Policy', 'Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &')" class="absolute right-3 top-3 w-6 h-6 border-2 border-blue-500 rounded-full text-blue-500 font-bold text-xs">i</button>
-            </div>
+            <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded col-span-2">
             <select id="prof" class="p-3 border rounded col-span-2"><option value="">Select Profession *</option><option>Student</option><option>Working Professional</option><option>House Wife</option></select>
-            <input id="mobile" placeholder="Mobile (ISD/STD) *" class="p-3 border rounded col-span-2">
-            <input id="bldg" placeholder="Building Name/No" class="p-3 border rounded col-span-2">
-            <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
-            <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
+            <input id="mobile" placeholder="Mobile *" class="p-3 border rounded col-span-2">
             <input id="city" placeholder="City *" class="p-3 border rounded">
             <input id="pin" placeholder="PIN Code *" class="p-3 border rounded">
             <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
-            <div class="col-span-2"><label class="font-bold block mb-2">Interested Areas of Study:</label><div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div></div>
+            <div class="col-span-2"><label class="font-bold block mb-2">Interested Areas:</label><div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div></div>
         </form>
         <button id="btn-register" onclick="handleRegister()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
-        <button onclick="goBack()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
+        <button onclick="toggleView()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
     </div>
 
     <div id="msg-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg w-full max-w-sm shadow-2xl">
-            <h3 id="msg-title" class="font-bold text-xl mb-2 text-blue-800">Message</h3>
-            <p id="msg-body" class="mb-6">Content</p>
+        <div class="bg-white p-6 rounded-lg w-full max-w-sm text-center shadow-2xl">
+            <h3 id="msg-title" class="font-bold text-xl mb-4">Message</h3>
             <button onclick="document.getElementById('msg-modal').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button>
         </div>
     </div>
 
     <script>
-         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
+             const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU'); 
+        
         async function loadSubjects() {
             const { data } = await client.from('subjects').select('code, title');
-            const container = document.getElementById('subject-list');
-            if (data) {
-                container.innerHTML = data.map(s => `<label class="flex items-center gap-2"><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
-            }
+            document.getElementById('subject-list').innerHTML = data.map(s => `<label><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
         }
         loadSubjects();
 
-        function showPopup(title, body) {
-            document.getElementById('msg-title').innerText = title;
-            document.getElementById('msg-body').innerText = body;
-            document.getElementById('msg-modal').classList.remove('hidden');
-        }
-
         function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
-        function goBack() { document.getElementById('reg-form').reset(); toggleView(); }
 
-        // REMOVED the redundant 'register()' function that was causing conflicts
-        
         async function handleRegister() {
             const btn = document.getElementById('btn-register');
-            const fields = ['fname', 'lname', 'email', 'pass', 'prof', 'mobile', 'city', 'pin', 'country'];
-            for(let f of fields) { if(!document.getElementById(f).value.trim()) return showPopup('Warning', 'Please fill all mandatory fields *'); }
-
-            btn.disabled = true; btn.innerText = "Processing..."; btn.style.cursor = "wait";
+            btn.disabled = true; btn.innerText = "Processing...";
             
-            const { data: authData, error: authError } = await client.auth.signUp({ 
+            const { data: auth, error: authErr } = await client.auth.signUp({ 
                 email: document.getElementById('email').value, 
                 password: document.getElementById('pass').value 
-            })
-   
-            if (authError) { btn.disabled = false; btn.innerText = "Register"; return showPopup('Error', authError.message); }
+            });
+            if (authErr) { btn.disabled = false; btn.innerText = "Register"; alert(authErr.message); return; }
 
-            // Using the RPC function defined in your database
-            const { error: rpcError } = await client.rpc('save_user_profile', {
-                user_id: authData.user.id,
+            const { error: rpcErr } = await client.rpc('save_user_profile', {
+                user_id: auth.user.id,
                 fname: document.getElementById('fname').value,
                 lname: document.getElementById('lname').value,
                 mob: document.getElementById('mobile').value,
                 prof: document.getElementById('prof').value,
-                bldg: document.getElementById('bldg').value,
-                st: document.getElementById('street').value,
-                ar: document.getElementById('area').value,
+                bldg: '', st: '', ar: '',
                 ct: document.getElementById('city').value,
                 pin: document.getElementById('pin').value,
                 cnt: document.getElementById('country').value,
                 subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
-
             });
 
-            btn.disabled = false; btn.innerText = "Register"; btn.style.cursor = "pointer";
-            if (rpcError) showPopup('Save Error', rpcError.message);
-                            // In your handleRegister() function, update the Success popup:
-else {
-    showPopup('Success', 'Registration successful! You are now ready to login.');
-});
+            btn.disabled = false; btn.innerText = "Register";
+            alert(rpcErr ? "Save Error: " + rpcErr.message : "Success! You can now login.");
         }
 
         async function handleLogin() {
-            const btn = document.getElementById('btn-login');
-            btn.disabled = true; btn.innerText = "Signing in...";
-            const { data, error } = await client.auth.signInWithPassword({ 
+            const { error } = await client.auth.signInWithPassword({ 
                 email: document.getElementById('login-email').value, 
                 password: document.getElementById('login-pass').value 
             });
-            btn.disabled = false; btn.innerText = "Sign In";
-            if (error) showPopup('Login Failed', 'Incorrect username or password. Please retry.');
-            else window.location.href = "/dashboard.html";
+            if (error) alert("Login Failed: " + error.message);
+            else window.location.href = "dashboard.html";
         }
     </script>
 </body>
