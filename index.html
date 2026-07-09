@@ -6,45 +6,100 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-100 p-4">
 
-    <div id="view-login" class="max-w-sm mx-auto mt-20 p-8 bg-white rounded-2xl shadow-xl">
-        <h1 class="text-2xl font-bold mb-6 text-center text-blue-700">InsureGPTE Login</h1>
-        <input id="in-email" type="email" placeholder="Email" class="w-full p-3 mb-4 border rounded">
-        <input id="in-pass" type="password" placeholder="Password" class="w-full p-3 mb-6 border rounded">
-        <button onclick="login()" class="w-full bg-blue-600 text-white py-3 rounded font-bold">Sign In</button>
-        <p class="mt-4 text-center text-sm">New user? <button onclick="show('reg')" class="text-blue-600 underline">Register here</button></p>
+    <div id="login-view" class="max-w-md mx-auto mt-20 p-8 bg-white rounded-xl shadow-lg border">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-800">InsureGPTE Login</h2>
+        <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-4 border rounded">
+        <input id="login-pass" type="password" placeholder="Password" class="w-full p-3 mb-6 border rounded">
+        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Sign In</button>
+        <p class="mt-4 text-center text-sm">New user? <button onclick="toggleView()" class="text-blue-600 font-bold underline">Register Here</button></p>
     </div>
 
-    <div id="view-reg" class="hidden max-w-2xl mx-auto my-10 p-8 bg-white rounded-2xl shadow-xl">
-        <h2 class="text-xl font-bold mb-6">User Registration</h2>
+    <div id="reg-view" class="hidden max-w-2xl mx-auto my-10 p-8 bg-white rounded-xl shadow-lg border">
+        <h2 class="text-2xl font-bold mb-6 text-blue-800">New User Registration</h2>
         <div class="grid grid-cols-2 gap-4">
-            <div class="col-span-2 relative">
-                <input id="reg-pass" type="password" placeholder="Password" class="w-full p-3 border rounded pr-10">
-                <button onclick="toggleModal(true)" class="absolute right-3 top-3 w-6 h-6 flex items-center justify-center rounded-full border-2 border-blue-600 text-blue-600 font-bold">i</button>
+            <input id="fname" placeholder="First Name *" class="p-3 border rounded">
+            <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
+            <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
+            
+            <div class="relative col-span-2">
+                <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded">
+                <button onclick="document.getElementById('modal').classList.remove('hidden')" class="absolute right-3 top-3 w-6 h-6 border-2 border-blue-500 rounded-full text-blue-500 font-bold text-xs">i</button>
             </div>
-            <input id="fname" placeholder="First Name" class="p-3 border rounded">
-            <input id="lname" placeholder="Last Name" class="p-3 border rounded">
+
+            <select id="prof" class="p-3 border rounded col-span-2"><option>Student</option><option>Working Professional</option><option>House Wife</option></select>
+            <input id="mobile" placeholder="Mobile (ISD/STD) *" class="p-3 border rounded col-span-2">
+            <input id="bldg" placeholder="Building Name/No" class="p-3 border rounded col-span-2">
+            <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
+            <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
+            <input id="city" placeholder="City *" class="p-3 border rounded">
+            <input id="pin" placeholder="PIN Code *" class="p-3 border rounded">
+            <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
+
+            <div class="col-span-2">
+                <label class="font-bold block mb-2">Areas of Business Interested:</label>
+                <div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div>
             </div>
-        <button onclick="register()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
-        <button onclick="show('login')" class="w-full mt-4 text-gray-500 underline">Back to Login</button>
+        </div>
+        <button onclick="handleRegister()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
+        <button onclick="toggleView()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
     </div>
 
     <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg max-w-sm">
-            <h3 class="font-bold mb-2">Password Policy</h3>
-            <p class="text-sm text-gray-600 mb-4">Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &</p>
-            <button onclick="toggleModal(false)" class="w-full bg-gray-200 py-2 rounded">Close</button>
+        <div class="bg-white p-6 rounded-lg w-80 shadow-2xl">
+            <h3 class="font-bold text-lg mb-2">Password Policy</h3>
+            <p class="text-sm mb-4">Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &</p>
+            <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button>
         </div>
     </div>
 
     <script>
-            const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
-  
-        function show(v) { document.getElementById('view-login').className = (v === 'login' ? 'max-w-sm mx-auto mt-20 p-8 bg-white rounded-2xl shadow-xl' : 'hidden'); document.getElementById('view-reg').className = (v === 'reg' ? 'max-w-2xl mx-auto my-10 p-8 bg-white rounded-2xl shadow-xl' : 'hidden'); }
-        function toggleModal(show) { document.getElementById('modal').className = (show ? 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4' : 'hidden'); }
-        
-        // ... (your existing login/register logic)
+        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+        // UI Navigation
+        function toggleView() {
+            document.getElementById('login-view').classList.toggle('hidden');
+            document.getElementById('reg-view').classList.toggle('hidden');
+        }
+
+        // Load Subjects
+        async function loadSubjects() {
+            const { data } = await client.from('subjects').select('code, title');
+            document.getElementById('subject-list').innerHTML = data.map(s => `
+                <label class="flex items-center gap-2"><input type="checkbox" value="${s.code}"> ${s.title}</label>
+            `).join('');
+        }
+        loadSubjects();
+
+        // Registration Flow
+        async function handleRegister() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            const subjects = Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value);
+            
+            const { data, error } = await client.auth.signUp({ 
+                email: email, 
+                password: pass,
+                options: { data: { first_name: document.getElementById('fname').value } }
+            });
+            if (error) return alert(error.message);
+            
+            // Update profile with subjects
+            await client.from('profiles').update({ interested_business_areas: subjects }).eq('id', data.user.id);
+            alert("Registration successful! Check your email to verify.");
+        }
+
+        // Login Flow
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const { data, error } = await client.auth.signInWithPassword({ email, pass });
+            if (error) return alert(error.message);
+            
+            const { data: p } = await client.from('profiles').select('status').eq('id', data.user.id).single();
+            if (p.status === 'approved') alert("Login Successful!");
+            else alert("Account pending approval.");
+        }
     </script>
 </body>
 </html>
