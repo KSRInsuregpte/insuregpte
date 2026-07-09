@@ -18,14 +18,14 @@
 
     <div id="reg-view" class="hidden max-w-2xl mx-auto my-10 p-8 bg-white rounded-xl shadow-lg border">
         <h2 class="text-2xl font-bold mb-6 text-blue-800">New User Registration</h2>
-        <div class="grid grid-cols-2 gap-4">
+        <form id="reg-form" class="grid grid-cols-2 gap-4">
             <input id="fname" placeholder="First Name *" class="p-3 border rounded">
             <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
             <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
             
             <div class="relative col-span-2">
                 <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded">
-                <button onclick="document.getElementById('modal-info').classList.remove('hidden')" class="absolute right-3 top-3 w-6 h-6 border-2 border-blue-500 rounded-full text-blue-500 font-bold text-xs">i</button>
+                <button type="button" onclick="document.getElementById('modal-info').classList.remove('hidden')" class="absolute right-3 top-3 w-6 h-6 border-2 border-blue-500 rounded-full text-blue-500 font-bold text-xs">i</button>
             </div>
 
             <select id="prof" class="p-3 border rounded col-span-2"><option value="">Select Profession *</option><option>Student</option><option>Working Professional</option><option>House Wife</option></select>
@@ -41,8 +41,8 @@
                 <label class="font-bold block mb-2">Interested Areas of Study:</label>
                 <div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div>
             </div>
-        </div>
-        <button onclick="handleRegister()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
+        </form>
+        <button id="btn-register" onclick="handleRegister()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
         <button onclick="toggleView()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
     </div>
 
@@ -63,8 +63,7 @@
     </div>
 
     <script>
-                const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
-        
+        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
         function toggleView() {
             document.getElementById('login-view').classList.toggle('hidden');
             document.getElementById('reg-view').classList.toggle('hidden');
@@ -72,7 +71,8 @@
 
         function closeSuccess() {
             document.getElementById('modal-success').classList.add('hidden');
-            toggleView(); 
+            document.getElementById('reg-form').reset();
+            toggleView();
         }
 
         async function loadSubjects() {
@@ -83,16 +83,42 @@
         }
         loadSubjects();
 
-        async function handleRegister() {
+
+
+async function handleRegister() {
+            // 1. Get the button element
+            const btn = document.getElementById('btn-register');
+            
+            // 2. Disable button and show loading state
+            btn.disabled = true;
+            btn.style.cursor = "wait";
+            btn.style.opacity = "0.5";
+            btn.innerText = "Processing, please wait...";
+            
             const email = document.getElementById('email').value;
             const pass = document.getElementById('pass').value;
             const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\$@#&])[A-Za-z\d\$@#&]{8,15}$/;
-            if (!regex.test(pass)) return alert("Password policy not met!");
             
+            if (!regex.test(pass)) { 
+                // Re-enable if validation fails
+                btn.disabled = false;
+                btn.style.cursor = "pointer";
+                btn.style.opacity = "1";
+                btn.innerText = "Register";
+                return alert("Password does not meet requirements!"); 
+            }
+
             const subjects = Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value);
             
             const { data, error } = await client.auth.signUp({ email, password: pass });
-            if (error) return alert("Error: " + error.message);
+            
+            if (error) { 
+                btn.disabled = false;
+                btn.style.cursor = "pointer";
+                btn.style.opacity = "1";
+                btn.innerText = "Register";
+                return alert("Error: " + error.message); 
+            }
             
             await client.from('profiles').update({ 
                 interested_business_areas: subjects,
@@ -108,6 +134,7 @@
                 country: document.getElementById('country').value
             }).eq('id', data.user.id);
 
+            // 3. Show Success and keep button disabled until they close the modal
             document.getElementById('modal-success').classList.remove('hidden');
         }
 
@@ -116,7 +143,6 @@
             const pass = document.getElementById('login-pass').value;
             const { data, error } = await client.auth.signInWithPassword({ email, pass });
             if (error) return alert(error.message);
-            
             const { data: p } = await client.from('profiles').select('status').eq('id', data.user.id).single();
             if (p?.status === 'approved') alert("Login Successful!");
             else alert("Account pending approval.");
