@@ -1,33 +1,90 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE - New Version</title>
+    <title>InsureGPTE Registration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="bg-red-600 text-white text-center py-2 font-bold">VERCEL DEBUG: NEW VERSION LOADED</div>
+<body class="bg-gray-50 p-6">
 
-    <div id="view-login" class="mt-20 text-center">
-        <h1 class="text-3xl font-bold">InsureGPTE Portal</h1>
-        <input id="login-email" type="email" placeholder="Email" class="block mx-auto mt-4 p-2 border">
-        <input id="login-pass" type="password" placeholder="Password" class="block mx-auto mt-2 p-2 border">
-        <button onclick="loginUser()" class="mt-4 bg-blue-500 text-white px-6 py-2">Sign In</button>
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-bold mb-6">User Registration</h2>
+    
+    <div id="reg-form" class="grid grid-cols-2 gap-4">
+        <input id="fname" placeholder="First Name *" class="p-3 border rounded">
+        <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
+        <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
+        
+        <div class="col-span-2 relative">
+            <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded">
+            <span title="Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &" class="absolute right-3 top-3 cursor-help font-bold text-blue-600">i</span>
+        </div>
+
+        <select id="profession" class="p-3 border rounded col-span-2">
+            <option value="">Select Profession</option>
+            <option>Student</option><option>Working Professional</option><option>House Wife</option>
+        </select>
+        
+        <input id="mobile" placeholder="Mobile (with ISD code)" class="p-3 border rounded col-span-2">
+        <input id="bname" placeholder="Building Name" class="p-3 border rounded col-span-2">
+        <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
+        <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
+        <input id="city" placeholder="City *" class="p-3 border rounded">
+        <input id="pin" placeholder="PIN Code *" class="p-3 border rounded">
+        <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
+
+        <div class="col-span-2">
+            <label class="block mb-2 font-bold">Areas of Business Interested:</label>
+            <div id="subject-list" class="grid grid-cols-2 gap-2"></div>
+        </div>
     </div>
 
-    <script>
-        console.log("Script version: 2026-07-09-A");
-            const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+    <button onclick="register()" class="w-full mt-6 bg-blue-600 text-white py-3 rounded font-bold">Register</button>
+</div>
 
+<script>
+    const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+    // Load Subjects into Checklist
+    async function loadSubjects() {
+        const { data } = await client.from('subjects').select('code, title');
+        const container = document.getElementById('subject-list');
+        container.innerHTML = data.map(s => `
+            <label><input type="checkbox" value="${s.code}"> ${s.title}</label>
+        `).join('');
+    }
+    loadSubjects();
 
-        async function loginUser() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const { data, error } = await client.auth.signInWithPassword({ email, pass });
-            if (error) { alert("Login failed: " + error.message); }
-            else { alert("Login successful!"); }
-        }
-    </script>
+    async function register() {
+        // 1. Password Validation Regex
+        const pass = document.getElementById('pass').value;
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\$@#&])[A-Za-z\d\$@#&]{8,15}$/;
+        if (!regex.test(pass)) return alert("Password does not meet policy requirements!");
+
+        // 2. Get Subjects
+        const selectedSubjects = Array.from(document.querySelectorAll('#subject-list input:checked'))
+                                      .map(cb => cb.value);
+
+        // 3. Register Flow
+        const { data, error } = await client.auth.signUp({ 
+            email: document.getElementById('email').value, 
+            password: pass 
+        });
+        
+        if (error) return alert(error.message);
+
+        await client.from('profiles').update({
+            first_name: document.getElementById('fname').value,
+            last_name: document.getElementById('lname').value,
+            mobile: document.getElementById('mobile').value,
+            profession: document.getElementById('profession').value,
+            city: document.getElementById('city').value,
+            pin_code: document.getElementById('pin').value,
+            interested_business_areas: selectedSubjects // Stores as JSON array
+        }).eq('id', data.user.id);
+
+        alert("Registration Successful. Please check your email for verification.");
+    }
+</script>
 </body>
 </html>
