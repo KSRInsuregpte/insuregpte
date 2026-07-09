@@ -12,7 +12,7 @@
         <h2 class="text-2xl font-bold mb-6 text-center text-blue-800">InsureGPTE Login</h2>
         <input id="login-email" type="email" placeholder="Email" class="w-full p-3 mb-4 border rounded">
         <input id="login-pass" type="password" placeholder="Password" class="w-full p-3 mb-6 border rounded">
-        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Sign In</button>
+        <button id="btn-login" onclick="handleLogin()" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700">Sign In</button>
         <p class="mt-4 text-center text-sm">New user? <button onclick="toggleView()" class="text-blue-600 font-bold underline">Register Here</button></p>
     </div>
 
@@ -22,12 +22,10 @@
             <input id="fname" placeholder="First Name *" class="p-3 border rounded">
             <input id="lname" placeholder="Last Name *" class="p-3 border rounded">
             <input id="email" placeholder="Email *" class="p-3 border rounded col-span-2">
-            
             <div class="relative col-span-2">
                 <input id="pass" type="password" placeholder="Password *" class="w-full p-3 border rounded">
-                <button type="button" onclick="document.getElementById('modal-info').classList.remove('hidden')" class="absolute right-3 top-3 w-6 h-6 border-2 border-blue-500 rounded-full text-blue-500 font-bold text-xs">i</button>
+                <button type="button" onclick="showPopup('Password Policy', 'Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &')" class="absolute right-3 top-3 w-6 h-6 border-2 border-blue-500 rounded-full text-blue-500 font-bold text-xs">i</button>
             </div>
-
             <select id="prof" class="p-3 border rounded col-span-2"><option value="">Select Profession *</option><option>Student</option><option>Working Professional</option><option>House Wife</option></select>
             <input id="mobile" placeholder="Mobile (ISD/STD) *" class="p-3 border rounded col-span-2">
             <input id="bldg" placeholder="Building Name/No" class="p-3 border rounded col-span-2">
@@ -36,81 +34,78 @@
             <input id="city" placeholder="City *" class="p-3 border rounded">
             <input id="pin" placeholder="PIN Code *" class="p-3 border rounded">
             <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
-
-            <div class="col-span-2">
-                <label class="font-bold block mb-2">Interested Areas of Study:</label>
-                <div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div>
-            </div>
+            <div class="col-span-2"><label class="font-bold block mb-2">Interested Areas of Study:</label><div id="subject-list" class="grid grid-cols-2 gap-2 text-sm"></div></div>
         </form>
         <button id="btn-register" onclick="handleRegister()" class="w-full mt-6 bg-green-600 text-white py-3 rounded font-bold">Register</button>
-        <button onclick="toggleView()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
+        <button onclick="goBack()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
     </div>
 
-    <div id="modal-success" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"><div class="bg-white p-8 rounded-lg w-full max-w-sm text-center shadow-2xl"><h3 class="font-bold text-xl mb-4 text-green-600">Success!</h3><p class="mb-6">Registration accepted, an email sent to your email id for confirmation.</p><button onclick="closeSuccess()" class="w-full bg-blue-600 text-white py-2 rounded">OK</button></div></div>
-    <div id="modal-info" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"><div class="bg-white p-6 rounded-lg w-80 shadow-2xl"><h3 class="font-bold text-lg mb-2">Password Policy</h3><p class="text-sm mb-4">Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &</p><button onclick="document.getElementById('modal-info').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button></div></div>
+    <div id="msg-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg w-full max-w-sm shadow-2xl">
+            <h3 id="msg-title" class="font-bold text-xl mb-2 text-blue-800">Message</h3>
+            <p id="msg-body" class="mb-6">Content</p>
+            <button onclick="document.getElementById('msg-modal').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button>
+        </div>
+    </div>
 
     <script>
-const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
-        function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
-        function closeSuccess() { document.getElementById('modal-success').classList.add('hidden'); document.getElementById('reg-form').reset(); toggleView(); }
-
-        async function loadSubjects() {
-            const { data } = await client.from('subjects').select('code, title');
-            document.getElementById('subject-list').innerHTML = data.map(s => `<label class="flex items-center gap-2"><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
+        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
+ 
+        
+        function showPopup(title, body) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-body').innerText = body;
+            document.getElementById('msg-modal').classList.remove('hidden');
         }
-        loadSubjects();
 
-async function handleRegister() {
-    const btn = document.getElementById('btn-register');
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('pass').value;
+        function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
+        
+        function goBack() { document.getElementById('reg-form').reset(); toggleView(); }
 
-    btn.disabled = true; btn.innerText = "Processing...";
+        async function handleRegister() {
+            const btn = document.getElementById('btn-register');
+            // Basic Validation
+            const fields = ['fname', 'lname', 'email', 'pass', 'prof', 'mobile', 'city', 'pin', 'country'];
+            for(let f of fields) { if(!document.getElementById(f).value.trim()) return showPopup('Warning', 'Please fill all mandatory fields *'); }
 
-    // 1. SIGN UP
-    const { data: authData, error: authError } = await client.auth.signUp({ email, password: pass });
-    if (authError) { 
-        console.error("Auth Error:", authError); 
-        alert("Auth Failed: " + authError.message); 
-        btn.disabled = false; btn.innerText = "Register"; return; 
-    }
+            btn.disabled = true; btn.innerText = "Processing..."; btn.style.cursor = "wait";
+            
+            const { data: authData, error: authError } = await client.auth.signUp({ 
+                email: document.getElementById('email').value, 
+                password: document.getElementById('pass').value 
+            });
+            if (authError) { btn.disabled = false; btn.innerText = "Register"; return showPopup('Error', authError.message); }
 
-    console.log("Auth Success. User ID:", authData.user.id);
+            const { error: rpcError } = await client.rpc('save_user_profile', {
+                user_id: authData.user.id,
+                fname: document.getElementById('fname').value,
+                lname: document.getElementById('lname').value,
+                mob: document.getElementById('mobile').value,
+                prof: document.getElementById('prof').value,
+                bldg: document.getElementById('bldg').value,
+                st: document.getElementById('street').value,
+                ar: document.getElementById('area').value,
+                ct: document.getElementById('city').value,
+                pin: document.getElementById('pin').value,
+                cnt: document.getElementById('country').value,
+                subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
+            });
 
-    // 2. PREPARE DATA
-    const profileData = {
-        id: authData.user.id,
-        first_name: document.getElementById('fname').value,
-        last_name: document.getElementById('lname').value,
-        mobile: document.getElementById('mobile').value,
-        profession: document.getElementById('prof').value,
-        city: document.getElementById('city').value
-    };
+            btn.disabled = false; btn.innerText = "Register"; btn.style.cursor = "pointer";
+            if (rpcError) showPopup('Save Error', rpcError.message);
+            else showPopup('Success', 'Registration successful! Please check your email.');
+        }
 
-    console.log("Attempting to save:", profileData);
-
-// REPLACE your old upsert block with this:
-const { error: rpcError } = await client.rpc('save_user_profile', {
-    user_id: authData.user.id,
-    fname: document.getElementById('fname').value,
-    lname: document.getElementById('lname').value,
-    mob: document.getElementById('mobile').value,
-    prof: document.getElementById('prof').value,
-    bldg: document.getElementById('bldg').value,
-    st: document.getElementById('street').value,
-    ar: document.getElementById('area').value,
-    ct: document.getElementById('city').value,
-    pin: document.getElementById('pin').value,
-    cnt: document.getElementById('country').value,
-    subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
-});
-
-if (rpcError) throw rpcError;
-
-async function handleLogin() {
-            const { data, error } = await client.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value });
-            if (error) return alert(error.message);
-            alert("Login Successful!");
+        async function handleLogin() {
+            const btn = document.getElementById('btn-login');
+            btn.disabled = true; btn.innerText = "Signing in...";
+            const { data, error } = await client.auth.signInWithPassword({ 
+                email: document.getElementById('login-email').value, 
+                password: document.getElementById('login-pass').value 
+            });
+            btn.disabled = false; btn.innerText = "Sign In";
+            if (error) showPopup('Login Failed', 'Incorrect username or password. Please retry.');
+            else window.location.href = "/dashboard.html"; // Redirect to your next page
         }
     </script>
 </body>
