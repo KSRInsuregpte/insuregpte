@@ -46,62 +46,55 @@
         <button onclick="toggleView()" class="w-full mt-2 text-gray-500 underline">Back to Login</button>
     </div>
 
-    <div id="modal-success" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-lg w-full max-w-sm text-center shadow-2xl">
-            <h3 class="font-bold text-xl mb-4 text-green-600">Registration Successful!</h3>
-            <p class="mb-6">Registration accepted, an email sent to your email id for confirmation.</p>
-            <button onclick="closeSuccess()" class="w-full bg-blue-600 text-white py-2 rounded">OK</button>
-        </div>
-    </div>
-
-    <div id="modal-info" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg w-80 shadow-2xl">
-            <h3 class="font-bold text-lg mb-2">Password Policy</h3>
-            <p class="text-sm mb-4">Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &</p>
-            <button onclick="document.getElementById('modal-info').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button>
-        </div>
-    </div>
+    <div id="modal-success" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"><div class="bg-white p-8 rounded-lg w-full max-w-sm text-center shadow-2xl"><h3 class="font-bold text-xl mb-4 text-green-600">Success!</h3><p class="mb-6">Registration accepted, an email sent to your email id for confirmation.</p><button onclick="closeSuccess()" class="w-full bg-blue-600 text-white py-2 rounded">OK</button></div></div>
+    <div id="modal-info" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"><div class="bg-white p-6 rounded-lg w-80 shadow-2xl"><h3 class="font-bold text-lg mb-2">Password Policy</h3><p class="text-sm mb-4">Min 8-15 chars, 1 Capital, 1 Number, Special: $, @, #, &</p><button onclick="document.getElementById('modal-info').classList.add('hidden')" class="w-full bg-blue-600 text-white py-2 rounded">Close</button></div></div>
 
     <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
-        function toggleView() {
-            document.getElementById('login-view').classList.toggle('hidden');
-            document.getElementById('reg-view').classList.toggle('hidden');
-        }
-
-        function closeSuccess() {
-            document.getElementById('modal-success').classList.add('hidden');
-            document.getElementById('reg-form').reset();
-            toggleView();
-        }
+const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
+        function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
+        function closeSuccess() { document.getElementById('modal-success').classList.add('hidden'); document.getElementById('reg-form').reset(); toggleView(); }
 
         async function loadSubjects() {
             const { data } = await client.from('subjects').select('code, title');
-            document.getElementById('subject-list').innerHTML = data.map(s => `
-                <label class="flex items-center gap-2"><input type="checkbox" value="${s.code}"> ${s.title}</label>
-            `).join('');
+            document.getElementById('subject-list').innerHTML = data.map(s => `<label class="flex items-center gap-2"><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
         }
         loadSubjects();
 
+        async function handleRegister() {
+            const btn = document.getElementById('btn-register');
+            btn.disabled = true; btn.innerText = "Processing..."; btn.style.cursor = "wait";
+            
+            const { data: authData, error: authError } = await client.auth.signUp({ 
+                email: document.getElementById('email').value, 
+                password: document.getElementById('pass').value 
+            });
+            if (authError) { btn.disabled = false; btn.innerText = "Register"; return alert(authError.message); }
 
+            // CRITICAL FIX: Explicitly setting the ID for the database
+            const { error: dbError } = await client.from('profiles').upsert({ 
+                id: authData.user.id, // Explicit ID link
+                first_name: document.getElementById('fname').value,
+                last_name: document.getElementById('lname').value,
+                mobile: document.getElementById('mobile').value,
+                profession: document.getElementById('prof').value,
+                building_name: document.getElementById('bldg').value,
+                street_name: document.getElementById('street').value,
+                area: document.getElementById('area').value,
+                city: document.getElementById('city').value,
+                pin_code: document.getElementById('pin').value,
+                country: document.getElementById('country').value,
+                interested_business_areas: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
+            });
 
-async function handleRegister() { const btn = document.getElementById('btn-register'); btn.disabled = true; btn.innerText = "Processing..."; // 1. Auth Sign Up const { data: authData, error: authError } = await client.auth.signUp({ email: document.getElementById('email').value, password: document.getElementById('pass').value }); if (authError) { alert(authError.message); btn.disabled = false; return; } // 2. Prepare Data Object (Matching SQL column names exactly) const profileData = { id: authData.user.id, first_name: document.getElementById('fname').value, last_name: document.getElementById('lname').value, mobile: document.getElementById('mobile').value, profession: document.getElementById('prof').value, building_name: document.getElementById('bldg').value, street_name: document.getElementById('street').value, area: document.getElementById('area').value, city: document.getElementById('city').value, pin_code: document.getElementById('pin').value, country: document.getElementById('country').value, interested_business_areas: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value) }; // 3. Upsert with explicit check const { error: dbError } = await client.from('profiles').upsert(profileData); if (dbError) { console.error("DB Error:", dbError); alert("Data failed to save: " + dbError.message); btn.disabled = false; } else { document.getElementById('modal-success').classList.remove('hidden'); } }
+            if (dbError) { alert("Data save error: " + dbError.message); btn.disabled = false; btn.innerText = "Register"; }
+            else { document.getElementById('modal-success').classList.remove('hidden'); btn.disabled = false; btn.innerText = "Register"; }
+        }
 
         async function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const { data, error } = await client.auth.signInWithPassword({ email, pass });
+            const { data, error } = await client.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value });
             if (error) return alert(error.message);
-            const { data: p } = await client.from('profiles').select('status').eq('id', data.user.id).single();
-            if (p?.status === 'approved') alert("Login Successful!");
-            else alert("Account pending approval.");
+            alert("Login Successful!");
         }
     </script>
 </body>
 </html>
-
-
-
-
-
-	
