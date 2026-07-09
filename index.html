@@ -64,11 +64,9 @@ const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supaba
             const btn = document.getElementById('btn-register');
             btn.disabled = true; btn.innerText = "Processing..."; btn.style.cursor = "wait";
             
-            const { data: authData, error: authError } = await client.auth.signUp({ 
-                email: document.getElementById('email').value, 
-                password: document.getElementById('pass').value 
-            });
-            if (authError) { btn.disabled = false; btn.innerText = "Register"; return alert(authError.message); }
+// Temporarily comment out the reliance on verification during your dev cycle: const { data: authData, error: authError } = await client.auth.signUp({ email, password: pass, options: { emailRedirectTo: 'YOUR_SITE_URL' // Ensure this is set } });
+
+if (authError) { btn.disabled = false; btn.innerText = "Register"; return alert(authError.message); }
 
             // CRITICAL FIX: Explicitly setting the ID for the database
             const { error: dbError } = await client.from('profiles').upsert({ 
