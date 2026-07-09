@@ -86,56 +86,61 @@
 
 
 async function handleRegister() {
-            // 1. Get the button element
+            // 1. Validation
+            const requiredFields = ['fname', 'lname', 'email', 'pass', 'prof', 'mobile', 'city', 'pin', 'country'];
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    alert("Please fill all mandatory fields marked with *.");
+                    field.focus();
+                    return;
+                }
+            }
+
             const btn = document.getElementById('btn-register');
-            
-            // 2. Disable button and show loading state
             btn.disabled = true;
             btn.style.cursor = "wait";
             btn.style.opacity = "0.5";
             btn.innerText = "Processing, please wait...";
             
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\$@#&])[A-Za-z\d\$@#&]{8,15}$/;
-            
-            if (!regex.test(pass)) { 
-                // Re-enable if validation fails
+            try {
+                // 2. Auth Sign Up
+                const { data: authData, error: authError } = await client.auth.signUp({ 
+                    email: document.getElementById('email').value, 
+                    password: document.getElementById('pass').value 
+                });
+                if (authError) throw authError;
+
+                // 3. DATABASE SAVE (The crucial part)
+                // We use 'await' here to ensure the code stops and waits until Supabase confirms the save.
+                const { error: dbError } = await client.from('profiles').update({ 
+                    interested_business_areas: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value),
+                    first_name: document.getElementById('fname').value,
+                    last_name: document.getElementById('lname').value,
+                    mobile: document.getElementById('mobile').value,
+                    profession: document.getElementById('prof').value,
+                    building_name: document.getElementById('bldg').value,
+                    street_name: document.getElementById('street').value,
+                    area: document.getElementById('area').value,
+                    city: document.getElementById('city').value,
+                    pin_code: document.getElementById('pin').value,
+                    country: document.getElementById('country').value
+                }).eq('id', authData.user.id);
+
+                if (dbError) throw dbError; // If this fails, it jumps to the 'catch' block
+
+                // 4. Success: Only reached if Auth AND Database save were perfect
+                document.getElementById('modal-success').classList.remove('hidden');
+
+            } catch (err) {
+                // Error handling: Button is restored, and user sees the error
+                const btn = document.getElementById('btn-register');
                 btn.disabled = false;
                 btn.style.cursor = "pointer";
                 btn.style.opacity = "1";
                 btn.innerText = "Register";
-                return alert("Password does not meet requirements!"); 
+                alert("Registration failed: " + err.message);
             }
-
-            const subjects = Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value);
-            
-            const { data, error } = await client.auth.signUp({ email, password: pass });
-            
-            if (error) { 
-                btn.disabled = false;
-                btn.style.cursor = "pointer";
-                btn.style.opacity = "1";
-                btn.innerText = "Register";
-                return alert("Error: " + error.message); 
-            }
-            
-            await client.from('profiles').update({ 
-                interested_business_areas: subjects,
-                first_name: document.getElementById('fname').value,
-                last_name: document.getElementById('lname').value,
-                mobile: document.getElementById('mobile').value,
-                profession: document.getElementById('prof').value,
-                building_name: document.getElementById('bldg').value,
-                street_name: document.getElementById('street').value,
-                area: document.getElementById('area').value,
-                city: document.getElementById('city').value,
-                pin_code: document.getElementById('pin').value,
-                country: document.getElementById('country').value
-            }).eq('id', data.user.id);
-
-            // 3. Show Success and keep button disabled until they close the modal
-            document.getElementById('modal-success').classList.remove('hidden');
         }
 
         async function handleLogin() {
