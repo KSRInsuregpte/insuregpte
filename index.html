@@ -27,9 +27,12 @@
             <input id="pass" type="password" placeholder="Password" class="p-4 border rounded-xl md:col-span-2">
             <select id="prof" class="p-4 border rounded-xl md:col-span-2 bg-white"><option value="">Select Profession</option><option>Student</option><option>Working Professional</option></select>
             <input id="mobile" placeholder="Mobile Number" class="p-4 border rounded-xl md:col-span-2">
+            <input id="bname" placeholder="Building Name" class="p-3 border rounded col-span-2">
+            <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
+            <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
             <input id="city" placeholder="City" class="p-4 border rounded-xl">
             <input id="pin" placeholder="PIN Code" class="p-4 border rounded-xl">
-            <div class="md:col-span-2 mt-4"><label class="font-bold text-slate-700 block mb-3">Interested Areas:</label><div id="subject-list" class="grid grid-cols-2 gap-3 text-sm"></div></div>
+            <div class="md:col-span-2 mt-4"><label class="font-bold text-slate-700 block mb-3">Interested Areas of Subject:</label><div id="subject-list" class="grid grid-cols-2 gap-3 text-sm"></div></div>
         </form>
         <button id="btn-register" onclick="handleRegister()" class="w-full mt-8 bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition">Complete Registration</button>
         <button onclick="toggleView()" class="w-full mt-4 text-slate-400 hover:text-slate-600">Back to Login</button>
@@ -50,7 +53,7 @@
             if (authErr) { btn.disabled = false; btn.innerText = "Register"; alert(authErr.message); return; }
             const { error: rpcErr } = await client.rpc('save_user_profile', { user_id: auth.user.id, fname: document.getElementById('fname').value, lname: document.getElementById('lname').value, mob: document.getElementById('mobile').value, prof: document.getElementById('prof').value, bldg: '', st: '', ar: '', ct: document.getElementById('city').value, pin: document.getElementById('pin').value, cnt: 'India', subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value) });
             btn.disabled = false; btn.innerText = "Complete Registration";
-            alert(rpcErr ? "Error: " + rpcErr.message : "Success! Redirecting to login...");
+            alert(rpcErr ? "Error: " + rpcErr.message : "Registration Successful! Redirecting to login...");
             if(!rpcErr) toggleView();
         }
         async function handleLogin() {
