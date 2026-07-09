@@ -50,8 +50,45 @@
 
     <script>
         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');        
- 
+
+         // Load Subjects into Checklist
+    async function loadSubjects() {
+        const { data } = await client.from('subjects').select('code, title');
+        const container = document.getElementById('subject-list');
+        container.innerHTML = data.map(s => `
+            <label><input type="checkbox" value="${s.code}"> ${s.title}</label>
+        `).join('');
+    }
+    loadSubjects();	
+
+        async function register() {
+        // 1. Password Validation Regex
+        const pass = document.getElementById('pass').value;
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[\$@#&])[A-Za-z\d\$@#&]{8,15}$/;
+        if (!regex.test(pass)) return alert("Password does not meet policy requirements!");
+
+        // 2. Get Subjects
+        const selectedSubjects = Array.from(document.querySelectorAll('#subject-list input:checked'))
+                                      .map(cb => cb.value);
+        // 3. Register Flow
+        const { data, error } = await client.auth.signUp({ 
+            email: document.getElementById('email').value, 
+            password: pass 
+        });
         
+        if (error) return alert(error.message);
+        await client.from('profiles').update({
+            first_name: document.getElementById('fname').value,
+            last_name: document.getElementById('lname').value,
+            mobile: document.getElementById('mobile').value,
+            profession: document.getElementById('profession').value,
+            city: document.getElementById('city').value,
+            pin_code: document.getElementById('pin').value,
+            interested_business_areas: selectedSubjects // Stores as JSON array
+        }).eq('id', data.user.id);
+
+        alert("Registration Successful. Please check your email for verification.");
+    }
         function showPopup(title, body) {
             document.getElementById('msg-title').innerText = title;
             document.getElementById('msg-body').innerText = body;
