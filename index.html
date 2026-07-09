@@ -1,100 +1,32 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InsureGPTE - Complete Portal</title>
+    <title>InsureGPTE - New Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-gray-100 min-h-screen">
+    <div class="bg-red-600 text-white text-center py-2 font-bold">VERCEL DEBUG: NEW VERSION LOADED</div>
 
-    <div id="view-login" class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white p-10 rounded-3xl shadow-xl w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-6 text-center">InsureGPTE Portal</h1>
-            <input id="login-email" type="email" placeholder="Email" class="w-full p-4 mb-4 border rounded-xl">
-            <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 mb-6 border rounded-xl">
-            <button id="btn-login" onclick="loginUser()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold">Sign In</button>
-            <button onclick="showView('register')" class="w-full mt-4 text-slate-500 underline">Register</button>
-        </div>
-    </div>
-
-    <div id="view-register" class="hidden max-w-2xl mx-auto p-10 bg-white shadow-xl rounded-3xl mt-10">
-        <h2 class="text-2xl font-bold mb-6">Complete Profile</h2>
-        <div class="grid grid-cols-2 gap-4">
-            <input id="reg-fname" placeholder="First Name" class="p-4 border rounded-xl">
-            <input id="reg-lname" placeholder="Last Name" class="p-4 border rounded-xl">
-            <input id="reg-email" placeholder="Email" class="p-4 border rounded-xl col-span-2">
-            <input id="reg-pass" type="password" placeholder="Password" class="p-4 border rounded-xl col-span-2">
-            <input id="reg-mobile" placeholder="Mobile" class="p-4 border rounded-xl col-span-2">
-            <input id="reg-company" placeholder="Company Name" class="p-4 border rounded-xl col-span-2">
-            <textarea id="reg-address" placeholder="Address" class="p-4 border rounded-xl col-span-2"></textarea>
-        </div>
-        <button id="btn-reg" onclick="registerUser()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-xl font-bold">Submit Registration</button>
-        <button onclick="showView('login')" class="w-full mt-4 text-slate-500 underline">Back to Login</button>
-    </div>
-
-    <div id="view-admin" class="hidden max-w-5xl mx-auto p-10 bg-white shadow-xl rounded-3xl mt-10">
-        <h2 class="text-2xl font-bold mb-6">Admin Console</h2>
-        <table class="w-full text-left">
-            <thead><tr class="border-b"><th>Name</th><th>Email</th><th>Company</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody id="admin-table-body"></tbody>
-        </table>
-        <button onclick="location.reload()" class="mt-6 text-red-500 underline">Logout</button>
+    <div id="view-login" class="mt-20 text-center">
+        <h1 class="text-3xl font-bold">InsureGPTE Portal</h1>
+        <input id="login-email" type="email" placeholder="Email" class="block mx-auto mt-4 p-2 border">
+        <input id="login-pass" type="password" placeholder="Password" class="block mx-auto mt-2 p-2 border">
+        <button onclick="loginUser()" class="mt-4 bg-blue-500 text-white px-6 py-2">Sign In</button>
     </div>
 
     <script>
-    const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+        console.log("Script version: 2026-07-09-A");
+            const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
-        function showView(view) {
-            ['login', 'register', 'admin'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
-            document.getElementById('view-'+view).classList.remove('hidden');
-        }
 
         async function loginUser() {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
             const { data, error } = await client.auth.signInWithPassword({ email, pass });
-            if (error) return alert(error.message);
-            
-            const { data: profile } = await client.from('profiles').select('status, role').eq('id', data.user.id).single();
-            if (profile?.role === 'admin') { loadAdmin(); showView('admin'); }
-            else if (profile?.status === 'approved') { alert("Welcome!"); }
-            else { alert("Pending Admin Approval."); client.auth.signOut(); }
-        }
-
-        async function registerUser() {
-            const btn = document.getElementById('btn-reg');
-            btn.innerText = "Processing...";
-            try {
-                const { data, error: authError } = await client.auth.signUp({ 
-                    email: document.getElementById('reg-email').value, 
-                    password: document.getElementById('reg-pass').value 
-                });
-                if (authError) throw authError;
-
-                // We skip the insert/update entirely. The database Trigger does the work.
-                alert("Account created. Pending approval.");
-                showView('login');
-            } catch (err) { alert(err.message); btn.innerText = "Submit Registration"; }
-        }
-
-        async function loadAdmin() {
-            const { data: profiles } = await client.from('profiles').select('*');
-            document.getElementById('admin-table-body').innerHTML = profiles.map(p => `
-                <tr class="border-b">
-                    <td>${p.first_name || 'N/A'}</td>
-                    <td>${p.mobile || 'N/A'}</td>
-                    <td>${p.company_name || 'N/A'}</td>
-                    <td>${p.status}</td>
-                    <td><button onclick="approve('${p.id}')" class="bg-blue-600 text-white px-3 py-1 rounded">Approve</button></td>
-                </tr>
-            `).join('');
-        }
-
-        async function approve(uid) {
-            await client.from('profiles').update({ status: 'approved' }).eq('id', uid);
-            alert("User approved.");
-            loadAdmin();
+            if (error) { alert("Login failed: " + error.message); }
+            else { alert("Login successful!"); }
         }
     </script>
 </body>
