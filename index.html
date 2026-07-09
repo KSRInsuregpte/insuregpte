@@ -86,62 +86,56 @@
 
 
 async function handleRegister() {
-            // 1. Validation
-            const requiredFields = ['fname', 'lname', 'email', 'pass', 'prof', 'mobile', 'city', 'pin', 'country'];
-            for (let fieldId of requiredFields) {
-                const field = document.getElementById(fieldId);
-                if (!field.value.trim()) {
-                    alert("Please fill all mandatory fields marked with *.");
-                    field.focus();
-                    return;
-                }
-            }
-
-            const btn = document.getElementById('btn-register');
-            btn.disabled = true;
-            btn.style.cursor = "wait";
-            btn.style.opacity = "0.5";
-            btn.innerText = "Processing, please wait...";
-            
-            try {
-                // 2. Auth Sign Up
-                const { data: authData, error: authError } = await client.auth.signUp({ 
-                    email: document.getElementById('email').value, 
-                    password: document.getElementById('pass').value 
-                });
-                if (authError) throw authError;
-
-                // 3. DATABASE SAVE (The crucial part)
-                // We use 'await' here to ensure the code stops and waits until Supabase confirms the save.
-                const { error: dbError } = await client.from('profiles').update({ 
-                    interested_business_areas: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value),
-                    first_name: document.getElementById('fname').value,
-                    last_name: document.getElementById('lname').value,
-                    mobile: document.getElementById('mobile').value,
-                    profession: document.getElementById('prof').value,
-                    building_name: document.getElementById('bldg').value,
-                    street_name: document.getElementById('street').value,
-                    area: document.getElementById('area').value,
-                    city: document.getElementById('city').value,
-                    pin_code: document.getElementById('pin').value,
-                    country: document.getElementById('country').value
-                }).eq('id', authData.user.id);
-
-                if (dbError) throw dbError; // If this fails, it jumps to the 'catch' block
-
-                // 4. Success: Only reached if Auth AND Database save were perfect
-                document.getElementById('modal-success').classList.remove('hidden');
-
-            } catch (err) {
-                // Error handling: Button is restored, and user sees the error
-                const btn = document.getElementById('btn-register');
-                btn.disabled = false;
-                btn.style.cursor = "pointer";
-                btn.style.opacity = "1";
-                btn.innerText = "Register";
-                alert("Registration failed: " + err.message);
-            }
+    const btn = document.getElementById('btn-register');
+    
+    // 1. Validation check
+    const required = ['fname', 'lname', 'email', 'pass', 'prof', 'mobile', 'city', 'pin', 'country'];
+    for (let id of required) {
+        if (!document.getElementById(id).value.trim()) {
+            return alert("Please fill all mandatory fields marked with *.");
         }
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+    btn.style.cursor = "wait";
+
+    try {
+        // 2. Auth Sign Up
+        const { data: authData, error: authError } = await client.auth.signUp({ 
+            email: document.getElementById('email').value, 
+            password: document.getElementById('pass').value 
+        });
+        if (authError) throw authError;
+
+        // 3. UPSERT Profile Data (This is the fix)
+        const { error: dbError } = await client.from('profiles').upsert({ 
+            id: authData.user.id, // Must match the ID from Auth
+            first_name: document.getElementById('fname').value,
+            last_name: document.getElementById('lname').value,
+            mobile: document.getElementById('mobile').value,
+            profession: document.getElementById('prof').value,
+            building_name: document.getElementById('bldg').value,
+            street_name: document.getElementById('street').value,
+            area: document.getElementById('area').value,
+            city: document.getElementById('city').value,
+            pin_code: document.getElementById('pin').value,
+            country: document.getElementById('country').value,
+            interested_business_areas: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
+        });
+
+        if (dbError) throw dbError;
+
+        // 4. Show success
+        document.getElementById('modal-success').classList.remove('hidden');
+    } catch (err) {
+        alert("Registration issue: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Register";
+        btn.style.cursor = "pointer";
+    }
+}
 
         async function handleLogin() {
             const email = document.getElementById('login-email').value;
