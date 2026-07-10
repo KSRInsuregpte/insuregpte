@@ -39,48 +39,38 @@
     </div>
 
     <script>
-         const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU'); 
+         const client = window.supabase.createClient('Supabase App URL', 'App Key'); 
         async function loadSubjects() {
             const { data } = await client.from('subjects').select('code, title');
-            document.getElementById('subject-list').innerHTML = data.map(s => `<label class="flex items-center gap-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer"><input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
+            document.getElementById('subject-list').innerHTML = data.map(s => `<label class="flex items-center gap-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">	<input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
         }
         loadSubjects();
         function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
-        async function handleRegister() {
-    const btn = document.getElementById('btn-register');
-    
-    // 1. Client-side check before doing anything
-    const email = document.getElementById('email').value.trim();
-    if (!email) { alert("Email is required"); return; }
+        
+async function handleRegister() {
+            const btn = document.getElementById('btn-register');
+            btn.disabled = true; btn.innerText = "Processing...";
+            
+            const { data: auth, error: authErr } = await client.auth.signUp({ 
+                email: document.getElementById('email').value, 
+                password: document.getElementById('pass').value 
+            });
+            if (authErr) { btn.disabled = false; btn.innerText = "Register"; alert(authErr.message); return; }
 
-    btn.disabled = true; 
-    btn.innerText = "Saving Profile...";
-
-    // 2. Auth Sign-up
-    const { data: authData, error: authError } = await client.auth.signUp({ 
-        email: email, 
-        password: document.getElementById('pass').value 
-    });
-
-    if (authError) {
-        btn.disabled = false; btn.innerText = "Register";
-        alert("Auth Error: " + authError.message);
-        return;
-    }
-
-    // 3. Database Update (Crucial: Use .insert() only if the profile is empty)
-    const { error: rpcError } = await client.rpc('save_user_profile', {
-        user_id: authData.user.id,
-        fname: document.getElementById('fname').value,
-        lname: document.getElementById('lname').value,
-        mob: document.getElementById('mobile').value,
-        prof: document.getElementById('prof').value,
-        bldg: '', st: '', ar: '',
-        ct: document.getElementById('city').value,
-        pin: document.getElementById('pin').value,
-        cnt: 'India',
-        subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
-    });
+            const { error: rpcErr } = await client.rpc('save_user_profile', {
+                user_id: auth.user.id,
+                fname: document.getElementById('fname').value,
+                lname: document.getElementById('lname').value,
+                mob: document.getElementById('mobile').value,
+                prof: document.getElementById('prof').value,
+                bldg: document.getElementById('bldg').value,
+                st: document.getElementById('street').value,
+                ar: document.getElementById('area').value,
+                ct: document.getElementById('city').value,
+                pin: document.getElementById('pin').value,
+                cnt: document.getElementById('country').value,
+                subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
+            });
 
     // 4. Final confirmation logic
     btn.disabled = false;
