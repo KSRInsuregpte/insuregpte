@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta charset="UTF-8">
     <title>InsureGPTE Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -42,17 +41,21 @@
     <script>
 // REPLACE 'YOUR_SUPABASE_URL' and 'YOUR_SUPABASE_KEY' with your actual values
 const SUPABASE_URL = 'https://tvjsivuibvzybdbjtesq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU'; // The anon/public key
-        
-        const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-        async function loadSubjects() {
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU'; // The anon/public key        
+const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+        async function loadSubjects() 
+        {
             const { data } = await client.from('subjects').select('code, title');
             document.getElementById('subject-list').innerHTML = data.map(s => `<label class="flex items-center gap-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">	<input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
         }
         loadSubjects();
         function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
-        async function handleRegister() {
-    const btn = document.getElementById('btn-register');
+        async function handleRegister() 
+        {
+            if (!client) { alert("Supabase client not initialized!"); return; }
+            else
+            {
+            const btn = document.getElementById('btn-register')};
     
     // 1. Client-side check before doing anything
     const email = document.getElementById('email').value.trim();
