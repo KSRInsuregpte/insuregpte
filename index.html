@@ -92,19 +92,35 @@ async function handleRegister()
             subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
         });
 
-        if (rpcErr) throw rpcErr;
+        if (rpcErr) {
+    console.log("RPC Error Object:", rpcErr);
+    throw rpcErr;
+} else {
+    alert("Registration Successful!");
+    document.getElementById("reg-form").reset();
+    toggleView(); // Go back to login
+}
 
-        alert("Registration Successful!");
-        toggleView(); // Go back to login
+} catch (err) {
 
-    } catch (err) {
-        console.error("Error occurred:", err);
-        alert("Error: " + (err.message || "An unexpected error occurred"));
-    } finally {
-        // 5. Always re-enable the button
-        btn.disabled = false;
-        btn.innerText = "Complete Registration";
-    }
+    console.error("Full Error Object:", err);
+    console.error("Error Message:", err.message);
+    console.error("Error Details:", err.details);
+    console.error("Error Hint:", err.hint);
+    console.error("Error Code:", err.code);
+
+    alert(
+        "Message : " + (err.message || "N/A") +
+        "\nCode    : " + (err.code || "N/A") +
+        "\nDetails : " + (err.details || "N/A") +
+        "\nHint    : " + (err.hint || "N/A")
+    );
+
+} finally {
+
+    btn.disabled = false;
+    btn.innerText = "Complete Registration";
+
 }
         async function handleLogin() {
             const { error } = await client.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value });
