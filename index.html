@@ -35,8 +35,13 @@
             <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
             <div class="md:col-span-2 mt-4"><label class="font-bold text-slate-700 block mb-3">Interested Areas of Subject:</label><div id="subject-list" class="grid grid-cols-2 gap-3 text-sm"></div></div>
         </form>
-        <button id="btn-register" onclick="handleRegister()" class="w-full mt-8 bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition">Complete Registration</button>
-        <button onclick="toggleView()" class="w-full mt-4 text-slate-400 hover:text-slate-600">Back to Login</button>
+        <button
+type="button"
+id="btn-register"
+onclick="handleRegister()" class="w-full mt-8 bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition">Complete Registration</button>
+       <button
+type="button"
+onclick="toggleView()" class="w-full mt-4 text-slate-400 hover:text-slate-600">Back to Login</button>
     </div>
 
     <script>
@@ -120,18 +125,21 @@ const { error: rpcErr } = await client.rpc('save_user_profile', {
     pin: document.getElementById('pin').value,
     cnt: document.getElementById('country').value,
     subjects: Array.from(
-        document.querySelectorAll('#subject-list input:checked')
-    ).map(cb => cb.value)
-});
+    document.querySelectorAll('#subject-list input:checked')
+).map(cb => cb.value)});
 
 if (rpcErr) {
     console.log("RPC Error Object:", rpcErr);
     throw rpcErr;
 }
 
-alert("Registration Successful!");
+alert(
+"Registration Successful.\n\nA verification email has been sent.\nPlease verify your email before signing in."
+);
+
 document.getElementById("reg-form").reset();
-toggleView(); // Go back to login
+
+toggleView();// Go back to login
 
 } catch (err) {
 
