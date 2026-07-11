@@ -90,14 +90,13 @@ async function handleRegister()
         if (authErr) throw authErr;
 
         // 4. Perform Profile Save
+
+if (!auth.user) {
+    throw new Error("User account was not created by Supabase.");
+}
+
 const { error: rpcErr } = await client.rpc('save_user_profile', {
-    if (!auth.user) 
-     {
-              throw new Error("User account was not created by Supabase.");
-     }
-     else
-     {
-     user_id: auth.user.id,
+    user_id: auth.user.id,
     fname: document.getElementById('fname').value,
     lname: document.getElementById('lname').value,
     mob: document.getElementById('mobile').value,
@@ -111,7 +110,7 @@ const { error: rpcErr } = await client.rpc('save_user_profile', {
     subjects: Array.from(
         document.querySelectorAll('#subject-list input:checked')
     ).map(cb => cb.value)
-}});
+});
 
 if (rpcErr) {
     console.log("RPC Error Object:", rpcErr);
