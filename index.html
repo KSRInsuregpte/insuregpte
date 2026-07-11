@@ -99,9 +99,7 @@ async function handleRegister()
     alert("Registration Successful!");
     document.getElementById("reg-form").reset();
     toggleView(); // Go back to login
-}
-
-} catch (err) {
+}catch (err) {
 
     console.error("Full Error Object:", err);
     console.error("Error Message:", err.message);
