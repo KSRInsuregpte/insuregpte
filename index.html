@@ -26,6 +26,7 @@
             <input id="pass" type="password" placeholder="Password" class="p-4 border rounded-xl md:col-span-2">
             <select id="prof" class="p-4 border rounded-xl md:col-span-2 bg-white"><option value="">Select Profession</option><option>Student</option><option>Working Professional</option></select>
             <input id="mobile" placeholder="Mobile Number" class="p-4 border rounded-xl md:col-span-2">
+            <input id="cname" placeholder="Comapny Name" class="p-3 border rounded col-span-2">
             <input id="bname" placeholder="Building Name" class="p-3 border rounded col-span-2">
             <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
             <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
@@ -98,6 +99,7 @@ console.log("fname :", document.getElementById('fname')?.value);
 console.log("lname :", document.getElementById('lname')?.value);
 console.log("mobile:", document.getElementById('mobile')?.value);
 console.log("prof  :", document.getElementById('prof')?.value);
+console.log("cname :", document.getElementById('cname')?.value);         
 console.log("bname :", document.getElementById('bname')?.value);
 console.log("street:", document.getElementById('street')?.value);
 console.log("area  :", document.getElementById('area')?.value);
@@ -110,6 +112,7 @@ const { error: rpcErr } = await client.rpc('save_user_profile', {
     lname: document.getElementById('lname').value,
     mob: document.getElementById('mobile').value,
     prof: document.getElementById('prof').value,
+    company: document.getElementById('cname').value,
     bldg: document.getElementById('bname').value,
     st: document.getElementById('street').value,
     ar: document.getElementById('area').value,
