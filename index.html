@@ -78,28 +78,32 @@ async function handleRegister()
 
         // 4. Perform Profile Save
         const { error: rpcErr } = await client.rpc('save_user_profile', {
-            user_id: auth.user.id,
-            fname: document.getElementById('fname').value,
-            lname: document.getElementById('lname').value,
-            mob: document.getElementById('mobile').value,
-            prof: document.getElementById('prof').value,
-            bldg: document.getElementById('bldg').value,
-            st: document.getElementById('street').value,
-            ar: document.getElementById('area').value,
-            ct: document.getElementById('city').value,
-            pin: document.getElementById('pin').value,
-            cnt: document.getElementById('country').value,
-            subjects: Array.from(document.querySelectorAll('#subject-list input:checked')).map(cb => cb.value)
-        });
+    user_id: auth.user.id,
+    fname: document.getElementById('fname').value,
+    lname: document.getElementById('lname').value,
+    mob: document.getElementById('mobile').value,
+    prof: document.getElementById('prof').value,
+    bldg: document.getElementById('bldg').value,
+    st: document.getElementById('street').value,
+    ar: document.getElementById('area').value,
+    ct: document.getElementById('city').value,
+    pin: document.getElementById('pin').value,
+    cnt: document.getElementById('country').value,
+    subjects: Array.from(
+        document.querySelectorAll('#subject-list input:checked')
+    ).map(cb => cb.value)
+});
 
-        if (rpcErr) {
+if (rpcErr) {
     console.log("RPC Error Object:", rpcErr);
     throw rpcErr;
-} else {
-    alert("Registration Successful!");
-    document.getElementById("reg-form").reset();
-    toggleView(); // Go back to login
-}catch (err) {
+}
+
+alert("Registration Successful!");
+document.getElementById("reg-form").reset();
+toggleView(); // Go back to login
+
+} catch (err) {
 
     console.error("Full Error Object:", err);
     console.error("Error Message:", err.message);
