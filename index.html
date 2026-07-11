@@ -42,13 +42,26 @@
 // REPLACE 'YOUR_SUPABASE_URL' and 'YOUR_SUPABASE_KEY' with your actual values
       
 const client = window.supabase.createClient("https://tvjsivuibvzybdbjtesq.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU");
-        async function loadSubjects() 
-        {
-            const { data } = await client.from('subjects').select('code, title');
-            document.getElementById('subject-list').innerHTML = data.map(s => `<label class="flex items-center gap-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">	<input type="checkbox" value="${s.code}"> ${s.title}</label>`).join('');
-        }
-        loadSubjects();
-        function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
+ async function loadSubjects() {
+    const { data, error } = await client
+        .from('subjects')
+        .select('code, title');
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    document.getElementById('subject-list').innerHTML =
+        data.map(s =>
+            `<label class="flex items-center gap-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                <input type="checkbox" value="${s.code}">
+                ${s.title}
+            </label>`
+        ).join('');
+}
+loadSubjects();
+function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
 
 async function handleRegister() 
 {
@@ -77,8 +90,14 @@ async function handleRegister()
         if (authErr) throw authErr;
 
         // 4. Perform Profile Save
-        const { error: rpcErr } = await client.rpc('save_user_profile', {
-    user_id: auth.user.id,
+const { error: rpcErr } = await client.rpc('save_user_profile', {
+    if (!auth.user) 
+     {
+              throw new Error("User account was not created by Supabase.");
+     }
+     else
+     {
+     user_id: auth.user.id,
     fname: document.getElementById('fname').value,
     lname: document.getElementById('lname').value,
     mob: document.getElementById('mobile').value,
@@ -92,7 +111,7 @@ async function handleRegister()
     subjects: Array.from(
         document.querySelectorAll('#subject-list input:checked')
     ).map(cb => cb.value)
-});
+}});
 
 if (rpcErr) {
     console.log("RPC Error Object:", rpcErr);
@@ -123,7 +142,8 @@ toggleView(); // Go back to login
     btn.disabled = false;
     btn.innerText = "Complete Registration";
 
-}
+} // <-- Ends the try...catch...finally
+} // <-- THIS BRACE closes handleRegister()
         async function handleLogin() {
             const { error } = await client.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value });
             if (error) alert("Login Failed: " + error.message);
