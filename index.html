@@ -94,14 +94,23 @@ async function handleRegister()
 if (!auth.user) {
     throw new Error("User account was not created by Supabase.");
 }
-
+console.log("fname :", document.getElementById('fname')?.value);
+console.log("lname :", document.getElementById('lname')?.value);
+console.log("mobile:", document.getElementById('mobile')?.value);
+console.log("prof  :", document.getElementById('prof')?.value);
+console.log("bname :", document.getElementById('bname')?.value);
+console.log("street:", document.getElementById('street')?.value);
+console.log("area  :", document.getElementById('area')?.value);
+console.log("city  :", document.getElementById('city')?.value);
+console.log("pin   :", document.getElementById('pin')?.value);
+console.log("country:", document.getElementById('country')?.value);
 const { error: rpcErr } = await client.rpc('save_user_profile', {
     user_id: auth.user.id,
     fname: document.getElementById('fname').value,
     lname: document.getElementById('lname').value,
     mob: document.getElementById('mobile').value,
     prof: document.getElementById('prof').value,
-    bldg: document.getElementById('bldg').value,
+    bldg: document.getElementById('bname').value,
     st: document.getElementById('street').value,
     ar: document.getElementById('area').value,
     ct: document.getElementById('city').value,
