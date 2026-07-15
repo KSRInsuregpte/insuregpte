@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureGPTE | Practice Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="min-h-screen bg-slate-50">
+<nav class="border-b border-slate-200 bg-white p-4 shadow-sm">
+    <div class="mx-auto flex max-w-5xl items-center justify-between">
+        <a href="dashboard.html" class="font-medium text-slate-600 hover:text-blue-800">← Back</a>
+        <h1 class="text-xl font-bold text-blue-900">InsureGPTE Practice Quiz</h1>
+        <button id="logout-button" type="button" class="font-medium text-red-600 hover:text-red-800">Logout</button>
+    </div>
+</nav>
+
+<main class="mx-auto max-w-5xl p-4 md:p-6">
+    <section class="mb-6 rounded-3xl bg-blue-900 p-6 text-white shadow-lg md:p-8">
+        <h2 id="page-title" class="text-3xl font-bold">Practice Quiz</h2>
+        <p class="mt-2 text-blue-100">50 questions · 1 mark for every correct answer · Maximum 5 attempts per subject</p>
+    </section>
+
+    <div id="message-box" class="hidden mb-5 rounded-xl p-4"></div>
+
+    <section id="start-panel" class="rounded-2xl border bg-white p-6 shadow-sm">
+        <h3 id="start-heading" class="text-xl font-bold text-slate-800">Ready to begin?</h3>
+        <p class="mt-2 text-slate-600">
+            An attempt is counted when you click <strong>Start This Attempt</strong>.
+            Each answer is recorded immediately and cannot be changed afterwards.
+        </p>
+        <div class="mt-5 flex flex-wrap gap-3">
+            <button id="start-button" type="button" class="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">Start This Attempt</button>
+            <a href="dashboard.html" class="rounded-xl border border-slate-300 px-6 py-3 font-bold text-slate-700 hover:bg-slate-50">← Back to Dashboard</a>
+        </div>
+    </section>
+
+    <section id="attempt-summary" class="mt-6 hidden grid-cols-2 gap-3 md:grid-cols-4">
+        <div class="rounded-xl border bg-white p-4 shadow-sm"><p class="text-xs uppercase tracking-wide text-slate-500">Attempt</p><p id="attempt-number" class="mt-1 text-2xl font-bold text-slate-900">-</p></div>
+        <div class="rounded-xl border bg-white p-4 shadow-sm"><p class="text-xs uppercase tracking-wide text-slate-500">Answered</p><p id="answered-count" class="mt-1 text-2xl font-bold text-slate-900">0 / 50</p></div>
+        <div class="rounded-xl border bg-white p-4 shadow-sm"><p class="text-xs uppercase tracking-wide text-slate-500">Score</p><p id="score-count" class="mt-1 text-2xl font-bold text-slate-900">0 / 50</p></div>
+        <div class="rounded-xl border bg-white p-4 shadow-sm"><p class="text-xs uppercase tracking-wide text-slate-500">Progress</p><p id="progress-count" class="mt-1 text-2xl font-bold text-slate-900">0%</p></div>
+    </section>
+
+    <section id="quiz-panel" class="mt-6 hidden">
+        <div class="mb-4 flex items-center justify-between gap-4">
+            <h3 id="quiz-heading" class="text-xl font-bold text-slate-800">Questions</h3>
+            <a href="dashboard.html" class="font-medium text-blue-700 hover:underline">← Back</a>
+        </div>
+        <div id="questions-container" class="space-y-6"></div>
+    </section>
+
+    <section id="final-result" class="mt-8 hidden rounded-2xl border border-emerald-300 bg-emerald-100 p-6">
+        <h2 class="text-2xl font-bold text-emerald-900">Quiz Completed</h2>
+        <p id="final-score" class="mt-2 text-lg text-emerald-900"></p>
+        <div class="mt-5"><a href="dashboard.html" class="rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white hover:bg-emerald-800">Back to Dashboard</a></div>
+    </section>
+</main>
+
+<script>
+    // Replace these placeholders with the same values used in index.html.
+    const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+
+
+    const TOTAL_QUESTIONS = 50;
+    let currentAttemptId = null;
+    let currentAttemptNumber = null;
+    let currentSubjectId = null;
+    let currentSubjectCode = null;
+    let answeredCount = 0;
+    let currentScore = 0;
+    let attemptInProgress = false;
+
+    function getSelectedSubjectFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const subjectId = params.get('subject_id');
+        const subjectCode = params.get('subject_code');
+        if (!subjectId || !subjectCode) return null;
+        const numericSubjectId = Number(subjectId);
+        if (!Number.isInteger(numericSubjectId) || numericSubjectId <= 0) return null;
+        return { id: numericSubjectId, code: subjectCode };
+    }
+
+    async function initialisePage() {
+        try {
+            const { data: { user }, error: userError } = await client.auth.getUser();
+            if (userError || !user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const { data: profile, error: profileError } = await client
+                .from('profiles')
+                .select('status')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError) throw profileError;
+
+            if (profile.status !== 'active') {
+                showMessage('Your account is not active. Please verify your email or contact support.', 'error');
+                document.getElementById('start-button').disabled = true;
+                return;
+            }
+
+            const selectedSubject = getSelectedSubjectFromUrl();
+            if (!selectedSubject) {
+                showMessage('No valid subject was selected. Please return to the dashboard and choose a subject.', 'error');
+                document.getElementById('start-button').disabled = true;
+                return;
+            }
+
+            currentSubjectId = selectedSubject.id;
+            currentSubjectCode = selectedSubject.code;
+            document.getElementById('page-title').innerText = currentSubjectCode + ' Practice Quiz';
+            document.getElementById('start-heading').innerText = 'Ready to begin ' + currentSubjectCode + '?';
+        } catch (error) {
+            console.error('Page initialisation error:', error);
+            showMessage(error.message || 'Unable to initialise the quiz page.', 'error');
+            document.getElementById('start-button').disabled = true;
+        }
+    }
+
+    async function startQuiz() {
+        const startButton = document.getElementById('start-button');
+        startButton.disabled = true;
+        startButton.innerText = 'Preparing 50 Questions...';
+        hideMessage();
+
+        try {
+            const { data: attemptData, error: attemptError } = await client.rpc('start_quiz_attempt', {
+                p_subject_id: currentSubjectId
+            });
+            if (attemptError) throw attemptError;
+            if (!attemptData || attemptData.length === 0) throw new Error('The quiz attempt could not be created.');
+
+            currentAttemptId = attemptData[0].attempt_id;
+            currentAttemptNumber = attemptData[0].attempt_number;
+            answeredCount = 0;
+            currentScore = 0;
+            attemptInProgress = true;
+
+            const { data: questions, error: questionError } = await client.rpc('get_attempt_questions', {
+                p_attempt_id: currentAttemptId
+            });
+            if (questionError) throw questionError;
+            if (!questions || questions.length !== TOTAL_QUESTIONS) throw new Error('The system did not return the required 50 questions.');
+
+            document.getElementById('start-panel').classList.add('hidden');
+            document.getElementById('attempt-summary').classList.remove('hidden');
+            document.getElementById('attempt-summary').classList.add('grid');
+            document.getElementById('quiz-panel').classList.remove('hidden');
+            document.getElementById('quiz-heading').innerText = currentSubjectCode + ' · Attempt ' + currentAttemptNumber;
+
+            updateAttemptSummary();
+            displayQuestions(questions);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (error) {
+            console.error('Quiz start error:', error);
+            showMessage(error.message || 'Unable to start the quiz.', 'error');
+            startButton.disabled = false;
+            startButton.innerText = 'Start This Attempt';
+        }
+    }
+
+    function displayQuestions(questions) {
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
+
+        questions.forEach(question => {
+            const questionCard = document.createElement('article');
+            questionCard.className = 'question-card rounded-2xl border bg-white p-5 shadow-sm';
+            questionCard.dataset.questionId = question.question_id;
+
+            const options = [question.option_a, question.option_b, question.option_c, question.option_d];
+            questionCard.innerHTML = `
+                <p class="mb-4 font-bold text-slate-900">${question.question_order}. ${escapeHtml(question.question_text)}</p>
+                <div class="space-y-3">
+                    ${options.map((option, index) => `
+                        <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-3 hover:bg-slate-50">
+                            <input type="radio" name="q${question.question_id}" value="${escapeAttribute(option || '')}" class="mt-1">
+                            <span><strong>${String.fromCharCode(65 + index)}.</strong> ${escapeHtml(option || 'Option not set')}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="feedback mt-4 hidden rounded-xl p-4"></div>
+            `;
+
+            questionCard.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    submitAnswer(questionCard, question.question_id, radio.value);
+                }, { once: true });
+            });
+
+            container.appendChild(questionCard);
+        });
+    }
+
+    async function submitAnswer(questionCard, questionId, selectedAnswer) {
+        const radioButtons = questionCard.querySelectorAll('input[type="radio"]');
+        const feedback = questionCard.querySelector('.feedback');
+        radioButtons.forEach(radio => { radio.disabled = true; });
+
+        feedback.className = 'feedback mt-4 rounded-xl bg-slate-100 p-4 text-slate-700';
+        feedback.innerText = 'Checking and recording your answer...';
+        feedback.classList.remove('hidden');
+
+        try {
+            const { data, error } = await client.rpc('submit_quiz_answer', {
+                p_attempt_id: currentAttemptId,
+                p_question_id: questionId,
+                p_selected_answer: selectedAnswer
+            });
+            if (error) throw error;
+            if (!data || data.length === 0) throw new Error('No answer result was returned.');
+
+            const result = data[0];
+            answeredCount = result.answered_count;
+            currentScore = result.score;
+
+            if (result.is_correct) {
+                feedback.className = 'feedback mt-4 rounded-xl bg-green-100 p-4';
+                feedback.innerHTML = `<p class="font-bold text-green-800">Correct! +1 mark</p><p class="mt-2 font-normal text-green-900">${escapeHtml(result.explanation || '')}</p>`;
+            } else {
+                feedback.className = 'feedback mt-4 rounded-xl bg-red-100 p-4';
+                feedback.innerHTML = `<p class="font-bold text-red-800">Incorrect. 0 marks</p><p class="mt-2 text-red-900"><strong>Correct Answer:</strong> ${escapeHtml(result.correct_answer || '')}</p><p class="mt-2 font-normal text-red-900">${escapeHtml(result.explanation || '')}</p>`;
+            }
+
+            updateAttemptSummary();
+            if (result.completed) {
+                attemptInProgress = false;
+                showFinalResult();
+            }
+        } catch (error) {
+            console.error('Answer submission error:', error);
+            feedback.className = 'feedback mt-4 rounded-xl bg-red-100 p-4 text-red-800';
+            feedback.innerText = error.message || 'Unable to record this answer.';
+            radioButtons.forEach(radio => { radio.disabled = false; });
+        }
+    }
+
+    function updateAttemptSummary() {
+        document.getElementById('attempt-number').innerText = currentAttemptNumber || '-';
+        document.getElementById('answered-count').innerText = answeredCount + ' / ' + TOTAL_QUESTIONS;
+        document.getElementById('score-count').innerText = currentScore + ' / ' + TOTAL_QUESTIONS;
+        document.getElementById('progress-count').innerText = Math.round((answeredCount / TOTAL_QUESTIONS) * 100) + '%';
+    }
+
+    function showFinalResult() {
+        const percentage = Math.round((currentScore / TOTAL_QUESTIONS) * 100);
+        document.getElementById('final-result').classList.remove('hidden');
+        document.getElementById('final-score').innerText = 'Your final score is ' + currentScore + ' out of ' + TOTAL_QUESTIONS + ' (' + percentage + '%).';
+        document.getElementById('final-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function showMessage(message, type) {
+        const box = document.getElementById('message-box');
+        box.innerText = message;
+        box.className = type === 'error'
+            ? 'mb-5 rounded-xl bg-red-100 p-4 text-red-800'
+            : 'mb-5 rounded-xl bg-blue-100 p-4 text-blue-800';
+        box.classList.remove('hidden');
+    }
+
+    function hideMessage() {
+        document.getElementById('message-box').classList.add('hidden');
+    }
+
+    async function logout() {
+        if (attemptInProgress && !confirm('Your quiz is still in progress. Do you want to log out?')) return;
+        const { error } = await client.auth.signOut();
+        if (error) {
+            showMessage('Unable to log out. Please try again.', 'error');
+            return;
+        }
+        window.location.href = 'index.html';
+    }
+
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = String(value ?? '');
+        return div.innerHTML;
+    }
+
+    function escapeAttribute(value) {
+        return escapeHtml(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    document.getElementById('start-button').addEventListener('click', startQuiz);
+    document.getElementById('logout-button').addEventListener('click', logout);
+
+    window.addEventListener('beforeunload', event => {
+        if (!attemptInProgress) return;
+        event.preventDefault();
+        event.returnValue = '';
+    });
+
+    initialisePage();
+</script>
+</body>
+</html>
