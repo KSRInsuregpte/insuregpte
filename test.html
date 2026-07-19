@@ -104,38 +104,92 @@
     // Replace these placeholders with the same values used in index.html.
     const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
 
-const TOTAL_QUESTIONS=50,SESSION_LIMIT_SECONDS=7200,PROGRESS_CIRCUMFERENCE=301.59;
+let totalQuestions=50,sessionLimitSeconds=7200;
+const PROGRESS_CIRCUMFERENCE=301.59,RPC_TIMEOUT_MS=20000;
 let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false;
 const selectedAnswers={},answerResults={},reviewQuestions=new Set();
 
 function selectedSubject(){const p=new URLSearchParams(location.search),id=p.get('subject_id'),code=p.get('subject_code'),n=Number(id);return id&&code&&Number.isInteger(n)&&n>0?{id:n,code}:null}
-async function initialisePage(){try{const{data:{user},error}=await client.auth.getUser();if(error||!user){location.href='index.html';return}const{data:profile,error:pe}=await client.from('profiles').select('status').eq('id',user.id).single();if(pe)throw pe;if(profile.status!=='active'){msg('Your account is not active. Please verify your email or contact support.','error');document.getElementById('start-button').disabled=true;return}const s=selectedSubject();if(!s){msg('No valid subject was selected. Please return to the dashboard and select a subject.','error');document.getElementById('start-button').disabled=true;return}currentSubjectId=s.id;currentSubjectCode=s.code;document.getElementById('subject-heading').innerText=`${s.code} · 50 Questions · 1 Mark Each`;document.getElementById('start-heading').innerText=`Ready to begin ${s.code}?`}catch(e){console.error(e);msg(e.message||'Unable to initialise the quiz page.','error');document.getElementById('start-button').disabled=true}}
+async function initialisePage(){try{const{data:{user},error}=await client.auth.getUser();if(error||!user){location.href='index.html';return}const{data:profile,error:pe}=await client.from('profiles').select('status').eq('id',user.id).single();if(pe)throw pe;if(profile.status!=='active'){msg('Your account is not active. Please verify your email or contact support.','error');document.getElementById('start-button').disabled=true;return}const s=selectedSubject();if(!s){msg('No valid subject was selected. Please return to the dashboard and select a subject.','error');document.getElementById('start-button').disabled=true;return}currentSubjectId=s.id;currentSubjectCode=s.code;document.getElementById('subject-heading').innerText=`${s.code} · Practice Quiz · 1 Mark Each`;document.getElementById('start-heading').innerText=`Ready to begin ${s.code}?`}catch(e){console.error(e);msg(e.message||'Unable to initialise the quiz page.','error');document.getElementById('start-button').disabled=true}}
 
-async function startQuiz(){const b=document.getElementById('start-button');b.disabled=true;b.innerText='Preparing 50 Questions...';hideMsg();try {
-  const { data: a, error: ae } = await client.rpc(
-    'start_quiz_attempt',
-    {
-      p_subject_id: currentSubjectId,
-      p_test_mode: 'practice'
+async function callRpcWithTimeout(functionName,parameters){let timeoutId;const timeout=new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error(`${functionName} did not respond within ${RPC_TIMEOUT_MS/1000} seconds.`)),RPC_TIMEOUT_MS)});try{return await Promise.race([client.rpc(functionName,parameters),timeout])}finally{clearTimeout(timeoutId)}}
+function quizStartError(error,stage){const detail=String(error?.message||'');const safePatterns=[/did not respond within/i,/not active/i,/does not contain enough questions/i,/maximum permitted/i,/not currently available/i,/configuration is invalid/i,/did not return the required/i,/start time is invalid/i];return safePatterns.some(pattern=>pattern.test(detail))?detail:`${stage} failed. Please try again.`}
+
+async function startQuiz(){
+  const button=document.getElementById('start-button');
+  let stage='Creating the quiz attempt';
+  button.disabled=true;
+  button.innerText='Creating Attempt...';
+  hideMsg();
+
+  try{
+    const{data:attempts,error:attemptError}=await callRpcWithTimeout('start_quiz_attempt',{p_subject_id:currentSubjectId,p_test_mode:'practice'});
+    if(attemptError)throw attemptError;
+    if(!attempts?.length)throw new Error('The quiz attempt could not be created.');
+
+    const attempt=attempts[0];
+    currentAttemptId=attempt.attempt_id;
+    currentAttemptNumber=attempt.attempt_number;
+    totalQuestions=Number(attempt.total_questions);
+    sessionLimitSeconds=Number(attempt.time_limit_minutes)*60;
+
+    if(!Number.isInteger(totalQuestions)||totalQuestions<1||!Number.isFinite(sessionLimitSeconds)||sessionLimitSeconds<1){
+      throw new Error('The quiz configuration is invalid.');
     }
-  );
-};if(ae)throw ae;if(!a?.length)throw new Error('The quiz attempt could not be created.');currentAttemptId=a[0].attempt_id;currentAttemptNumber=a[0].attempt_number;const{data:ar,error:are}=await client.from('quiz_attempts').select('started_at').eq('id',currentAttemptId).single();if(are)throw are;attemptStartedAt=new Date(ar.started_at);answeredCount=0;currentScore=0;currentQuestionIndex=0;attemptInProgress=true;const{data:q,error:qe}=await client.rpc('get_attempt_questions',{p_attempt_id:currentAttemptId});if(qe)throw qe;if(!q||q.length!==50)throw new Error('The system did not return the required 50 questions.');questions=q;document.getElementById('start-panel').classList.add('hidden');document.getElementById('quiz-layout').classList.remove('hidden');document.getElementById('quiz-layout').classList.add('grid');document.getElementById('attempt-badge').innerText=`Attempt ${currentAttemptNumber}`;restoreReview();buildPalette();renderQuestion();updateScore();startSessionTimer()}catch(e){console.error(e);msg(e.message||'Unable to start the quiz.','error');b.disabled=false;b.innerText='Start This Attempt'}}
+
+    stage='Loading the quiz questions';
+    button.innerText='Loading Questions...';
+
+    const{data:questionRows,error:questionError}=await callRpcWithTimeout('get_attempt_questions',{p_attempt_id:currentAttemptId});
+    if(questionError)throw questionError;
+    if(!questionRows||questionRows.length!==totalQuestions){
+      throw new Error(`The system did not return the required ${totalQuestions} questions.`);
+    }
+
+    questions=questionRows;
+    attemptStartedAt=new Date(questionRows[0].started_at);
+
+    if(Number.isNaN(attemptStartedAt.getTime())){
+      throw new Error('The quiz start time is invalid.');
+    }
+
+    answeredCount=0;
+    currentScore=0;
+    currentQuestionIndex=0;
+    attemptInProgress=true;
+    document.getElementById('subject-heading').innerText=`${currentSubjectCode} · ${totalQuestions} Questions · 1 Mark Each`;
+    document.getElementById('start-panel').classList.add('hidden');
+    document.getElementById('quiz-layout').classList.remove('hidden');
+    document.getElementById('quiz-layout').classList.add('grid');
+    document.getElementById('attempt-badge').innerText=`Attempt ${currentAttemptNumber}`;
+    restoreReview();
+    buildPalette();
+    renderQuestion();
+    updateScore();
+    startSessionTimer();
+  }catch(error){
+    console.error(`${stage} error:`,error);
+    msg(quizStartError(error,stage),'error');
+    button.disabled=false;
+    button.innerText='Start This Attempt';
+  }
+}
 
 function buildPalette(){const p=document.getElementById('question-palette');p.innerHTML='';questions.forEach((q,i)=>{const b=document.createElement('button');b.type='button';b.innerText=i+1;b.className='qbtn';b.dataset.index=i;b.onclick=()=>{currentQuestionIndex=i;renderQuestion()};p.appendChild(b)});refreshPalette()}
-function renderQuestion(){const q=questions[currentQuestionIndex];if(!q)return;questionStartedAt=Date.now();startQuestionTimer();document.getElementById('question-position').innerText=`Question ${currentQuestionIndex+1} of 50`;document.getElementById('question-text').innerText=q.question_text;const r=answerResults[q.question_id],sel=selectedAnswers[q.question_id];document.getElementById('question-status').innerText=r?'Answered and recorded':reviewQuestions.has(q.question_id)?'Marked for review':'Not answered';const opts=[q.option_a,q.option_b,q.option_c,q.option_d],c=document.getElementById('options-container');c.innerHTML='';opts.forEach((o,i)=>{const v=o||'',lab=document.createElement('label');lab.className='opt flex cursor-pointer items-start gap-3 rounded-xl border border-slate-300 p-4';if(sel===v)lab.classList.add('selected');if(r)lab.classList.add('locked');const radio=document.createElement('input');radio.type='radio';radio.name='current-question';radio.value=v;radio.disabled=!!r;radio.checked=sel===v;radio.className='mt-1';radio.onchange=()=>{selectedAnswers[q.question_id]=v;renderQuestion()};const t=document.createElement('span');t.innerHTML=`<strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(v||'Option not set')}`;lab.append(radio,t);c.appendChild(lab)});renderFeedback(q.question_id);document.getElementById('submit-answer-button').disabled=!!r||!selectedAnswers[q.question_id];document.getElementById('previous-button').disabled=currentQuestionIndex===0;document.getElementById('next-button').disabled=currentQuestionIndex===49;updateReviewButton(q.question_id);refreshPalette()}
+function renderQuestion(){const q=questions[currentQuestionIndex];if(!q)return;questionStartedAt=Date.now();startQuestionTimer();document.getElementById('question-position').innerText=`Question ${currentQuestionIndex+1} of ${totalQuestions}`;document.getElementById('question-text').innerText=q.question_text;const r=answerResults[q.question_id],sel=selectedAnswers[q.question_id];document.getElementById('question-status').innerText=r?'Answered and recorded':reviewQuestions.has(q.question_id)?'Marked for review':'Not answered';const opts=[q.option_a,q.option_b,q.option_c,q.option_d],c=document.getElementById('options-container');c.innerHTML='';opts.forEach((o,i)=>{const v=o||'',lab=document.createElement('label');lab.className='opt flex cursor-pointer items-start gap-3 rounded-xl border border-slate-300 p-4';if(sel===v)lab.classList.add('selected');if(r)lab.classList.add('locked');const radio=document.createElement('input');radio.type='radio';radio.name='current-question';radio.value=v;radio.disabled=!!r;radio.checked=sel===v;radio.className='mt-1';radio.onchange=()=>{selectedAnswers[q.question_id]=v;renderQuestion()};const t=document.createElement('span');t.innerHTML=`<strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(v||'Option not set')}`;lab.append(radio,t);c.appendChild(lab)});renderFeedback(q.question_id);document.getElementById('submit-answer-button').disabled=!!r||!selectedAnswers[q.question_id];document.getElementById('previous-button').disabled=currentQuestionIndex===0;document.getElementById('next-button').disabled=currentQuestionIndex===questions.length-1;updateReviewButton(q.question_id);refreshPalette()}
 function renderFeedback(id){const b=document.getElementById('feedback-box'),r=answerResults[id];if(!r){b.classList.add('hidden');b.innerHTML='';return}b.classList.remove('hidden');if(r.is_correct){b.className='mt-5 rounded-xl bg-green-100 p-4 text-green-900';b.innerHTML=`<p class="font-bold">Correct! +1 mark</p><p class="mt-2">${escapeHtml(r.explanation||'')}</p>`}else{b.className='mt-5 rounded-xl bg-red-100 p-4 text-red-900';b.innerHTML=`<p class="font-bold">Incorrect. 0 marks</p><p class="mt-2"><strong>Correct Answer:</strong> ${escapeHtml(r.correct_answer||'')}</p><p class="mt-2">${escapeHtml(r.explanation||'')}</p>`}}
 async function submitAnswer(){const q=questions[currentQuestionIndex],ans=selectedAnswers[q.question_id];if(!ans){msg('Please select an answer before submitting.','error');return}const b=document.getElementById('submit-answer-button');b.disabled=true;b.innerText='Recording...';try{const{data,error}=await client.rpc('submit_quiz_answer',{p_attempt_id:currentAttemptId,p_question_id:q.question_id,p_selected_answer:ans});if(error)throw error;if(!data?.length)throw new Error('No result was returned.');const r=data[0];answerResults[q.question_id]=r;answeredCount=r.answered_count;currentScore=r.score;reviewQuestions.delete(q.question_id);saveReview();updateScore();renderQuestion();if(r.completed){attemptInProgress=false;clearReview();showFinal()}}catch(e){console.error(e);msg(e.message||'Unable to record this answer.','error')}finally{b.innerText='Submit Answer';if(!answerResults[q.question_id])b.disabled=false}}
-function prev(){if(currentQuestionIndex>0){currentQuestionIndex--;renderQuestion()}}function next(){if(currentQuestionIndex<49){currentQuestionIndex++;renderQuestion()}}
+function prev(){if(currentQuestionIndex>0){currentQuestionIndex--;renderQuestion()}}function next(){if(currentQuestionIndex<questions.length-1){currentQuestionIndex++;renderQuestion()}}
 function toggleReview(){const q=questions[currentQuestionIndex];reviewQuestions.has(q.question_id)?reviewQuestions.delete(q.question_id):reviewQuestions.add(q.question_id);saveReview();renderQuestion()}
 function updateReviewButton(id){const b=document.getElementById('review-button'),m=reviewQuestions.has(id);b.innerText=m?'Remove Review Mark':'Mark for Review';b.className=m?'rounded-xl border border-red-500 bg-red-100 px-4 py-2 font-semibold text-red-800 hover:bg-red-200':'rounded-xl border border-red-300 bg-red-50 px-4 py-2 font-semibold text-red-700 hover:bg-red-100'}
 function refreshPalette(){document.querySelectorAll('.qbtn').forEach(b=>{const i=Number(b.dataset.index),q=questions[i];b.className='qbtn';if(answerResults[q.question_id])b.classList.add('answered');if(reviewQuestions.has(q.question_id)){b.classList.remove('answered');b.classList.add('review')}if(i===currentQuestionIndex)b.classList.add('current')})}
-function updateScore(){document.getElementById('answered-count').innerText=`${answeredCount} / 50`;document.getElementById('score-count').innerText=`${currentScore} / 50`;const p=Math.round(answeredCount/50*100);document.getElementById('progress-label').innerText=`${p}%`;document.getElementById('progress-circle').style.strokeDashoffset=String(PROGRESS_CIRCUMFERENCE-(p/100)*PROGRESS_CIRCUMFERENCE)}
-function showFinal(){clearTimers();const p=Math.round(currentScore/50*100);document.getElementById('quiz-layout').classList.add('hidden');document.getElementById('final-result').classList.remove('hidden');document.getElementById('final-score').innerText=`You answered ${answeredCount} question(s). Your final score is ${currentScore} out of 50 (${p}%).`;scrollTo({top:0,behavior:'smooth'})}
+function updateScore(){document.getElementById('answered-count').innerText=`${answeredCount} / ${totalQuestions}`;document.getElementById('score-count').innerText=`${currentScore} / ${totalQuestions}`;const p=Math.round(answeredCount/totalQuestions*100);document.getElementById('progress-label').innerText=`${p}%`;document.getElementById('progress-circle').style.strokeDashoffset=String(PROGRESS_CIRCUMFERENCE-(p/100)*PROGRESS_CIRCUMFERENCE)}
+function showFinal(){clearTimers();const p=Math.round(currentScore/totalQuestions*100);document.getElementById('quiz-layout').classList.add('hidden');document.getElementById('final-result').classList.remove('hidden');document.getElementById('final-score').innerText=`You answered ${answeredCount} question(s). Your final score is ${currentScore} out of ${totalQuestions} (${p}%).`;scrollTo({top:0,behavior:'smooth'})}
 
 function startQuestionTimer(){if(questionTimerInterval)clearInterval(questionTimerInterval);updateQuestionTimer();questionTimerInterval=setInterval(updateQuestionTimer,1000)}
 function updateQuestionTimer(){if(!questionStartedAt)return;const e=Math.max(0,Math.floor((Date.now()-questionStartedAt)/1000));document.getElementById('question-time').innerText='Time on this question: '+formatMMSS(e)}
 function startSessionTimer(){if(sessionTimerInterval)clearInterval(sessionTimerInterval);updateSessionTimer();sessionTimerInterval=setInterval(updateSessionTimer,1000)}
-async function updateSessionTimer(){if(!attemptStartedAt||!attemptInProgress||isFinalising)return;const e=Math.floor((Date.now()-attemptStartedAt.getTime())/1000),r=Math.max(SESSION_LIMIT_SECONDS-e,0);document.getElementById('session-timer').innerText=formatHHMMSS(r);if(r<=300)document.getElementById('session-timer').classList.add('text-red-700');if(r===0){clearInterval(sessionTimerInterval);await finaliseAttempt('The 2-hour session limit has been reached. Your answered questions will now be scored.')}}
+async function updateSessionTimer(){if(!attemptStartedAt||!attemptInProgress||isFinalising)return;const e=Math.floor((Date.now()-attemptStartedAt.getTime())/1000),r=Math.max(sessionLimitSeconds-e,0);document.getElementById('session-timer').innerText=formatHHMMSS(r);if(r<=300)document.getElementById('session-timer').classList.add('text-red-700');if(r===0){clearInterval(sessionTimerInterval);await finaliseAttempt('The session time limit has been reached. Your answered questions will now be scored.')}}
 async function finaliseAttempt(message){if(!currentAttemptId||isFinalising||!attemptInProgress)return;isFinalising=true;try{const{data,error}=await client.rpc('finalize_quiz_attempt',{p_attempt_id:currentAttemptId});if(error)throw error;if(data?.length){answeredCount=data[0].answered_count;currentScore=data[0].score}attemptInProgress=false;clearTimers();clearReview();if(message)alert(message);showFinal()}catch(e){console.error(e);msg(e.message||'Unable to finish the attempt.','error');isFinalising=false}}
 function clearTimers(){if(sessionTimerInterval)clearInterval(sessionTimerInterval);if(questionTimerInterval)clearInterval(questionTimerInterval)}
 function formatMMSS(t){const m=Math.floor(t/60),s=t%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
