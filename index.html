@@ -88,49 +88,35 @@ async function handleRegister()
         const passVal = document.getElementById('pass').value;
 
         // 3. Perform Sign Up
+        const selectedSubjects = Array.from(
+            document.querySelectorAll('#subject-list input:checked')
+        ).map(checkbox => checkbox.value);
+
         const { data: auth, error: authErr } = await client.auth.signUp({ 
             email: emailVal, 
-            password: passVal 
+            password: passVal,
+            options: {
+                data: {
+                    first_name: document.getElementById('fname').value,
+                    last_name: document.getElementById('lname').value,
+                    mobile: document.getElementById('mobile').value,
+                    profession: document.getElementById('prof').value,
+                    company_name: document.getElementById('cname').value,
+                    building_name: document.getElementById('bname').value,
+                    street_name: document.getElementById('street').value,
+                    area: document.getElementById('area').value,
+                    city: document.getElementById('city').value,
+                    pin_code: document.getElementById('pin').value,
+                    country: document.getElementById('country').value,
+                    subjects: selectedSubjects
+                }
+            }
         });
 
         if (authErr) throw authErr;
 
-        // 4. Perform Profile Save
-
 if (!auth.user) {
     throw new Error("User account was not created by Supabase.");
-}
-console.log("fname :", document.getElementById('fname')?.value);
-console.log("lname :", document.getElementById('lname')?.value);
-console.log("mobile:", document.getElementById('mobile')?.value);
-console.log("prof  :", document.getElementById('prof')?.value);
-console.log("cname :", document.getElementById('cname')?.value);         
-console.log("bname :", document.getElementById('bname')?.value);
-console.log("street:", document.getElementById('street')?.value);
-console.log("area  :", document.getElementById('area')?.value);
-console.log("city  :", document.getElementById('city')?.value);
-console.log("pin   :", document.getElementById('pin')?.value);
-console.log("country:", document.getElementById('country')?.value);
-const { error: rpcErr } = await client.rpc('save_user_profile', {
-    user_id: auth.user.id,
-    fname: document.getElementById('fname').value,
-    lname: document.getElementById('lname').value,
-    mob: document.getElementById('mobile').value,
-    prof: document.getElementById('prof').value,
-    company: document.getElementById('cname').value,
-    bldg: document.getElementById('bname').value,
-    st: document.getElementById('street').value,
-    ar: document.getElementById('area').value,
-    ct: document.getElementById('city').value,
-    pin: document.getElementById('pin').value,
-    cnt: document.getElementById('country').value,
-    subjects: Array.from(
-    document.querySelectorAll('#subject-list input:checked')
-).map(cb => cb.value)});
-
-if (rpcErr) {
-    console.log("RPC Error Object:", rpcErr);
-    throw rpcErr;
 }
 
 alert(
