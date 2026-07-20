@@ -9,6 +9,7 @@
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
 
     <div id="login-view" class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
+        <div id="session-message" role="alert" class="hidden mb-6 rounded-xl bg-amber-100 p-4 text-amber-900"></div>
         <h2 class="text-3xl font-extrabold text-blue-900 mb-2">Welcome Back</h2>
         <p class="text-slate-500 mb-8">Sign in to access your dashboard</p>
         <input id="login-email" type="email" placeholder="Email Address" class="w-full p-4 mb-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
@@ -48,6 +49,28 @@ onclick="toggleView()" class="w-full mt-4 text-slate-400 hover:text-slate-600">B
 // REPLACE 'YOUR_SUPABASE_URL' and 'YOUR_SUPABASE_KEY' with your actual values
       
 const client = window.supabase.createClient("https://tvjsivuibvzybdbjtesq.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU");
+function showSessionMessage() {
+    const parameters = new URLSearchParams(window.location.search);
+
+    if (parameters.get('session') !== 'replaced') {
+        return;
+    }
+
+    const message = document.getElementById('session-message');
+    message.innerText =
+        'This session is no longer active, possibly because your account ' +
+        'was signed in elsewhere. Please sign in again.';
+    message.classList.remove('hidden');
+
+    parameters.delete('session');
+    const remainingQuery = parameters.toString();
+    const cleanUrl = window.location.pathname +
+        (remainingQuery ? `?${remainingQuery}` : '') +
+        window.location.hash;
+
+    window.history.replaceState({}, '', cleanUrl);
+}
+
  async function loadSubjects() {
     const { data, error } = await client
         .from('subjects')
@@ -66,6 +89,7 @@ const client = window.supabase.createClient("https://tvjsivuibvzybdbjtesq.supaba
             </label>`
         ).join('');
 }
+showSessionMessage();
 loadSubjects();
 function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
 
@@ -150,9 +174,47 @@ toggleView();// Go back to login
 } // <-- Ends the try...catch...finally
 } // <-- THIS BRACE closes handleRegister()
         async function handleLogin() {
-            const { error } = await client.auth.signInWithPassword({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value });
-            if (error) alert("Login Failed: " + error.message);
-            else window.location.href = "dashboard.html";
+            const button = document.getElementById('btn-login');
+            button.disabled = true;
+            button.innerText = 'Signing In...';
+
+            try {
+                const { error: loginError } =
+                    await client.auth.signInWithPassword({
+                        email: document.getElementById('login-email').value,
+                        password: document.getElementById('login-pass').value
+                    });
+
+                if (loginError) {
+                    throw loginError;
+                }
+
+                const { error: revokeError } =
+                    await client.auth.signOut({ scope: 'others' });
+
+                if (revokeError) {
+                    console.error(
+                        'Unable to revoke other login sessions:',
+                        revokeError
+                    );
+
+                    await client.auth.signOut({ scope: 'local' });
+
+                    throw new Error(
+                        'Unable to secure this login. Please try again.'
+                    );
+                }
+
+                window.location.replace('dashboard.html');
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login Failed: ' + (
+                    error.message || 'Please try again.'
+                ));
+            } finally {
+                button.disabled = false;
+                button.innerText = 'Sign In';
+            }
         }
     </script>
 </body>
