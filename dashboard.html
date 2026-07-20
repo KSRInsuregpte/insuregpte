@@ -133,6 +133,29 @@
 
         const MAX_ATTEMPTS = 5;
 
+        function isInactiveSessionError(error) {
+            return error?.code === 'PT401';
+        }
+
+        async function redirectForInactiveSession(error) {
+            if (!isInactiveSessionError(error)) {
+                return false;
+            }
+
+            const { error: signOutError } =
+                await client.auth.signOut({ scope: 'local' });
+
+            if (signOutError) {
+                console.error(
+                    'Unable to clear the inactive local session:',
+                    signOutError
+                );
+            }
+
+            window.location.replace('index.html?session=replaced');
+            return true;
+        }
+
         async function init() {
             try {
                 const {
@@ -207,6 +230,10 @@
 
             } catch (error) {
                 console.error("Dashboard loading error:", error);
+
+                if (await redirectForInactiveSession(error)) {
+                    return;
+                }
 
                 showMessage(
                     error.message || "Unable to load the dashboard.",
