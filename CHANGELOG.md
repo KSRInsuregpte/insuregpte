@@ -97,6 +97,9 @@ This project follows Semantic Versioning (SemVer).
 - Added a protected registration migration with a Before User Created Auth
   hook, trusted referral capture, complete-profile enforcement, dual email and
   mobile verification, and an active-profile Data API gate
+- Disabled registration submission until the configured Turnstile widget is
+  available, so the temporary security warning cannot be bypassed by local
+  field validation
 - Preserved the deployed `save_user_profile` signature while preventing null
   profile fields, unverified mobile changes, invalid subjects, and accidental
   reactivation of suspended or closed accounts

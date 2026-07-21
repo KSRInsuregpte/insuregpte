@@ -109,8 +109,21 @@
         return siteKey;
     }
 
+    function setRegistrationEnabled(enabled) {
+        const button = byId('btn-register');
+
+        if (!button) {
+            return;
+        }
+
+        button.disabled = !enabled;
+        button.setAttribute('aria-disabled', String(!enabled));
+    }
+
     function renderCaptchaWidgets() {
         const siteKey = configuredTurnstileSiteKey();
+
+        setRegistrationEnabled(false);
 
         if (!siteKey) {
             setMessage(
@@ -178,6 +191,11 @@
                     }
                 }
             );
+        }
+
+        if (state.captcha.registrationWidgetId !== null) {
+            setMessage('registration-availability', '');
+            setRegistrationEnabled(true);
         }
     }
 
@@ -389,9 +407,18 @@
 
     async function handleRegister() {
         const button = byId('btn-register');
-        const result = validation.validate(registrationValues());
 
         setMessage('registration-error', '');
+
+        if (!state.captcha.configured) {
+            setMessage(
+                'registration-error',
+                'Protected registration is temporarily unavailable.'
+            );
+            return;
+        }
+
+        const result = validation.validate(registrationValues());
 
         if (!result.valid) {
             setMessage(
@@ -399,14 +426,6 @@
                 firstValidationError(result.errors)
             );
             focusFirstInvalidField(result.errors);
-            return;
-        }
-
-        if (!state.captcha.configured) {
-            setMessage(
-                'registration-error',
-                'Protected registration is temporarily unavailable.'
-            );
             return;
         }
 

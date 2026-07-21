@@ -13,6 +13,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/session-control.js?v=20260720"></script>
 </head>
 
 <body class="bg-slate-50 min-h-screen">
@@ -129,34 +130,26 @@
     </main>
 
     <script>
-        const client = window.supabase.createClient('https://tvjsivuibvzybdbjtesq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU');
+        const sessionControl = window.InsureGPTESessionControl;
+        const client = window.supabase.createClient(
+            'https://tvjsivuibvzybdbjtesq.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU',
+            sessionControl.clientOptions()
+        );
 
         const MAX_ATTEMPTS = 5;
 
-        function isInactiveSessionError(error) {
-            return error?.code === 'PT401';
-        }
-
         async function redirectForInactiveSession(error) {
-            if (!isInactiveSessionError(error)) {
-                return false;
-            }
-
-            const { error: signOutError } =
-                await client.auth.signOut({ scope: 'local' });
-
-            if (signOutError) {
-                console.error(
-                    'Unable to clear the inactive local session:',
-                    signOutError
-                );
-            }
-
-            window.location.replace('index.html?session=replaced');
-            return true;
+            return sessionControl.handleInactiveSessionError(error);
         }
 
         async function init() {
+            const pageControl = sessionControl.acquirePageControl();
+
+            if (!pageControl.acquired) {
+                return;
+            }
+
             try {
                 const {
                     data: { user },
@@ -164,7 +157,15 @@
                 } = await client.auth.getUser();
 
                 if (userError || !user) {
+                    sessionControl.releasePageControl();
                     window.location.href = "index.html";
+                    return;
+                }
+
+                if (!await sessionControl.activateProtectedPage(
+                    client,
+                    pageControl.tookOver
+                )) {
                     return;
                 }
 
@@ -426,10 +427,10 @@
         }
 
         async function logout() {
-            const { error } = await client.auth.signOut();
+            const result = await sessionControl.logoutEverywhere(client);
 
-            if (error) {
-                console.error("Logout error:", error);
+            if (!result.success) {
+                console.error("Logout error:", result.error);
 
                 showMessage(
                     "Unable to log out. Please try again.",
@@ -439,7 +440,7 @@
                 return;
             }
 
-            window.location.href = "index.html";
+            window.location.replace("index.html");
         }
 
         function escapeHtml(value) {

@@ -2,6 +2,7 @@
   "name": "insuregpte",
   "version": "1.0.0",
   "scripts": {
-    "start": "echo 'Site deployed!'"
+    "start": "echo 'Site deployed!'",
+    "test": "node TESTING/frontend-static-check.mjs && node TESTING/session-control-behavior-check.mjs && node TESTING/registration-validation-behavior-check.mjs && node TESTING/registration-security-static-check.mjs"
   }
 }
