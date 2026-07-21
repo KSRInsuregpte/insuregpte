@@ -1,8 +1,9 @@
 # InsureGPTE System Architecture
 
 **Document:** 01_SYSTEM_ARCHITECTURE.md  
-**Version:** 1.0  
-**Status:** Architecture Freeze Draft  
+**Version:** 1.3  
+**Status:** Approved — Architecture Frozen  
+**Approval Date:** 2026-07-20  
 **Project Owner:** Sundararajan Desikan  
 **Platform:** InsureGPTE  
 **Primary Stack:** HTML, Tailwind CSS, JavaScript, Supabase, PostgreSQL, Vercel  
@@ -122,7 +123,14 @@ Technology:
 
 - Supabase Auth
 - Email/password login
-- Email confirmation
+- email confirmation by OTP;
+- standard Supabase mobile confirmation by SMS OTP;
+- Cloudflare Turnstile for Auth bot protection.
+
+Supabase Auth is the Version 1.0 identity provider. The application user UUID
+must remain stable and portable so a future identity provider or database
+migration does not require rewriting user-owned learning, quiz, progress, or
+entitlement records.
 
 Authoritative user identity:
 
@@ -146,6 +154,30 @@ role = user
 status = verification_pending
 subscription_plan = free
 ```
+
+Protected registration policy:
+
+- all profile fields and a referral source are required;
+- at least one active subject must be selected;
+- the browser and the Before User Created Auth hook validate registration;
+- the trusted profile trigger repeats critical validation as a backstop;
+- new protected accounts remain `verification_pending` until the email and the
+  registered mobile number are both confirmed by Supabase Auth;
+- pending profiles cannot use protected table or RPC operations;
+- OTP values and provider secrets are never stored in application tables.
+
+Session-concurrency policy:
+
+- one active browser page is permitted per user across tabs, browsers, and
+  devices;
+- the first active page remains in control by default;
+- a later login must stop before the dashboard and offer two explicit choices:
+  cancel the new login or transfer control with **Use this login**;
+- transferring control disables the earlier page and revokes its renewable Auth
+  session; sharing one Supabase `session_id` does not permit two usable pages;
+- explicit Logout ends the account's active lease and all Auth sessions;
+- session enforcement must be server-side for protected operations and must not
+  rely only on frontend navigation or hidden controls.
 
 ### 5.3 Service Layer
 
@@ -497,12 +529,13 @@ Future pages may include:
 ```text
 Open index.html
 → Register
-→ Supabase creates Auth user
-→ Profile created with safe defaults
-→ Verification email sent
-→ User verifies email
-→ Account activated
-→ Login
+→ Browser validates every required field and at least one subject
+→ Cloudflare Turnstile challenge
+→ Before User Created hook validates the request server-side
+→ Supabase creates Auth user and trusted pending profile
+→ Enter email OTP
+→ Enter mobile SMS OTP
+→ Database confirms both Auth verifications and activates the profile
 → Dashboard
 ```
 
@@ -512,8 +545,11 @@ Open index.html
 Open index.html
 → Enter credentials
 → Supabase validates
-→ Profile and account status checked
-→ Active user enters dashboard
+→ Claim the short-lived active-client lease
+→ No existing active page: enter dashboard
+→ Existing active page: show Cancel / Use this login confirmation
+→ Cancel: end the new local login; first page remains active
+→ Use this login: transfer lease; disable first page; enter dashboard
 ```
 
 ### Learning
@@ -603,7 +639,29 @@ Ownership must be enforced through RLS and RPC checks.
 
 ### Identity
 
-Supabase Auth is authoritative. User-specific functions use `auth.uid()`.
+The configured identity provider is the sole authentication authority.
+Supabase Auth is the Version 1.0 provider, and user-specific functions use
+`auth.uid()`. Application data must continue to use a stable UUID so the
+identity provider can be replaced through a controlled migration.
+
+New public registration is protected by CAPTCHA and a Before User Created Auth
+hook. Email and mobile OTP generation and verification remain within Supabase
+Auth. Application tables store only verification timestamps and the normalized
+registered mobile number; they never store OTP values.
+
+### Session Concurrency
+
+- only one active browser page is allowed per user;
+- the first active page is authoritative until explicit logout, lease expiry,
+  or an approved **Use this login** transfer;
+- a later authentication cannot enter the dashboard automatically;
+- a displaced page must be denied protected table and RPC access even while a
+  previously issued access token has not yet expired;
+- duplicate tabs are blocked by the shared frontend controller, while the
+  database lease protects cross-browser and cross-device access;
+- session checks must use trusted server-side session state;
+- session-control changes require rollback SQL or a documented platform-setting
+  rollback, Auth testing, cross-browser testing, and active-quiz testing.
 
 ### Authorization
 
@@ -868,7 +926,7 @@ Testing categories:
 
 ## 22. Architecture Approval
 
-This document is frozen when the project owner approves:
+The project owner approved and froze this document on 2026-07-19, including:
 
 - Version 1.0 scope;
 - module architecture;
@@ -877,6 +935,9 @@ This document is frozen when the project owner approves:
 - frontend page flow;
 - roles and security model;
 - included and deferred features.
+
+Implementation may now proceed through the approved development sequence.
+Material architecture changes still require the change-control process below.
 
 ---
 
@@ -893,6 +954,94 @@ Any architecture change must document:
 - testing impact;
 - release impact;
 - approval decision.
+
+### Approved change record — 2026-07-19
+
+- **Requested change:** prohibit concurrent authenticated sessions for one user
+  account while keeping logout as an explicit user action.
+- **Business reason:** reduce account sharing and protect learning and practice
+  test integrity.
+- **Affected modules:** authentication, protected RPCs, frontend session
+  handling, testing, and deployment configuration.
+- **Database impact:** none at architecture-freeze stage; implementation impact
+  depends on the selected enforcement mechanism.
+- **Security impact:** authentication/session behavior will change when
+  enforcement is deployed.
+- **Migration impact:** implementation must be version controlled and reversible.
+- **Testing impact:** same-browser, cross-browser, cross-device, active-quiz,
+  logout, expiry, and recovery cases are mandatory.
+- **Release impact:** deploy to staging before production.
+- **Approval decision:** approved by the project owner.
+
+### Implementation status update — 2026-07-19
+
+- The Supabase project is on the Free plan, so the managed single-session
+  switch is unavailable.
+- Refresh-token replay detection is enabled with a 10-second reuse interval.
+- Time-box and inactivity limits remain disabled, and JWT expiry is 3,600
+  seconds.
+- A Free-plan-compatible PostgREST pre-request guard, frontend session
+  handling, verification SQL, and rollback have been prepared in the
+  repository. They are not active until the migration and frontend are
+  deployed and the mandatory browser tests pass.
+- The guard covers PostgREST table and RPC requests. Any future protected
+  Storage or Realtime feature must add equivalent session enforcement before
+  release.
+
+### Approved refinement and implementation — 2026-07-20
+
+- **Requested refinement:** a later login must not automatically replace the
+  first page. It must stop before the dashboard and ask whether to cancel or
+  explicitly transfer control. Duplicate tabs must also be unusable.
+- **Approval decision:** approved by the project owner following Chrome and
+  Edge runtime testing.
+- **Database impact:** add one short-lived `active_client_leases` control row per
+  active user plus three narrowly granted RPCs. This is not a second identity or
+  authentication store: Supabase Auth remains the only identity authority and
+  no password, token, email, or profile data is stored in the lease table.
+- **Frontend impact:** add one shared session controller used by login,
+  dashboard, and quiz pages for the client header, duplicate-tab control,
+  confirmation, heartbeat, displacement, and global logout.
+- **Deployment impact:** apply the compatibility migration, deploy all updated
+  pages and the shared controller, then apply strict enforcement. Each database
+  stage has a matching rollback.
+- **Detection behavior:** protected writes are denied immediately by the
+  database. An already displayed displaced page is covered and redirected when
+  its ten-second heartbeat or an activity/focus check detects the transfer.
+- **Recovery behavior:** a browser closed without Logout releases control after
+  the 90-second lease expires; the user may also explicitly transfer control
+  sooner.
+- **Implementation status:** repository implementation and static verification
+  are complete; production SQL deployment and manual browser verification are
+  still required.
+
+### Approved protected-registration implementation — 2026-07-21
+
+- **Requested change:** prevent incomplete/direct automated registration,
+  validate all registration fields, require at least one subject, record the
+  referral source, and verify both email and mobile ownership by OTP.
+- **Business reason:** protect learner identity quality, SMS/email reputation,
+  platform access, and examination integrity before public registration is
+  reopened.
+- **Database impact:** extend `profiles` with registration source, trusted
+  validation version, and email/mobile verification timestamps; add one Auth
+  hook function; harden existing lifecycle functions without changing their
+  signatures; extend the existing PostgREST pre-request guard with active-profile
+  enforcement. The existing unique mobile constraint is reused.
+- **Frontend impact:** replace inline registration behavior with shared,
+  testable validation and Auth flow scripts; add field guidance, CAPTCHA, email
+  OTP, and mobile OTP views.
+- **Security impact:** incomplete Auth requests are rejected before creation and
+  again by the profile trigger; new accounts cannot access protected data until
+  both OTP checks pass. OTP codes and provider secrets are not stored by the
+  application.
+- **External configuration:** Turnstile keys, an SMS provider, the email OTP
+  template, the Auth hook selection, and the Auth password policy must be
+  configured in their respective dashboards before signup is reopened.
+- **Approval decision:** approved by the project owner on 2026-07-21.
+- **Implementation status:** repository SQL, frontend, rollback, audit,
+  verification, tests, and deployment guide are complete; production migration
+  and provider configuration are pending owner execution.
 
 ---
 

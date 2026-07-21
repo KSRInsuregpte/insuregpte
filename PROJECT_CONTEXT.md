@@ -252,6 +252,18 @@
 
 # Email Verification Enabled
 
+#
+
+# Protected public registration uses Cloudflare Turnstile, a Before User
+
+# Created Auth hook, six-digit email verification, and standard Supabase mobile
+
+# SMS OTP. New protected accounts remain pending until both email and the
+
+# registered mobile number are confirmed. OTP values and provider secrets are
+
+# not stored in application tables.
+
 # 
 
 # Account Status

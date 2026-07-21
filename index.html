@@ -1,221 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-     <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="insuregpte-turnstile-site-key"
+        content="REPLACE_WITH_CLOUDFLARE_TURNSTILE_SITE_KEY"
+    >
     <title>InsureGPTE Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/session-control.js?v=20260720"></script>
+    <script defer src="js/registration-validation.js?v=20260721"></script>
+    <script defer src="js/index-auth.js?v=20260721"></script>
+    <script
+        async
+        defer
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+    ></script>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
+    <main class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl items-center justify-center">
+        <section
+            id="login-view"
+            aria-labelledby="login-title"
+            class="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-8 shadow-xl"
+        >
+            <div id="session-message" role="alert" class="hidden"></div>
+            <div id="login-error" role="alert" class="hidden"></div>
+            <h1 id="login-title" class="mb-2 text-3xl font-extrabold text-blue-900">
+                Welcome Back
+            </h1>
+            <p class="mb-8 text-slate-500">Sign in to access your dashboard</p>
 
-    <div id="login-view" class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-        <div id="session-message" role="alert" class="hidden mb-6 rounded-xl bg-amber-100 p-4 text-amber-900"></div>
-        <h2 class="text-3xl font-extrabold text-blue-900 mb-2">Welcome Back</h2>
-        <p class="text-slate-500 mb-8">Sign in to access your dashboard</p>
-        <input id="login-email" type="email" placeholder="Email Address" class="w-full p-4 mb-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-        <input id="login-pass" type="password" placeholder="Password" class="w-full p-4 mb-6 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-        <button id="btn-login" onclick="handleLogin()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition">Sign In</button>
-        <p class="mt-6 text-center text-slate-600">Don't have an account? <button onclick="toggleView()" class="text-blue-600 font-bold hover:underline">Register Now</button></p>
-    </div>
+            <form id="login-form" novalidate>
+                <label for="login-email" class="mb-1 block font-semibold text-slate-700">
+                    Email address
+                </label>
+                <input
+                    id="login-email"
+                    type="email"
+                    autocomplete="email"
+                    maxlength="254"
+                    required
+                    class="mb-4 w-full rounded-xl border border-slate-200 p-4 outline-none focus:ring-2 focus:ring-blue-500"
+                >
 
-    <div id="reg-view" class="hidden w-full max-w-2xl bg-white p-10 rounded-2xl shadow-xl border border-slate-100">
-        <h2 class="text-3xl font-extrabold text-blue-900 mb-6">Create Account</h2>
-        <form id="reg-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input id="fname" placeholder="First Name" class="p-4 border rounded-xl">
-            <input id="lname" placeholder="Last Name" class="p-4 border rounded-xl">
-            <input id="email" placeholder="Email Address" class="p-4 border rounded-xl md:col-span-2">
-            <input id="pass" type="password" placeholder="Password" class="p-4 border rounded-xl md:col-span-2">
-            <select id="prof" class="p-4 border rounded-xl md:col-span-2 bg-white"><option value="">Select Profession</option><option>Student</option><option>Working Professional</option></select>
-            <input id="mobile" placeholder="Mobile Number" class="p-4 border rounded-xl md:col-span-2">
-            <input id="cname" placeholder="Company Name" class="p-3 border rounded col-span-2">
-            <input id="bname" placeholder="Building Name" class="p-3 border rounded col-span-2">
-            <input id="street" placeholder="Street Name" class="p-3 border rounded col-span-2">
-            <input id="area" placeholder="Area" class="p-3 border rounded col-span-2">
-            <input id="city" placeholder="City" class="p-4 border rounded-xl">
-            <input id="pin" placeholder="PIN Code" class="p-4 border rounded-xl">
-            <input id="country" placeholder="Country *" class="p-3 border rounded col-span-2">
-            <div class="md:col-span-2 mt-4"><label class="font-bold text-slate-700 block mb-3">Interested Areas of Subject:</label><div id="subject-list" class="grid grid-cols-2 gap-3 text-sm"></div></div>
-        </form>
-        <button
-type="button"
-id="btn-register"
-onclick="handleRegister()" class="w-full mt-8 bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition">Complete Registration</button>
-       <button
-type="button"
-onclick="toggleView()" class="w-full mt-4 text-slate-400 hover:text-slate-600">Back to Login</button>
-    </div>
+                <label for="login-pass" class="mb-1 block font-semibold text-slate-700">
+                    Password
+                </label>
+                <input
+                    id="login-pass"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                    class="mb-4 w-full rounded-xl border border-slate-200 p-4 outline-none focus:ring-2 focus:ring-blue-500"
+                >
 
-    <script>
-// REPLACE 'YOUR_SUPABASE_URL' and 'YOUR_SUPABASE_KEY' with your actual values
-      
-const client = window.supabase.createClient("https://tvjsivuibvzybdbjtesq.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU");
-function showSessionMessage() {
-    const parameters = new URLSearchParams(window.location.search);
+                <div id="login-captcha" class="mb-4 flex justify-center"></div>
 
-    if (parameters.get('session') !== 'replaced') {
-        return;
-    }
+                <button
+                    id="btn-login"
+                    type="submit"
+                    class="w-full rounded-xl bg-blue-600 py-4 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    Sign In
+                </button>
+            </form>
 
-    const message = document.getElementById('session-message');
-    message.innerText =
-        'This session is no longer active, possibly because your account ' +
-        'was signed in elsewhere. Please sign in again.';
-    message.classList.remove('hidden');
+            <p class="mt-6 text-center text-slate-600">
+                Don't have an account?
+                <button
+                    id="btn-show-register"
+                    type="button"
+                    class="font-bold text-blue-600 hover:underline"
+                >
+                    Register Now
+                </button>
+            </p>
+        </section>
 
-    parameters.delete('session');
-    const remainingQuery = parameters.toString();
-    const cleanUrl = window.location.pathname +
-        (remainingQuery ? `?${remainingQuery}` : '') +
-        window.location.hash;
+        <section
+            id="reg-view"
+            aria-labelledby="registration-title"
+            class="hidden w-full max-w-3xl rounded-2xl border border-slate-100 bg-white p-6 shadow-xl md:p-10"
+        >
+            <h1 id="registration-title" class="mb-2 text-3xl font-extrabold text-blue-900">
+                Create Account
+            </h1>
+            <p class="mb-6 text-sm text-slate-600">
+                All fields are required. Your email and mobile number must both be verified before access is activated.
+            </p>
+            <div id="registration-availability" role="status" class="hidden"></div>
+            <div id="registration-error" role="alert" class="hidden"></div>
 
-    window.history.replaceState({}, '', cleanUrl);
-}
+            <form id="reg-form" class="grid grid-cols-1 gap-4 md:grid-cols-2" novalidate>
+                <div>
+                    <label for="fname" class="mb-1 block font-semibold">
+                        First name
+                        <span role="img" aria-label="Information" title="Your given name as used in your learning record." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="fname" autocomplete="given-name" minlength="2" maxlength="50" required class="w-full rounded-xl border p-4">
+                </div>
 
- async function loadSubjects() {
-    const { data, error } = await client
-        .from('subjects')
-        .select('code, title');
+                <div>
+                    <label for="lname" class="mb-1 block font-semibold">
+                        Last name
+                        <span role="img" aria-label="Information" title="Your family or surname." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="lname" autocomplete="family-name" minlength="1" maxlength="50" required class="w-full rounded-xl border p-4">
+                </div>
 
-    if (error) {
-        console.error(error);
-        return;
-    }
+                <div class="md:col-span-2">
+                    <label for="email" class="mb-1 block font-semibold">
+                        Email address
+                        <span role="img" aria-label="Information" title="A six-digit verification code will be sent to this address." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="email" type="email" autocomplete="email" maxlength="254" required class="w-full rounded-xl border p-4">
+                </div>
 
-    document.getElementById('subject-list').innerHTML =
-        data.map(s =>
-            `<label class="flex items-center gap-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
-                <input type="checkbox" value="${s.code}">
-                ${s.title}
-            </label>`
-        ).join('');
-}
-showSessionMessage();
-loadSubjects();
-function toggleView() { document.getElementById('login-view').classList.toggle('hidden'); document.getElementById('reg-view').classList.toggle('hidden'); }
+                <div class="md:col-span-2">
+                    <label for="pass" class="mb-1 block font-semibold">
+                        Password
+                        <span role="img" aria-label="Information" title="Use 12–64 characters with uppercase, lowercase, a number, and a symbol. Spaces are not allowed." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="pass" type="password" autocomplete="new-password" minlength="12" maxlength="64" required class="w-full rounded-xl border p-4">
+                    <p id="password-guidance" class="mt-1 text-xs text-slate-500"></p>
+                </div>
 
-async function handleRegister() 
-{
-    // 1. Properly define the button variable FIRST
-    const btn = document.getElementById('btn-register');
-    
-    // 2. Add a safety check to make sure the button exists
-    if (!btn) {
-        console.error("Button element 'btn-register' not found!");
-        return;
-    }
+                <div class="md:col-span-2">
+                    <label for="pass-confirm" class="mb-1 block font-semibold">
+                        Confirm password
+                        <span role="img" aria-label="Information" title="Enter the same password again to prevent typing mistakes." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="pass-confirm" type="password" autocomplete="new-password" minlength="12" maxlength="64" required class="w-full rounded-xl border p-4">
+                </div>
 
-    btn.disabled = true; 
-    btn.innerText = "Processing...";
+                <div class="md:col-span-2">
+                    <label for="prof" class="mb-1 block font-semibold">
+                        Profession
+                        <span role="img" aria-label="Information" title="Select the option that best describes your current role." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <select id="prof" required class="w-full rounded-xl border bg-white p-4">
+                        <option value="">Select profession</option>
+                        <option>Student</option>
+                        <option>Working Professional</option>
+                        <option>Insurance Agent</option>
+                        <option>Insurance Broker</option>
+                        <option>Surveyor / Loss Assessor</option>
+                        <option>Other</option>
+                    </select>
+                </div>
 
-    try {
-        const emailVal = document.getElementById('email').value;
-        const passVal = document.getElementById('pass').value;
+                <div class="md:col-span-2">
+                    <label for="mobile" class="mb-1 block font-semibold">
+                        Mobile number
+                        <span role="img" aria-label="Information" title="Include the country code. An SMS OTP will be sent after email verification." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="mobile" type="tel" autocomplete="tel" inputmode="tel" placeholder="+919876543210" maxlength="16" pattern="\+[1-9][0-9]{7,14}" required class="w-full rounded-xl border p-4">
+                </div>
 
-        // 3. Perform Sign Up
-        const selectedSubjects = Array.from(
-            document.querySelectorAll('#subject-list input:checked')
-        ).map(checkbox => checkbox.value);
+                <div class="md:col-span-2">
+                    <label for="cname" class="mb-1 block font-semibold">
+                        Company or institution
+                        <span role="img" aria-label="Information" title="Enter your employer, college, training institution, or Not applicable." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="cname" autocomplete="organization" minlength="2" maxlength="120" required class="w-full rounded-xl border p-4">
+                </div>
 
-        const { data: auth, error: authErr } = await client.auth.signUp({ 
-            email: emailVal, 
-            password: passVal,
-            options: {
-                data: {
-                    first_name: document.getElementById('fname').value,
-                    last_name: document.getElementById('lname').value,
-                    mobile: document.getElementById('mobile').value,
-                    profession: document.getElementById('prof').value,
-                    company_name: document.getElementById('cname').value,
-                    building_name: document.getElementById('bname').value,
-                    street_name: document.getElementById('street').value,
-                    area: document.getElementById('area').value,
-                    city: document.getElementById('city').value,
-                    pin_code: document.getElementById('pin').value,
-                    country: document.getElementById('country').value,
-                    subjects: selectedSubjects
-                }
-            }
-        });
+                <div class="md:col-span-2">
+                    <label for="bname" class="mb-1 block font-semibold">
+                        Building or house name
+                        <span role="img" aria-label="Information" title="Your building, apartment, or house name/number." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="bname" autocomplete="address-line1" minlength="2" maxlength="120" required class="w-full rounded-xl border p-4">
+                </div>
 
-        if (authErr) throw authErr;
+                <div class="md:col-span-2">
+                    <label for="street" class="mb-1 block font-semibold">
+                        Street name
+                        <span role="img" aria-label="Information" title="The street or road in your postal address." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="street" autocomplete="address-line2" minlength="2" maxlength="120" required class="w-full rounded-xl border p-4">
+                </div>
 
-if (!auth.user) {
-    throw new Error("User account was not created by Supabase.");
-}
+                <div class="md:col-span-2">
+                    <label for="area" class="mb-1 block font-semibold">
+                        Area or locality
+                        <span role="img" aria-label="Information" title="Your area, locality, village, or neighbourhood." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="area" autocomplete="address-level3" minlength="2" maxlength="120" required class="w-full rounded-xl border p-4">
+                </div>
 
-alert(
-"Registration Successful.\n\nA verification email has been sent.\nPlease verify your email before signing in."
-);
+                <div>
+                    <label for="city" class="mb-1 block font-semibold">
+                        City
+                        <span role="img" aria-label="Information" title="Your city or town." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="city" autocomplete="address-level2" minlength="2" maxlength="80" required class="w-full rounded-xl border p-4">
+                </div>
 
-document.getElementById("reg-form").reset();
+                <div>
+                    <label for="pin" class="mb-1 block font-semibold">
+                        Postal or PIN code
+                        <span role="img" aria-label="Information" title="The postal code for your address; letters are accepted for international codes." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="pin" autocomplete="postal-code" minlength="3" maxlength="12" required class="w-full rounded-xl border p-4">
+                </div>
 
-toggleView();// Go back to login
+                <div class="md:col-span-2">
+                    <label for="country" class="mb-1 block font-semibold">
+                        Country
+                        <span role="img" aria-label="Information" title="Your country of residence." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="country" autocomplete="country-name" value="India" minlength="2" maxlength="56" required class="w-full rounded-xl border p-4">
+                </div>
 
-} catch (err) {
+                <div class="md:col-span-2">
+                    <label for="registration-source" class="mb-1 block font-semibold">
+                        How did you learn about InsureGPTE?
+                        <span role="img" aria-label="Information" title="This helps us understand the genuine source of registrations." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <select id="registration-source" required class="w-full rounded-xl border bg-white p-4">
+                        <option value="">Select source</option>
+                        <option value="search_engine">Search engine</option>
+                        <option value="colleague">Friend or colleague</option>
+                        <option value="employer">Employer</option>
+                        <option value="training_institute">Training institute</option>
+                        <option value="social_media">Social media</option>
+                        <option value="professional_association">Professional association</option>
+                        <option value="direct_invitation">Direct invitation</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
 
-    console.error("Full Error Object:", err);
-    console.error("Error Message:", err.message);
-    console.error("Error Details:", err.details);
-    console.error("Error Hint:", err.hint);
-    console.error("Error Code:", err.code);
+                <div id="registration-source-detail-container" class="hidden md:col-span-2">
+                    <label for="registration-source-detail" class="mb-1 block font-semibold">
+                        Please describe the source
+                        <span role="img" aria-label="Information" title="Provide a short description without including confidential information." class="cursor-help text-blue-600">ⓘ</span>
+                    </label>
+                    <input id="registration-source-detail" minlength="2" maxlength="120" class="w-full rounded-xl border p-4">
+                </div>
 
-    alert(
-        "Message : " + (err.message || "N/A") +
-        "\nCode    : " + (err.code || "N/A") +
-        "\nDetails : " + (err.details || "N/A") +
-        "\nHint    : " + (err.hint || "N/A")
-    );
+                <fieldset class="mt-2 md:col-span-2">
+                    <legend class="mb-1 font-bold text-slate-700">
+                        Interested subjects
+                        <span role="img" aria-label="Information" title="Select at least one subject. You may select more than one." class="cursor-help text-blue-600">ⓘ</span>
+                    </legend>
+                    <p class="mb-3 text-xs text-slate-500">At least one subject is required.</p>
+                    <div id="subject-list" tabindex="-1" class="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                        <p class="text-slate-500">Loading subjects…</p>
+                    </div>
+                </fieldset>
 
-} finally {
+                <div class="md:col-span-2">
+                    <div id="registration-captcha" class="flex justify-center"></div>
+                </div>
 
-    btn.disabled = false;
-    btn.innerText = "Complete Registration";
+                <button
+                    id="btn-register"
+                    type="submit"
+                    class="mt-4 w-full rounded-xl bg-emerald-600 py-4 font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60 md:col-span-2"
+                >
+                    Complete Registration
+                </button>
+            </form>
 
-} // <-- Ends the try...catch...finally
-} // <-- THIS BRACE closes handleRegister()
-        async function handleLogin() {
-            const button = document.getElementById('btn-login');
-            button.disabled = true;
-            button.innerText = 'Signing In...';
+            <button id="btn-back-login" type="button" class="mt-4 w-full text-slate-500 hover:text-slate-700">
+                Back to Login
+            </button>
+        </section>
 
-            try {
-                const { error: loginError } =
-                    await client.auth.signInWithPassword({
-                        email: document.getElementById('login-email').value,
-                        password: document.getElementById('login-pass').value
-                    });
+        <section
+            id="email-otp-view"
+            aria-labelledby="email-otp-title"
+            class="hidden w-full max-w-md rounded-2xl border border-slate-100 bg-white p-8 shadow-xl"
+        >
+            <h1 id="email-otp-title" class="mb-2 text-3xl font-extrabold text-blue-900">
+                Verify Your Email
+            </h1>
+            <p class="mb-6 text-slate-600">
+                Code sent to <strong id="email-otp-address"></strong>
+            </p>
+            <div id="email-otp-message" role="alert" class="hidden"></div>
+            <form id="email-otp-form">
+                <label for="email-otp" class="mb-1 block font-semibold">Six-digit email code</label>
+                <input id="email-otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required class="mb-5 w-full rounded-xl border p-4 text-center text-2xl tracking-[0.5em]">
+                <button id="btn-verify-email-otp" type="submit" class="w-full rounded-xl bg-blue-600 py-4 font-bold text-white disabled:opacity-60">
+                    Verify Email
+                </button>
+            </form>
+            <button type="button" data-cancel-verification class="mt-4 w-full text-slate-500 hover:text-slate-700">
+                Cancel and return to login
+            </button>
+        </section>
 
-                if (loginError) {
-                    throw loginError;
-                }
-
-                const { error: revokeError } =
-                    await client.auth.signOut({ scope: 'others' });
-
-                if (revokeError) {
-                    console.error(
-                        'Unable to revoke other login sessions:',
-                        revokeError
-                    );
-
-                    await client.auth.signOut({ scope: 'local' });
-
-                    throw new Error(
-                        'Unable to secure this login. Please try again.'
-                    );
-                }
-
-                window.location.replace('dashboard.html');
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('Login Failed: ' + (
-                    error.message || 'Please try again.'
-                ));
-            } finally {
-                button.disabled = false;
-                button.innerText = 'Sign In';
-            }
-        }
-    </script>
+        <section
+            id="mobile-otp-view"
+            aria-labelledby="mobile-otp-title"
+            class="hidden w-full max-w-md rounded-2xl border border-slate-100 bg-white p-8 shadow-xl"
+        >
+            <h1 id="mobile-otp-title" class="mb-2 text-3xl font-extrabold text-blue-900">
+                Verify Your Mobile
+            </h1>
+            <p class="mb-6 text-slate-600">
+                Registered number: <strong id="mobile-otp-number"></strong>
+            </p>
+            <div id="mobile-otp-message" role="alert" class="hidden"></div>
+            <button id="btn-send-mobile-otp" type="button" class="mb-4 w-full rounded-xl border border-blue-600 py-3 font-bold text-blue-700 disabled:opacity-60">
+                Send mobile OTP
+            </button>
+            <form id="mobile-otp-form">
+                <label for="mobile-otp" class="mb-1 block font-semibold">Six-digit SMS code</label>
+                <input id="mobile-otp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required class="mb-5 w-full rounded-xl border p-4 text-center text-2xl tracking-[0.5em]">
+                <button id="btn-verify-mobile-otp" type="submit" class="w-full rounded-xl bg-emerald-600 py-4 font-bold text-white disabled:opacity-60">
+                    Verify Mobile and Continue
+                </button>
+            </form>
+            <button type="button" data-cancel-verification class="mt-4 w-full text-slate-500 hover:text-slate-700">
+                Cancel and return to login
+            </button>
+        </section>
+    </main>
 </body>
 </html>

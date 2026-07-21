@@ -1,7 +1,7 @@
 # InsureGPTE Database Design
 
 **Document:** `02_DATABASE_DESIGN.md`  
-**Version:** 1.0  
+**Version:** 1.1  
 **Status:** Architecture Freeze Draft  
 **Project:** InsureGPTE  
 **Database:** PostgreSQL through Supabase  
@@ -51,6 +51,7 @@ It is based on the current Supabase schema supplied for InsureGPTE and must rema
 
 - `auth.users`
 - `public.profiles`
+- `public.active_client_leases` — ephemeral page control only
 
 ### Academic Catalogue
 
@@ -96,6 +97,7 @@ It is based on the current Supabase schema supplied for InsureGPTE and must rema
 auth.users
     |
     +---- profiles
+    +---- active_client_leases
     +---- quiz_attempts
     +---- attempts
     +---- user_topic_progress
@@ -165,6 +167,11 @@ id uuid → auth.users.id
 - `profession`
 - address fields
 - `interested_business_areas`
+- `registration_source`
+- `registration_source_detail`
+- `registration_security_version`
+- `email_verified_at`
+- `mobile_verified_at`
 - `status`
 - `role`
 - `subscription_plan`
@@ -182,8 +189,16 @@ subscription_plan = free
 1. One profile must exist per Auth user.
 2. `id` must equal the Auth user ID.
 3. The frontend must not set role, status, plan, or another user's ID.
-4. Mobile uniqueness must be reviewed because international formatting and shared business numbers may exist.
-5. Status transitions must be controlled server-side.
+4. New protected registrations store mobile numbers in E.164 format and reuse
+   the existing `profiles.mobile` unique constraint.
+5. New public registration requires every profile field, a referral source, and
+   at least one active subject.
+6. `registration_security_version` is copied by the trusted Auth trigger and is
+   not controlled after registration by the browser.
+7. A protected profile remains `verification_pending` until its Supabase Auth
+   email and matching mobile are both confirmed.
+8. OTP values are never stored in `profiles` or any application table.
+9. Status transitions must be controlled server-side.
 
 ### Recommended Check Constraints
 
@@ -211,6 +226,124 @@ ON public.profiles(subscription_plan);
 ### Security
 
 RLS must allow users to read their own profile and update approved personal fields only. Privileged fields must be changed through secured server-side functions.
+
+## 5.3 Authentication Session Concurrency
+
+**Approved rule:** one active browser page per user across tabs, browsers, and
+devices. The first active page remains authoritative. A later login must stop
+before the dashboard and may take control only after the user explicitly
+selects **Use this login**; Cancel preserves the first page.
+
+### Existing Source of Truth
+
+Supabase Auth stores identities and authentication sessions in `auth.users` and
+`auth.sessions`, and access tokens contain a trusted `session_id` claim. These
+managed objects remain the only identity and authentication source of truth.
+
+The live audit completed on 2026-07-19 confirmed:
+
+- `auth.sessions` exists with the expected `id`, `user_id`, `not_after`, and
+  refresh/session metadata columns;
+- no existing custom session or login function was found;
+- no parallel application session table was found;
+- two users had session rows, and one user had two potentially active sessions;
+- the maximum potentially active session count for one user was two.
+
+The audit ruled out duplicate custom session objects. Runtime testing then
+proved that `auth.sessions` alone cannot distinguish two pages sharing browser
+Auth storage or implement a first-active-page lease with explicit transfer on
+the Free plan. The approved `active_client_leases` table therefore stores only
+ephemeral page control: user UUID, Auth session UUID, random client UUID, and
+lease timestamps. It stores no password, token, email, profile, or identity
+record and must never replace Supabase Auth.
+
+The Supabase settings were confirmed on 2026-07-19:
+
+- project plan: Free;
+- managed **Single session per user**: disabled and unavailable on this plan;
+- access-token/JWT expiry: 3,600 seconds;
+- compromised refresh-token detection: enabled;
+- refresh-token reuse interval: 10 seconds;
+- time-box and inactivity limits: disabled (`0`, never).
+
+### Enforcement Design
+
+1. Create one RLS-enabled `public.active_client_leases` row per active user.
+   Browser and service roles receive no direct table privileges or RLS policy.
+2. `claim_active_client(uuid, boolean)` acquires an available/stale lease,
+   reports a conflict without changing it, or transfers it only when the
+   caller has explicitly approved takeover.
+3. `heartbeat_active_client(uuid)` renews the owning client's lease for 90
+   seconds. `release_active_client(uuid)` removes only the caller's matching
+   lease before explicit global Logout.
+4. Every lease RPC validates `auth.uid()`, the trusted JWT `session_id`, the
+   matching `x-insuregpte-client-id` request header, and the corresponding live
+   `auth.sessions` row.
+5. `public.fn_enforce_active_auth_session()` runs as the PostgREST pre-request
+   function. Except for the self-validating claim RPC, every authenticated table
+   and RPC request requires the exact unexpired user/session/client lease.
+6. Reject a missing, expired, or displaced lease with SQLSTATE `PT401` and a
+   sanitized message. The frontend immediately covers the page and returns it
+   to login; it must not clear shared browser Auth storage from a displaced tab.
+7. Use a same-origin page lock to distinguish duplicate tabs that may share the
+   same Auth session and cloned browser state. Server enforcement remains
+   authoritative for cross-browser access and all protected operations.
+8. Preserve every existing business RPC signature. The three lease RPCs are
+   new, narrowly scoped control endpoints and do not change quiz/profile APIs.
+
+The managed setting is enforced during token refresh, so it does not by itself
+guarantee immediate denial of an already issued access token. Server-side
+session validation is therefore required for quiz submission, finalization,
+entitlement, progress, administration, and other protected operations when
+strict immediate enforcement is enabled.
+
+The original newest-login guard is deployed in
+`supabase/migrations/20260719220000_enforce_single_auth_session.sql`. The
+approved refinement is implemented in two additional stages:
+
+1. `20260720090000_add_active_client_lease.sql` adds the table/RPCs and a
+   compatibility guard so the currently deployed frontend remains usable.
+2. After all updated frontend files are live,
+   `20260720100000_require_active_client_lease.sql` removes the no-header
+   compatibility path and activates strict lease enforcement.
+
+Both stages have matching rollback SQL. Final catalogue verification is in
+`TESTING/sql/active-client-lease-verification.sql`. Runtime completion remains
+open until the migrations, frontend, and mandatory browser scenarios pass.
+
+The PostgREST pre-request mechanism covers the current table and RPC calls. It
+does not intercept Supabase Auth, Storage, or Realtime requests; future
+protected Storage or Realtime features require an equivalent control.
+
+### Active-Quiz Recovery
+
+If the user explicitly transfers control during a quiz:
+
+- the earlier page must be covered and returned to login on its heartbeat,
+  focus/activity check, or next protected request;
+- the earlier page must not submit further answers or finalize the attempt;
+- answers already stored remain unchanged;
+- the attempt remains `in_progress`;
+- the valid session may resume the existing attempt through the preserved
+  `start_quiz_attempt` behavior;
+- no client may reopen an already completed attempt.
+
+The database preserves the in-progress attempt and recorded answers. The
+current quiz page does not yet reconstruct already answered questions after a
+cross-browser resume; that frontend recovery gap must be addressed with the
+approved quiz-resume work before production release.
+
+### Rollback and Verification
+
+Implementation requires:
+
+- compatibility and strict migrations with matching reverse-order rollbacks;
+- duplicate-tab Cancel and **Use this login** testing;
+- different-browser and different-device testing;
+- second-login Cancel and explicit-transfer testing;
+- displaced-session RPC rejection testing;
+- active-quiz resume testing;
+- explicit global logout and 90-second lease-expiry recovery testing.
 
 ---
 
