@@ -83,8 +83,13 @@ assert.ok(
     'audit should identify stale phone change attempts'
 );
 assert.ok(
-    indexHtml.includes('REPLACE_WITH_CLOUDFLARE_TURNSTILE_SITE_KEY'),
-    'unconfigured registration should fail closed until a site key is supplied'
+    !indexHtml.includes('REPLACE_WITH_CLOUDFLARE_TURNSTILE_SITE_KEY'),
+    'production registration should not retain the Turnstile site-key placeholder'
+);
+assert.match(
+    indexHtml,
+    /name="insuregpte-turnstile-site-key"\s+content="0x[0-9A-Za-z_-]{20,}"/,
+    'production registration should provide a Cloudflare Turnstile public site key'
 );
 assert.match(
     indexHtml,

@@ -100,6 +100,9 @@ This project follows Semantic Versioning (SemVer).
 - Disabled registration submission until the configured Turnstile widget is
   available, so the temporary security warning cannot be bypassed by local
   field validation
+- Configured the production Cloudflare Turnstile public Site Key for the
+  approved InsureGPTE hostnames and added a static check that rejects the
+  deployment placeholder
 - Preserved the deployed `save_user_profile` signature while preventing null
   profile fields, unverified mobile changes, invalid subjects, and accidental
   reactivation of suspended or closed accounts
