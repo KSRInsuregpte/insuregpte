@@ -24,7 +24,7 @@ function createEvent(type, values = {}) {
     };
 }
 
-function createProtectedPage() {
+function createProtectedPage({ blockContextMenu = true } = {}) {
     const elements = new Map();
     const documentListeners = new Map();
     const windowListeners = new Map();
@@ -43,7 +43,10 @@ function createProtectedPage() {
             }
         },
         dataset: {
-            screenProtectionLabel: 'InsureGPTE test'
+            screenProtectionLabel: 'InsureGPTE test',
+            ...(blockContextMenu
+                ? { screenProtectionContextMenu: 'disabled' }
+                : {})
         },
         appendChild(element) {
             rememberElement(element);
@@ -135,6 +138,7 @@ for (const event of [
     createEvent('cut'),
     createEvent('paste'),
     createEvent('dragstart'),
+    createEvent('contextmenu'),
     createEvent('keydown', { ctrlKey: true, key: 'c' }),
     createEvent('keydown', { ctrlKey: true, key: 'v' }),
     createEvent('keydown', { ctrlKey: true, key: 'p' }),
@@ -147,6 +151,18 @@ for (const event of [
         `${event.type} protection should prevent the browser default`
     );
 }
+
+const contextMenuAllowedPage = createProtectedPage({
+    blockContextMenu: false
+});
+const allowedContextMenu = createEvent('contextmenu');
+
+contextMenuAllowedPage.dispatchDocumentEvent(allowedContextMenu);
+assert.equal(
+    allowedContextMenu.defaultPrevented,
+    false,
+    'right-click must remain available when the page does not opt in'
+);
 
 const protectionStyle = page.elements.get(
     'insuregpte-screen-protection-style'

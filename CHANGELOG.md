@@ -109,6 +109,9 @@ This project follows Semantic Versioning (SemVer).
 - Added authentication-and-test-only screen protection that blocks copy, cut,
   paste, and protected-page printing, and adds a visible screenshot deterrence
   watermark without affecting dashboard or future learning pages
+- Disabled the right-click context menu only on the combined authentication,
+  registration, and verification page while preserving it on the test,
+  dashboard, and future learning pages
 - Preserved the deployed `save_user_profile` signature while preventing null
   profile fields, unverified mobile changes, invalid subjects, and accidental
   reactivation of suspended or closed accounts

@@ -33,7 +33,8 @@ const requiredSnippets = {
         'mobile-otp-view',
         'mobile-country-code',
         'country-other',
-        'data-password-toggle'
+        'data-password-toggle',
+        'data-screen-protection-context-menu="disabled"'
     ],
     'dashboard.html': [
         'js/session-control.js',
@@ -72,9 +73,11 @@ const requiredJavascriptSnippets = {
         'cut',
         'paste',
         'dragstart',
+        'contextmenu',
         'printscreen',
         '@media print',
         'data-screen-protection-label',
+        'screenProtectionContextMenu',
         'Screenshots are prohibited'
     ],
     'js/registration-validation.js': [
@@ -195,11 +198,22 @@ const dashboardHtml = fs.readFileSync(
     path.join(repositoryRoot, 'dashboard.html'),
     'utf8'
 );
+const testHtml = fs.readFileSync(
+    path.join(repositoryRoot, 'test.html'),
+    'utf8'
+);
 
 if (dashboardHtml.includes('js/screen-protection.js')) {
     failures.push(
         'dashboard.html: protected-screen controls must remain limited to ' +
         'authentication and test pages'
+    );
+}
+
+if (testHtml.includes('data-screen-protection-context-menu')) {
+    failures.push(
+        'test.html: right-click blocking must remain limited to the ' +
+        'authentication and registration page'
     );
 }
 

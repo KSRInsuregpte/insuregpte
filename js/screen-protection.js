@@ -192,6 +192,13 @@
         );
     }
 
+    function blockProtectedContextMenu(event) {
+        event.preventDefault();
+        showProtectionNotice(
+            'Right-click is disabled on this protected InsureGPTE screen.'
+        );
+    }
+
     function activateScreenProtection() {
         if (
             !document.body ||
@@ -219,6 +226,16 @@
         }
 
         document.addEventListener('keydown', blockProtectedShortcut);
+
+        if (
+            document.body.dataset.screenProtectionContextMenu === 'disabled'
+        ) {
+            document.addEventListener(
+                'contextmenu',
+                blockProtectedContextMenu
+            );
+        }
+
         global.addEventListener('beforeprint', () => {
             showProtectionNotice(
                 'Printing is disabled on this protected InsureGPTE screen.'
