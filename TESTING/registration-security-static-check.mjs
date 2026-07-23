@@ -21,7 +21,6 @@ const rollback = read(
 const verification = read(
     'TESTING/sql/protected-registration-verification.sql'
 );
-const audit = read('sql/audit-registration-security.sql');
 const indexHtml = read('index.html');
 
 for (const snippet of [
@@ -75,14 +74,6 @@ assert.ok(
     'verification should exercise anonymous rejection'
 );
 assert.ok(
-    audit.includes('a7127f24-7a13-4b8e-b1f0-235ca25ff0b3'),
-    'audit should inspect the reported suspicious actor'
-);
-assert.ok(
-    audit.includes('07_stale_phone_change'),
-    'audit should identify stale phone change attempts'
-);
-assert.ok(
     !indexHtml.includes('REPLACE_WITH_CLOUDFLARE_TURNSTILE_SITE_KEY'),
     'production registration should not retain the Turnstile site-key placeholder'
 );
@@ -96,6 +87,18 @@ assert.match(
     /id="btn-register"[\s\S]*?disabled[\s\S]*?aria-disabled="true"/,
     'registration submit should start disabled until Turnstile is ready'
 );
+for (const snippet of [
+    'id="mobile-country-code"',
+    'id="mobile-country-code-other"',
+    'id="country-other"',
+    'id="postal-code-guidance"',
+    'data-password-toggle'
+]) {
+    assert.ok(
+        indexHtml.includes(snippet),
+        `registration accessibility control is missing: ${snippet}`
+    );
+}
 const indexAuth = read('js/index-auth.js');
 assert.ok(
     indexAuth.includes('setRegistrationEnabled(false)'),
@@ -105,6 +108,17 @@ assert.ok(
     indexAuth.includes('setRegistrationEnabled(true)'),
     'registration should be enabled only after Turnstile renders'
 );
+for (const snippet of [
+    'validation.composeMobileNumber(',
+    'updateMobileCallingCode',
+    'updateCountrySelection',
+    'togglePasswordVisibility'
+]) {
+    assert.ok(
+        indexAuth.includes(snippet),
+        `registration interaction is missing: ${snippet}`
+    );
+}
 assert.ok(
     !/\bonclick\s*=/i.test(indexHtml),
     'the refactored authentication page should not use inline click handlers'

@@ -103,6 +103,9 @@ This project follows Semantic Versioning (SemVer).
 - Configured the production Cloudflare Turnstile public Site Key for the
   approved InsureGPTE hostnames and added a static check that rejects the
   deployment placeholder
+- Improved registration usability with a separate India/default or manual
+  international calling code, country-aware Indian PIN validation, an
+  India-or-manual country selector, and accessible password visibility controls
 - Preserved the deployed `save_user_profile` signature while preventing null
   profile fields, unverified mobile changes, invalid subjects, and accidental
   reactivation of suspended or closed accounts

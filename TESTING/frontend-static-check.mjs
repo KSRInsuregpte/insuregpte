@@ -28,7 +28,10 @@ const requiredSnippets = {
         'insuregpte-turnstile-site-key',
         'registration-captcha',
         'email-otp-view',
-        'mobile-otp-view'
+        'mobile-otp-view',
+        'mobile-country-code',
+        'country-other',
+        'data-password-toggle'
     ],
     'dashboard.html': [
         'js/session-control.js',
@@ -65,6 +68,8 @@ const requiredJavascriptSnippets = {
         'InsureGPTERegistrationValidation',
         'password.length >= 12',
         'MOBILE_PATTERN',
+        'composeMobileNumber',
+        'INDIA_PIN_PATTERN',
         'Select at least one subject.'
     ],
     'js/index-auth.js': [
@@ -76,7 +81,10 @@ const requiredJavascriptSnippets = {
         "type: 'email'",
         "type: 'phone_change'",
         'client.auth.updateUser',
-        'registration_source'
+        'registration_source',
+        'updateMobileCallingCode',
+        'updateCountrySelection',
+        'togglePasswordVisibility'
     ]
 };
 

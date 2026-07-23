@@ -66,3 +66,9 @@
 - [ ] Complete cross-user, cross-browser, and single-session testing
 - [ ] Performance optimization
 - [ ] Production deployment
+
+---
+
+## Phase 5 (Post-launch)
+
+- [ ] Add optional postal/PIN-based address lookup after the initial product launch

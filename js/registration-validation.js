@@ -25,6 +25,10 @@
     const EMAIL_PATTERN =
         /^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9-]+(?:\.[A-Z0-9-]+)+$/i;
     const MOBILE_PATTERN = /^\+[1-9][0-9]{7,14}$/;
+    const CALLING_CODE_PATTERN = /^\+[1-9][0-9]{0,2}$/;
+    const NATIONAL_NUMBER_PATTERN = /^[0-9]{4,14}$/;
+    const INDIA_MOBILE_PATTERN = /^[6-9][0-9]{9}$/;
+    const INDIA_PIN_PATTERN = /^[1-9][0-9]{5}$/;
     const POSTAL_PATTERN = /^[A-Z0-9][A-Z0-9 -]{1,10}[A-Z0-9]$/i;
 
     function clean(value) {
@@ -40,6 +44,22 @@
             && /[a-z]/.test(password)
             && /[0-9]/.test(password)
             && /[^A-Za-z0-9]/.test(password);
+    }
+
+    function composeMobileNumber(callingCode, nationalNumber) {
+        const code = clean(callingCode);
+        const number = clean(nationalNumber);
+
+        if (
+            !CALLING_CODE_PATTERN.test(code)
+            || !NATIONAL_NUMBER_PATTERN.test(number)
+            || (code === '+91' && !INDIA_MOBILE_PATTERN.test(number))
+        ) {
+            return '';
+        }
+
+        const mobile = `${code}${number}`;
+        return MOBILE_PATTERN.test(mobile) ? mobile : '';
     }
 
     function validate(values) {
@@ -99,7 +119,7 @@
 
         if (!MOBILE_PATTERN.test(data.mobile)) {
             errors.mobile =
-                'Enter the mobile number with country code, for example +919876543210.';
+                'Select a valid calling code and enter a valid mobile number.';
         }
 
         const lengthRules = [
@@ -117,8 +137,14 @@
             }
         }
 
-        if (!POSTAL_PATTERN.test(data.pinCode)) {
-            errors.pinCode = 'Enter a valid postal or PIN code.';
+        if (
+            data.country === 'India'
+                ? !INDIA_PIN_PATTERN.test(data.pinCode)
+                : !POSTAL_PATTERN.test(data.pinCode)
+        ) {
+            errors.pinCode = data.country === 'India'
+                ? 'Enter a valid six-digit Indian PIN code.'
+                : 'Enter a valid postal or PIN code.';
         }
 
         if (!REGISTRATION_SOURCES.includes(data.registrationSource)) {
@@ -151,6 +177,7 @@
     global.InsureGPTERegistrationValidation = Object.freeze({
         PROFESSIONS,
         REGISTRATION_SOURCES,
+        composeMobileNumber,
         isValidPassword,
         validate
     });

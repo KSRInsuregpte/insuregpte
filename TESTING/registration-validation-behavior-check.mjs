@@ -70,6 +70,22 @@ assert.equal(
     'strong password should pass'
 );
 
+assert.equal(
+    validation.composeMobileNumber('+91', '9876543210'),
+    '+919876543210',
+    'Indian calling code and national number should compose to E.164 format'
+);
+assert.equal(
+    validation.composeMobileNumber('+44', '7700900123'),
+    '+447700900123',
+    'international calling code and number should compose to E.164 format'
+);
+assert.equal(
+    validation.composeMobileNumber('+91', '1234567890'),
+    '',
+    'invalid Indian mobile numbers should be rejected'
+);
+
 const missingSubject = validation.validate({
     ...validRegistration,
     subjects: []
@@ -82,7 +98,25 @@ const invalidMobile = validation.validate({
     mobile: '9876543210'
 });
 assert.equal(invalidMobile.valid, false);
-assert.match(invalidMobile.errors.mobile, /country code/);
+assert.match(invalidMobile.errors.mobile, /calling code/);
+
+const invalidIndiaPin = validation.validate({
+    ...validRegistration,
+    pinCode: '012345'
+});
+assert.equal(invalidIndiaPin.valid, false);
+assert.match(invalidIndiaPin.errors.pinCode, /Indian PIN code/);
+
+const validInternationalPostalCode = validation.validate({
+    ...validRegistration,
+    country: 'United Kingdom',
+    pinCode: 'SW1A 1AA'
+});
+assert.equal(
+    validInternationalPostalCode.valid,
+    true,
+    'international postal codes should remain available for manual entry'
+);
 
 const missingSourceDetail = validation.validate({
     ...validRegistration,
