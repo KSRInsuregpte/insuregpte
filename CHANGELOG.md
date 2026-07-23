@@ -122,6 +122,12 @@ This project follows Semantic Versioning (SemVer).
   stale-phone-change, Auth-session, and Auth-audit inspection SQL
 - Added protected-registration catalogue/behavior verification, rollback SQL,
   frontend behavior tests, and a controlled production activation guide
+- Temporarily changed protected-account activation to email OTP only while
+  retaining required normalized unique mobile data, preserving any existing
+  mobile-verification evidence, and deferring SMS OTP until a production
+  provider plan is approved
+- Added a reversible email-only activation migration, existing-user backfill,
+  deployment verification SQL, and frontend regression coverage
 
 ### Planned
 

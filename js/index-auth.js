@@ -7,6 +7,7 @@
         + 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.'
         + 'meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
     const REGISTRATION_SECURITY_VERSION = 2;
+    const MOBILE_VERIFICATION_REQUIRED = false;
     const OTP_PATTERN = /^[0-9]{6}$/;
     const sessionControl = global.InsureGPTESessionControl;
     const validation = global.InsureGPTERegistrationValidation;
@@ -664,7 +665,18 @@
             }
 
             state.signedIn = Boolean(data.session);
-            showMobileVerification(data.user);
+
+            if (MOBILE_VERIFICATION_REQUIRED) {
+                showMobileVerification(data.user);
+                return;
+            }
+
+            setMessage(
+                'email-otp-message',
+                'Email verified. Opening your dashboardâ€¦',
+                'success'
+            );
+            await enterDashboard();
         } catch (error) {
             console.error('Email OTP verification failed:', error);
             setMessage(
@@ -903,7 +915,8 @@
             state.signedIn = true;
 
             if (
-                registrationVersion(data.user)
+                MOBILE_VERIFICATION_REQUIRED
+                && registrationVersion(data.user)
                     >= REGISTRATION_SECURITY_VERSION
                 && !hasCompletedMobileVerification(data.user)
             ) {
@@ -978,7 +991,8 @@
             }
 
             if (
-                registrationVersion(data.user)
+                MOBILE_VERIFICATION_REQUIRED
+                && registrationVersion(data.user)
                     >= REGISTRATION_SECURITY_VERSION
                 && data.user.email_confirmed_at
                 && !hasCompletedMobileVerification(data.user)
@@ -1016,18 +1030,20 @@
             event.preventDefault();
             verifyEmailOtp();
         });
-        byId('btn-send-mobile-otp')?.addEventListener(
-            'click',
-            sendMobileOtp
-        );
-        byId('btn-verify-mobile-otp')?.addEventListener(
-            'click',
-            verifyMobileOtp
-        );
-        byId('mobile-otp-form')?.addEventListener('submit', (event) => {
-            event.preventDefault();
-            verifyMobileOtp();
-        });
+        if (MOBILE_VERIFICATION_REQUIRED) {
+            byId('btn-send-mobile-otp')?.addEventListener(
+                'click',
+                sendMobileOtp
+            );
+            byId('btn-verify-mobile-otp')?.addEventListener(
+                'click',
+                verifyMobileOtp
+            );
+            byId('mobile-otp-form')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                verifyMobileOtp();
+            });
+        }
         document.querySelectorAll('[data-cancel-verification]')
             .forEach((button) => {
                 button.addEventListener('click', cancelVerification);

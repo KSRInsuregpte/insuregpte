@@ -1,8 +1,8 @@
 # Protected Registration Deployment
 
-**Version:** 1.0  
-**Date:** 2026-07-21  
-**Status:** Repository implementation complete; production configuration pending
+**Version:** 1.1
+**Date:** 2026-07-23
+**Status:** Temporary email-only activation approved
 
 ## Purpose
 
@@ -13,7 +13,8 @@ only identity and OTP authority. It requires:
 - at least one active subject;
 - Cloudflare Turnstile CAPTCHA;
 - email confirmation by six-digit OTP;
-- mobile confirmation by six-digit SMS OTP;
+- required normalized unique mobile capture;
+- mobile SMS OTP deferred until a production provider plan is approved;
 - a recorded registration/referral source;
 - an active profile before protected table or RPC access;
 - the existing one-active-page session policy.
@@ -92,6 +93,18 @@ Then run:
 TESTING/sql/protected-registration-verification.sql
 ```
 
+For the approved temporary email-only activation policy, then run:
+
+```text
+supabase/migrations/20260723214500_defer_mobile_verification.sql
+```
+
+and:
+
+```text
+TESTING/sql/email-only-activation-verification.sql
+```
+
 Expected SQL Editor result for both is:
 
 ```text
@@ -107,6 +120,8 @@ Database changes:
 - existing active-session pre-request guard extended with active-profile
   enforcement;
 - existing `profiles.mobile` unique constraint retained.
+- complete email-confirmed pending profiles activated without requiring mobile
+  OTP; any existing mobile-verification timestamp is preserved.
 
 ## Step 5 — Enable the Before User Created Hook
 
@@ -147,24 +162,16 @@ OTP token variable. Suggested template:
 Keep **Confirm email** enabled. Confirm the Site URL and redirect allow-list
 contain only approved InsureGPTE production and staging addresses.
 
-## Step 7 — Configure Standard Phone Verification
+## Step 7 — Defer Standard Phone Verification
 
-This project uses standard Supabase phone verification, not the paid Advanced
-Phone MFA add-on.
+Mobile OTP is not an activation requirement during the temporary email-only
+phase. The mobile number remains mandatory, normalized, and unique.
 
-1. Select an SMS provider supported by Supabase, such as Twilio, Vonage,
-   MessageBird, or the applicable supported regional provider.
-2. Complete provider onboarding and, for Indian recipients, the applicable
-   TRAI/DLT sender and template registration.
-3. In **Authentication → Sign In / Providers**, enable Phone.
-4. Enter the SMS-provider credentials only in Supabase.
-5. Enable phone confirmation.
-6. Review SMS rate limits and OTP expiry.
-7. Never place SMS credentials in `index.html`, JavaScript, `.env` committed to
-   GitHub, or a database table.
-
-Direct phone-only signup remains rejected by the Before User Created hook;
-InsureGPTE registration must start with email and complete both OTP steps.
+1. Do not expose or commit existing SMS-provider credentials.
+2. Phone-only signup remains rejected by the Before User Created hook.
+3. Do not enable the frontend mobile-verification policy flag until a production
+   SMS plan and the matching database rollback/change are approved.
+4. Retain Twilio trial logs only as controlled-test evidence.
 
 ## Step 8 — Configure Password Policy
 
@@ -205,24 +212,29 @@ When ready for a short production test:
 5. Confirm no registration is possible without a subject.
 6. Confirm no registration is possible without Turnstile.
 7. Enter the email OTP.
-8. Confirm the dashboard is not accessible yet.
-9. Send and enter the mobile OTP.
-10. Confirm the profile becomes active and the dashboard opens.
-11. Confirm a second account cannot reuse the same email or mobile number.
-12. Confirm a direct phone-only signup is rejected.
-13. Confirm Chrome/Edge and duplicate-tab session tests still pass.
-14. Review Auth logs and rerun
-    `TESTING/sql/protected-registration-verification.sql`.
+8. Confirm the profile becomes active and the dashboard opens directly.
+9. Confirm a second account cannot reuse the same email or mobile number.
+10. Confirm a direct phone-only signup is rejected.
+11. Confirm Chrome/Edge and duplicate-tab session tests still pass.
+12. Review Auth logs and rerun
+    `TESTING/sql/email-only-activation-verification.sql`.
 
 If any test fails, immediately turn **Allow new users to sign up** off again.
 
 ## Rollback
 
 1. Turn **Allow new users to sign up** off.
-2. Disable the Before User Created hook.
-3. Disable Supabase CAPTCHA only if the previous deployed login page does not
+2. To restore mandatory mobile OTP only, first run:
+
+```text
+supabase/rollbacks/20260723214500_defer_mobile_verification.sql
+```
+
+3. For a full protected-registration rollback, disable the Before User Created
+   hook.
+4. Disable Supabase CAPTCHA only if the previous deployed login page does not
    send CAPTCHA tokens.
-4. Run:
+5. Run:
 
 ```text
 supabase/rollbacks/20260721130000_protect_user_registration.sql
@@ -238,7 +250,8 @@ Production registration is approved only when:
 - audit results are reviewed;
 - suspicious unverified users are quarantined;
 - migration and verification SQL pass;
-- hook, CAPTCHA, email OTP, SMS OTP, and password policy are configured;
+- hook, CAPTCHA, email OTP, and password policy are configured;
+- mobile capture remains mandatory and unique while SMS OTP is deferred;
 - valid and invalid registration tests pass;
 - existing-user login passes;
 - duplicate-tab and cross-browser session tests pass;

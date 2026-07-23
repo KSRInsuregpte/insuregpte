@@ -94,6 +94,8 @@ const requiredJavascriptSnippets = {
         'sessionControl.activateAfterSignIn',
         'captchaToken',
         'registration_security_version',
+        'const MOBILE_VERIFICATION_REQUIRED = false;',
+        'Email verified. Opening your dashboard',
         "type: 'email'",
         "type: 'phone_change'",
         'client.auth.updateUser',

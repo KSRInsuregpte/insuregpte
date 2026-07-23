@@ -31,7 +31,9 @@
 - [ ] Configure the Before User Created hook in Supabase Auth
 - [ ] Configure Cloudflare Turnstile in Cloudflare, the frontend, and Supabase
 - [ ] Configure the email confirmation template for six-digit OTP entry
-- [ ] Configure the SMS provider and standard Supabase phone verification
+- [x] Validate the standard Supabase/Twilio mobile OTP integration in a
+  controlled trial
+- [x] Temporarily activate protected accounts after email OTP only
 - [ ] Configure the 12-character minimum Auth password policy
 - [ ] Deploy and runtime-verify protected registration end to end
 - [ ] Deploy and runtime-verify first-active-page enforcement
@@ -72,3 +74,5 @@
 ## Phase 5 (Post-launch)
 
 - [ ] Add optional postal/PIN-based address lookup after the initial product launch
+- [ ] Purchase and configure the production SMS plan, then restore mobile OTP
+  activation through the approved rollback/change process
