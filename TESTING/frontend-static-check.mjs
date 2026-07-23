@@ -16,6 +16,7 @@ const htmlFiles = [
 
 const javascriptFiles = [
     'js/session-control.js',
+    'js/screen-protection.js',
     'js/registration-validation.js',
     'js/index-auth.js'
 ];
@@ -23,6 +24,7 @@ const javascriptFiles = [
 const requiredSnippets = {
     'index.html': [
         'js/session-control.js',
+        'js/screen-protection.js',
         'js/registration-validation.js',
         'js/index-auth.js',
         'insuregpte-turnstile-site-key',
@@ -41,6 +43,7 @@ const requiredSnippets = {
     ],
     'test.html': [
         'js/session-control.js',
+        'js/screen-protection.js',
         'sessionControl.clientOptions()',
         'sessionControl.activateProtectedPage',
         'sessionControl.logoutEverywhere',
@@ -63,6 +66,16 @@ const requiredJavascriptSnippets = {
         "client.auth.signOut({ scope: 'others' })",
         'another browser or page',
         'insuregpte:session-inactive'
+    ],
+    'js/screen-protection.js': [
+        'copy',
+        'cut',
+        'paste',
+        'dragstart',
+        'printscreen',
+        '@media print',
+        'data-screen-protection-label',
+        'Screenshots are prohibited'
     ],
     'js/registration-validation.js': [
         'InsureGPTERegistrationValidation',
@@ -178,6 +191,18 @@ for (const relativeFile of javascriptFiles) {
     }
 }
 
+const dashboardHtml = fs.readFileSync(
+    path.join(repositoryRoot, 'dashboard.html'),
+    'utf8'
+);
+
+if (dashboardHtml.includes('js/screen-protection.js')) {
+    failures.push(
+        'dashboard.html: protected-screen controls must remain limited to ' +
+        'authentication and test pages'
+    );
+}
+
 if (failures.length > 0) {
     console.error('Frontend static checks failed:');
 
@@ -189,6 +214,6 @@ if (failures.length > 0) {
 } else {
     console.log(
         `Frontend static checks passed for ${htmlFiles.length} HTML files ` +
-        `and ${javascriptFiles.length} shared JavaScript file.`
+        `and ${javascriptFiles.length} shared JavaScript files.`
     );
 }

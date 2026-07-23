@@ -106,6 +106,9 @@ This project follows Semantic Versioning (SemVer).
 - Improved registration usability with a separate India/default or manual
   international calling code, country-aware Indian PIN validation, an
   India-or-manual country selector, and accessible password visibility controls
+- Added authentication-and-test-only screen protection that blocks copy, cut,
+  paste, and protected-page printing, and adds a visible screenshot deterrence
+  watermark without affecting dashboard or future learning pages
 - Preserved the deployed `save_user_profile` signature while preventing null
   profile fields, unverified mobile changes, invalid subjects, and accidental
   reactivation of suspended or closed accounts
