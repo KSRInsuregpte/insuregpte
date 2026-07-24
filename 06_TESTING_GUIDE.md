@@ -52,3 +52,34 @@ Production smoke testing must confirm:
 - selecting **Return to Subject Selection** opens the dashboard;
 - the relevant subject's **Attempts Used** increases immediately;
 - only the explicit **Logout** button returns the learner to the login screen.
+
+## Active quiz exit flow
+
+Before **Start This Attempt** is selected, **Back** and **Logout** retain their
+normal behavior.
+
+After an attempt starts:
+
+1. **Back** and **Back to Dashboard** become **Finish Attempt & Return**.
+2. **Logout** becomes **Finish Attempt & Logout**.
+3. Each exit opens an accessible confirmation explaining that submitted
+   answers will be scored and unanswered questions will receive zero.
+4. **Continue Quiz** closes the confirmation without calling an RPC or
+   navigating.
+5. A confirmed exit calls the existing
+   `finalize_quiz_attempt(p_attempt_id uuid)` RPC.
+6. Dashboard navigation or global logout occurs only after the RPC succeeds.
+7. A failed finalization keeps the learner on the quiz and displays the error.
+8. Closing or refreshing the browser unexpectedly does not call finalization;
+   the existing `in_progress` attempt remains available for recovery.
+
+Production smoke testing must separately confirm:
+
+- **Finish Attempt & Return** records the partial result before opening the
+  dashboard;
+- **Finish Attempt & Logout** records the partial result before opening the
+  login page;
+- **Continue Quiz** leaves the attempt active;
+- a simulated or observed finalization error prevents both navigation and
+  logout;
+- an unexpected tab closure preserves the attempt for recovery.

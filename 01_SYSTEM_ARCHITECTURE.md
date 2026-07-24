@@ -576,6 +576,9 @@ Choose scope
 → Questions allocated
 → Submit answers
 → Immediate feedback where allowed
+→ Active Back / Logout requests require Continue Quiz or confirmed finalization
+→ Confirmed exit finalizes before dashboard navigation or logout
+→ Unexpected tab closure preserves the in-progress attempt for recovery
 → Finalize
 → Store result
 ```
