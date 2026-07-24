@@ -256,11 +256,13 @@
 
 # Protected public registration uses Cloudflare Turnstile, a Before User
 
-# Created Auth hook, six-digit email verification, and standard Supabase mobile
+# Created Auth hook and six-digit email verification. A normalized mobile
 
-# SMS OTP. New protected accounts remain pending until both email and the
+# number remains mandatory and unique profile data, but mobile SMS OTP is
 
-# registered mobile number are confirmed. OTP values and provider secrets are
+# temporarily deferred until a production SMS plan is approved. New protected
+
+# accounts remain pending until email is confirmed. OTP values and provider secrets are
 
 # not stored in application tables.
 

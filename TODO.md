@@ -31,11 +31,15 @@
 - [ ] Configure the Before User Created hook in Supabase Auth
 - [ ] Configure Cloudflare Turnstile in Cloudflare, the frontend, and Supabase
 - [ ] Configure the email confirmation template for six-digit OTP entry
-- [ ] Configure the SMS provider and standard Supabase phone verification
+- [x] Validate the standard Supabase/Twilio mobile OTP integration in a
+  controlled trial
+- [x] Temporarily activate protected accounts after email OTP only
 - [ ] Configure the 12-character minimum Auth password policy
 - [ ] Deploy and runtime-verify protected registration end to end
 - [ ] Deploy and runtime-verify first-active-page enforcement
 - [ ] Deploy and verify hardened `submit_quiz_answer`
+- [x] Keep the final quiz result visible and preserve login until the learner
+  explicitly returns to subject selection or logs out
 - [ ] Harden `start_quiz_attempt` entitlement, active-question, and concurrency rules
 - [ ] Make quiz finalization idempotent and time-limit safe
 - [ ] Complete remaining RPCs
@@ -66,3 +70,11 @@
 - [ ] Complete cross-user, cross-browser, and single-session testing
 - [ ] Performance optimization
 - [ ] Production deployment
+
+---
+
+## Phase 5 (Post-launch)
+
+- [ ] Add optional postal/PIN-based address lookup after the initial product launch
+- [ ] Purchase and configure the production SMS plan, then restore mobile OTP
+  activation through the approved rollback/change process

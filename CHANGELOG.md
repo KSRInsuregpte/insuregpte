@@ -103,6 +103,15 @@ This project follows Semantic Versioning (SemVer).
 - Configured the production Cloudflare Turnstile public Site Key for the
   approved InsureGPTE hostnames and added a static check that rejects the
   deployment placeholder
+- Improved registration usability with a separate India/default or manual
+  international calling code, country-aware Indian PIN validation, an
+  India-or-manual country selector, and accessible password visibility controls
+- Added authentication-and-test-only screen protection that blocks copy, cut,
+  paste, and protected-page printing, and adds a visible screenshot deterrence
+  watermark without affecting dashboard or future learning pages
+- Disabled the right-click context menu only on the combined authentication,
+  registration, and verification page while preserving it on the test,
+  dashboard, and future learning pages
 - Preserved the deployed `save_user_profile` signature while preventing null
   profile fields, unverified mobile changes, invalid subjects, and accidental
   reactivation of suspended or closed accounts
@@ -113,6 +122,18 @@ This project follows Semantic Versioning (SemVer).
   stale-phone-change, Auth-session, and Auth-audit inspection SQL
 - Added protected-registration catalogue/behavior verification, rollback SQL,
   frontend behavior tests, and a controlled production activation guide
+- Temporarily changed protected-account activation to email OTP only while
+  retaining required normalized unique mobile data, preserving any existing
+  mobile-verification evidence, and deferring SMS OTP until a production
+  provider plan is approved
+- Added a reversible email-only activation migration, existing-user backfill,
+  deployment verification SQL, and frontend regression coverage
+- Restored the quiz completion confirmation panel so submitting the final
+  answer no longer navigates away immediately, keeps the authenticated session
+  active, and returns to subject selection only when the learner requests it
+- Added regression coverage for final-result visibility, safe page-control
+  handoff, and dashboard attempt counts across completed, in-progress, and
+  abandoned attempts
 
 ### Planned
 

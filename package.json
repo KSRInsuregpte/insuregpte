@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "scripts": {
     "start": "echo 'Site deployed!'",
-    "test": "node TESTING/frontend-static-check.mjs && node TESTING/session-control-behavior-check.mjs && node TESTING/registration-validation-behavior-check.mjs && node TESTING/registration-security-static-check.mjs"
+    "test": "node TESTING/frontend-static-check.mjs && node TESTING/screen-protection-behavior-check.mjs && node TESTING/session-control-behavior-check.mjs && node TESTING/registration-validation-behavior-check.mjs && node TESTING/registration-security-static-check.mjs && node TESTING/email-only-activation-static-check.mjs && node TESTING/quiz-completion-behavior-check.mjs"
   }
 }

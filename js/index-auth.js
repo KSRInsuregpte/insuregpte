@@ -7,6 +7,7 @@
         + 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.'
         + 'meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
     const REGISTRATION_SECURITY_VERSION = 2;
+    const MOBILE_VERIFICATION_REQUIRED = false;
     const OTP_PATTERN = /^[0-9]{6}$/;
     const sessionControl = global.InsureGPTESessionControl;
     const validation = global.InsureGPTERegistrationValidation;
@@ -296,6 +297,114 @@
         }
     }
 
+    function selectedCallingCode() {
+        const selection = byId('mobile-country-code')?.value || '';
+
+        return selection === 'other'
+            ? byId('mobile-country-code-other')?.value
+            : selection;
+    }
+
+    function selectedCountry() {
+        const selection = byId('country')?.value || '';
+
+        return selection === 'other'
+            ? byId('country-other')?.value
+            : selection;
+    }
+
+    function updateMobileCallingCode() {
+        const selection = byId('mobile-country-code')?.value;
+        const otherContainer = byId(
+            'mobile-country-code-other-container'
+        );
+        const otherInput = byId('mobile-country-code-other');
+        const guidance = byId('mobile-guidance');
+        const usesOtherCode = selection === 'other';
+
+        otherContainer?.classList.toggle('hidden', !usesOtherCode);
+
+        if (otherInput) {
+            otherInput.required = usesOtherCode;
+
+            if (!usesOtherCode) {
+                otherInput.value = '';
+            }
+        }
+
+        if (guidance) {
+            guidance.textContent = usesOtherCode
+                ? 'Enter the calling code with +, then enter only the mobile number digits.'
+                : 'India: enter the 10-digit mobile number without +91.';
+        }
+    }
+
+    function updateCountrySelection() {
+        const selection = byId('country')?.value;
+        const otherContainer = byId('country-other-container');
+        const otherInput = byId('country-other');
+        const pinInput = byId('pin');
+        const guidance = byId('postal-code-guidance');
+        const usesOtherCountry = selection === 'other';
+
+        otherContainer?.classList.toggle('hidden', !usesOtherCountry);
+
+        if (otherInput) {
+            otherInput.required = usesOtherCountry;
+
+            if (!usesOtherCountry) {
+                otherInput.value = '';
+            }
+        }
+
+        if (pinInput) {
+            pinInput.minLength = usesOtherCountry ? 3 : 6;
+            pinInput.maxLength = usesOtherCountry ? 12 : 6;
+            pinInput.inputMode = usesOtherCountry ? 'text' : 'numeric';
+            pinInput.placeholder = usesOtherCountry ? 'Postal code' : '600001';
+            pinInput.setAttribute(
+                'pattern',
+                usesOtherCountry
+                    ? '[A-Za-z0-9][A-Za-z0-9 -]{1,10}[A-Za-z0-9]'
+                    : '[1-9][0-9]{5}'
+            );
+        }
+
+        if (guidance) {
+            guidance.textContent = usesOtherCountry
+                ? 'Enter the postal code manually using letters, numbers, spaces, or hyphens.'
+                : 'Enter the six-digit Indian PIN code.';
+        }
+    }
+
+    function setPasswordVisibility(button, visible) {
+        const input = byId(button?.dataset?.passwordTarget);
+
+        if (!button || !input) {
+            return;
+        }
+
+        input.type = visible ? 'text' : 'password';
+        button.textContent = visible ? 'Hide' : 'Show';
+        button.setAttribute('aria-pressed', String(visible));
+    }
+
+    function resetPasswordVisibility() {
+        document.querySelectorAll('[data-password-toggle]')
+            .forEach((button) => setPasswordVisibility(button, false));
+    }
+
+    function togglePasswordVisibility(button) {
+        const input = byId(button?.dataset?.passwordTarget);
+
+        if (!input) {
+            return;
+        }
+
+        setPasswordVisibility(button, input.type === 'password');
+        input.focus();
+    }
+
     function registrationValues() {
         return {
             firstName: byId('fname')?.value,
@@ -304,14 +413,17 @@
             password: byId('pass')?.value,
             confirmPassword: byId('pass-confirm')?.value,
             profession: byId('prof')?.value,
-            mobile: byId('mobile')?.value,
+            mobile: validation.composeMobileNumber(
+                selectedCallingCode(),
+                byId('mobile')?.value
+            ),
             companyName: byId('cname')?.value,
             buildingName: byId('bname')?.value,
             streetName: byId('street')?.value,
             area: byId('area')?.value,
             city: byId('city')?.value,
             pinCode: byId('pin')?.value,
-            country: byId('country')?.value,
+            country: selectedCountry(),
             registrationSource: byId('registration-source')?.value,
             registrationSourceDetail:
                 byId('registration-source-detail')?.value,
@@ -333,14 +445,19 @@
             password: 'pass',
             confirmPassword: 'pass-confirm',
             profession: 'prof',
-            mobile: 'mobile',
+            mobile: byId('mobile-country-code')?.value === 'other'
+                && !byId('mobile-country-code-other')?.value
+                ? 'mobile-country-code-other'
+                : 'mobile',
             companyName: 'cname',
             buildingName: 'bname',
             streetName: 'street',
             area: 'area',
             city: 'city',
             pinCode: 'pin',
-            country: 'country',
+            country: byId('country')?.value === 'other'
+                ? 'country-other'
+                : 'country',
             registrationSource: 'registration-source',
             registrationSourceDetail: 'registration-source-detail',
             subjects: 'subject-list'
@@ -465,6 +582,9 @@
             byId('email-otp').value = '';
             byId('reg-form').reset();
             updateRegistrationSourceDetail();
+            updateMobileCallingCode();
+            updateCountrySelection();
+            resetPasswordVisibility();
             resetCaptcha('registration');
             setMessage(
                 'email-otp-message',
@@ -545,7 +665,18 @@
             }
 
             state.signedIn = Boolean(data.session);
-            showMobileVerification(data.user);
+
+            if (MOBILE_VERIFICATION_REQUIRED) {
+                showMobileVerification(data.user);
+                return;
+            }
+
+            setMessage(
+                'email-otp-message',
+                'Email verified. Opening your dashboardâ€¦',
+                'success'
+            );
+            await enterDashboard();
         } catch (error) {
             console.error('Email OTP verification failed:', error);
             setMessage(
@@ -784,7 +915,8 @@
             state.signedIn = true;
 
             if (
-                registrationVersion(data.user)
+                MOBILE_VERIFICATION_REQUIRED
+                && registrationVersion(data.user)
                     >= REGISTRATION_SECURITY_VERSION
                 && !hasCompletedMobileVerification(data.user)
             ) {
@@ -859,7 +991,8 @@
             }
 
             if (
-                registrationVersion(data.user)
+                MOBILE_VERIFICATION_REQUIRED
+                && registrationVersion(data.user)
                     >= REGISTRATION_SECURITY_VERSION
                 && data.user.email_confirmed_at
                 && !hasCompletedMobileVerification(data.user)
@@ -897,18 +1030,20 @@
             event.preventDefault();
             verifyEmailOtp();
         });
-        byId('btn-send-mobile-otp')?.addEventListener(
-            'click',
-            sendMobileOtp
-        );
-        byId('btn-verify-mobile-otp')?.addEventListener(
-            'click',
-            verifyMobileOtp
-        );
-        byId('mobile-otp-form')?.addEventListener('submit', (event) => {
-            event.preventDefault();
-            verifyMobileOtp();
-        });
+        if (MOBILE_VERIFICATION_REQUIRED) {
+            byId('btn-send-mobile-otp')?.addEventListener(
+                'click',
+                sendMobileOtp
+            );
+            byId('btn-verify-mobile-otp')?.addEventListener(
+                'click',
+                verifyMobileOtp
+            );
+            byId('mobile-otp-form')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                verifyMobileOtp();
+            });
+        }
         document.querySelectorAll('[data-cancel-verification]')
             .forEach((button) => {
                 button.addEventListener('click', cancelVerification);
@@ -917,6 +1052,20 @@
             'change',
             updateRegistrationSourceDetail
         );
+        byId('mobile-country-code')?.addEventListener(
+            'change',
+            updateMobileCallingCode
+        );
+        byId('country')?.addEventListener(
+            'change',
+            updateCountrySelection
+        );
+        document.querySelectorAll('[data-password-toggle]')
+            .forEach((button) => {
+                button.addEventListener('click', () => {
+                    togglePasswordVisibility(button);
+                });
+            });
         byId('pass')?.addEventListener('input', updatePasswordGuidance);
     }
 
@@ -924,6 +1073,9 @@
         bindEvents();
         showSessionMessage();
         updateRegistrationSourceDetail();
+        updateMobileCallingCode();
+        updateCountrySelection();
+        resetPasswordVisibility();
         updatePasswordGuidance();
         loadSubjects();
         renderCaptchaWidgets();

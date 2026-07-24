@@ -16,6 +16,7 @@ const htmlFiles = [
 
 const javascriptFiles = [
     'js/session-control.js',
+    'js/screen-protection.js',
     'js/registration-validation.js',
     'js/index-auth.js'
 ];
@@ -23,12 +24,17 @@ const javascriptFiles = [
 const requiredSnippets = {
     'index.html': [
         'js/session-control.js',
+        'js/screen-protection.js',
         'js/registration-validation.js',
         'js/index-auth.js',
         'insuregpte-turnstile-site-key',
         'registration-captcha',
         'email-otp-view',
-        'mobile-otp-view'
+        'mobile-otp-view',
+        'mobile-country-code',
+        'country-other',
+        'data-password-toggle',
+        'data-screen-protection-context-menu="disabled"'
     ],
     'dashboard.html': [
         'js/session-control.js',
@@ -38,6 +44,7 @@ const requiredSnippets = {
     ],
     'test.html': [
         'js/session-control.js',
+        'js/screen-protection.js',
         'sessionControl.clientOptions()',
         'sessionControl.activateProtectedPage',
         'sessionControl.logoutEverywhere',
@@ -47,6 +54,9 @@ const requiredSnippets = {
         "callRpcWithTimeout('get_attempt_questions'",
         "button.innerText='Creating Attempt...'",
         "button.innerText='Loading Questions...'",
+        'return-dashboard-button',
+        "document.getElementById('final-result')",
+        'sessionControl.releasePageControl()',
         "window.location.replace('dashboard.html')"
     ]
 };
@@ -61,10 +71,24 @@ const requiredJavascriptSnippets = {
         'another browser or page',
         'insuregpte:session-inactive'
     ],
+    'js/screen-protection.js': [
+        'copy',
+        'cut',
+        'paste',
+        'dragstart',
+        'contextmenu',
+        'printscreen',
+        '@media print',
+        'data-screen-protection-label',
+        'screenProtectionContextMenu',
+        'Screenshots are prohibited'
+    ],
     'js/registration-validation.js': [
         'InsureGPTERegistrationValidation',
         'password.length >= 12',
         'MOBILE_PATTERN',
+        'composeMobileNumber',
+        'INDIA_PIN_PATTERN',
         'Select at least one subject.'
     ],
     'js/index-auth.js': [
@@ -73,10 +97,15 @@ const requiredJavascriptSnippets = {
         'sessionControl.activateAfterSignIn',
         'captchaToken',
         'registration_security_version',
+        'const MOBILE_VERIFICATION_REQUIRED = false;',
+        'Email verified. Opening your dashboard',
         "type: 'email'",
         "type: 'phone_change'",
         'client.auth.updateUser',
-        'registration_source'
+        'registration_source',
+        'updateMobileCallingCode',
+        'updateCountrySelection',
+        'togglePasswordVisibility'
     ]
 };
 
@@ -170,6 +199,29 @@ for (const relativeFile of javascriptFiles) {
     }
 }
 
+const dashboardHtml = fs.readFileSync(
+    path.join(repositoryRoot, 'dashboard.html'),
+    'utf8'
+);
+const testHtml = fs.readFileSync(
+    path.join(repositoryRoot, 'test.html'),
+    'utf8'
+);
+
+if (dashboardHtml.includes('js/screen-protection.js')) {
+    failures.push(
+        'dashboard.html: protected-screen controls must remain limited to ' +
+        'authentication and test pages'
+    );
+}
+
+if (testHtml.includes('data-screen-protection-context-menu')) {
+    failures.push(
+        'test.html: right-click blocking must remain limited to the ' +
+        'authentication and registration page'
+    );
+}
+
 if (failures.length > 0) {
     console.error('Frontend static checks failed:');
 
@@ -181,6 +233,6 @@ if (failures.length > 0) {
 } else {
     console.log(
         `Frontend static checks passed for ${htmlFiles.length} HTML files ` +
-        `and ${javascriptFiles.length} shared JavaScript file.`
+        `and ${javascriptFiles.length} shared JavaScript files.`
     );
 }

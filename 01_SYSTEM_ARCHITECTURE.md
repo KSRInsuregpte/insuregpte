@@ -1,7 +1,7 @@
 # InsureGPTE System Architecture
 
 **Document:** 01_SYSTEM_ARCHITECTURE.md  
-**Version:** 1.3  
+**Version:** 1.4
 **Status:** Approved — Architecture Frozen  
 **Approval Date:** 2026-07-20  
 **Project Owner:** Sundararajan Desikan  
@@ -124,7 +124,8 @@ Technology:
 - Supabase Auth
 - Email/password login
 - email confirmation by OTP;
-- standard Supabase mobile confirmation by SMS OTP;
+- required normalized mobile capture, with SMS OTP temporarily deferred until
+  a production provider plan is approved;
 - Cloudflare Turnstile for Auth bot protection.
 
 Supabase Auth is the Version 1.0 identity provider. The application user UUID
@@ -161,8 +162,10 @@ Protected registration policy:
 - at least one active subject must be selected;
 - the browser and the Before User Created Auth hook validate registration;
 - the trusted profile trigger repeats critical validation as a backstop;
-- new protected accounts remain `verification_pending` until the email and the
-  registered mobile number are both confirmed by Supabase Auth;
+- new protected accounts remain `verification_pending` until the email is
+  confirmed by Supabase Auth;
+- the registered mobile number remains required and unique, but is not an
+  activation gate while SMS OTP is deferred;
 - pending profiles cannot use protected table or RPC operations;
 - OTP values and provider secrets are never stored in application tables.
 
@@ -534,8 +537,7 @@ Open index.html
 → Before User Created hook validates the request server-side
 → Supabase creates Auth user and trusted pending profile
 → Enter email OTP
-→ Enter mobile SMS OTP
-→ Database confirms both Auth verifications and activates the profile
+→ Database confirms email verification and activates the profile
 → Dashboard
 ```
 
@@ -645,9 +647,10 @@ Supabase Auth is the Version 1.0 provider, and user-specific functions use
 identity provider can be replaced through a controlled migration.
 
 New public registration is protected by CAPTCHA and a Before User Created Auth
-hook. Email and mobile OTP generation and verification remain within Supabase
-Auth. Application tables store only verification timestamps and the normalized
-registered mobile number; they never store OTP values.
+hook. Email OTP generation and verification remain within Supabase Auth.
+Mobile OTP is temporarily deferred pending a production SMS plan. Application
+tables retain the normalized registered mobile number and any historical
+verification timestamp; they never store OTP values.
 
 ### Session Concurrency
 
@@ -1042,6 +1045,28 @@ Any architecture change must document:
 - **Implementation status:** repository SQL, frontend, rollback, audit,
   verification, tests, and deployment guide are complete; production migration
   and provider configuration are pending owner execution.
+
+### Approved temporary email-only activation — 2026-07-23
+
+- **Requested change:** defer mobile OTP as an account-activation requirement
+  until a production SMS provider plan is purchased.
+- **Business reason:** allow controlled launch without depending on trial SMS
+  restrictions or incurring an unapproved production messaging commitment.
+- **Database impact:** a corrective migration activates complete pending
+  profiles after Supabase email confirmation and backfills existing complete
+  email-confirmed profiles. Mobile data and any verification evidence remain
+  intact.
+- **Frontend impact:** successful email OTP verification proceeds directly to
+  the dashboard. The mobile OTP implementation is retained behind an explicit
+  disabled policy flag for a future controlled reactivation.
+- **Security impact:** CAPTCHA, the Before User Created hook, mandatory complete
+  profile data, unique normalized mobile capture, password policy, email OTP,
+  active-profile enforcement, and one-active-page enforcement remain active.
+  Mobile ownership is not asserted during this temporary phase.
+- **Rollback impact:** the matching rollback restores dual email/mobile
+  activation and returns protected accounts without matching confirmed mobile
+  data to `verification_pending`.
+- **Approval decision:** approved by the project owner on 2026-07-23.
 
 ---
 

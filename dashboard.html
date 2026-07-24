@@ -292,6 +292,16 @@
                 throw attemptError;
             }
 
+            const attemptCountBySubject =
+                countAttemptsBySubject(attempts);
+
+            renderSubjects(
+                subjects || [],
+                attemptCountBySubject
+            );
+        }
+
+        function countAttemptsBySubject(attempts) {
             const attemptCountBySubject = {};
 
             /*
@@ -309,10 +319,7 @@
                     (attemptCountBySubject[subjectId] || 0) + 1;
             });
 
-            renderSubjects(
-                subjects || [],
-                attemptCountBySubject
-            );
+            return attemptCountBySubject;
         }
 
         function renderSubjects(subjects, attemptCountBySubject) {

@@ -11,15 +11,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/session-control.js?v=20260720"></script>
-    <script defer src="js/registration-validation.js?v=20260721"></script>
-    <script defer src="js/index-auth.js?v=20260721"></script>
+    <script defer src="js/screen-protection.js?v=2026072302"></script>
+    <script defer src="js/registration-validation.js?v=20260723"></script>
+    <script defer src="js/index-auth.js?v=20260723"></script>
     <script
         async
         defer
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
     ></script>
 </head>
-<body class="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
+<body
+    data-screen-protection-label="InsureGPTE authentication — protected screen"
+    data-screen-protection-context-menu="disabled"
+    class="min-h-screen bg-slate-50 px-4 py-8 text-slate-900"
+>
     <main class="mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl items-center justify-center">
         <section
             id="login-view"
@@ -49,13 +54,25 @@
                 <label for="login-pass" class="mb-1 block font-semibold text-slate-700">
                     Password
                 </label>
-                <input
-                    id="login-pass"
-                    type="password"
-                    autocomplete="current-password"
-                    required
-                    class="mb-4 w-full rounded-xl border border-slate-200 p-4 outline-none focus:ring-2 focus:ring-blue-500"
-                >
+                <div class="relative mb-4">
+                    <input
+                        id="login-pass"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                        class="w-full rounded-xl border border-slate-200 p-4 pr-20 outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                    <button
+                        type="button"
+                        data-password-toggle
+                        data-password-target="login-pass"
+                        aria-controls="login-pass"
+                        aria-pressed="false"
+                        class="absolute inset-y-0 right-0 px-4 font-semibold text-blue-700 hover:text-blue-900"
+                    >
+                        Show
+                    </button>
+                </div>
 
                 <div id="login-captcha" class="mb-4 flex justify-center"></div>
 
@@ -89,7 +106,7 @@
                 Create Account
             </h1>
             <p class="mb-6 text-sm text-slate-600">
-                All fields are required. Your email and mobile number must both be verified before access is activated.
+                All fields are required. Email verification is required before access is activated.
             </p>
             <div id="registration-availability" role="status" class="hidden"></div>
             <div id="registration-error" role="alert" class="hidden"></div>
@@ -124,7 +141,19 @@
                         Password
                         <span role="img" aria-label="Information" title="Use 12–64 characters with uppercase, lowercase, a number, and a symbol. Spaces are not allowed." class="cursor-help text-blue-600">ⓘ</span>
                     </label>
-                    <input id="pass" type="password" autocomplete="new-password" minlength="12" maxlength="64" required class="w-full rounded-xl border p-4">
+                    <div class="relative">
+                        <input id="pass" type="password" autocomplete="new-password" minlength="12" maxlength="64" required class="w-full rounded-xl border p-4 pr-20">
+                        <button
+                            type="button"
+                            data-password-toggle
+                            data-password-target="pass"
+                            aria-controls="pass"
+                            aria-pressed="false"
+                            class="absolute inset-y-0 right-0 px-4 font-semibold text-blue-700 hover:text-blue-900"
+                        >
+                            Show
+                        </button>
+                    </div>
                     <p id="password-guidance" class="mt-1 text-xs text-slate-500"></p>
                 </div>
 
@@ -133,7 +162,19 @@
                         Confirm password
                         <span role="img" aria-label="Information" title="Enter the same password again to prevent typing mistakes." class="cursor-help text-blue-600">ⓘ</span>
                     </label>
-                    <input id="pass-confirm" type="password" autocomplete="new-password" minlength="12" maxlength="64" required class="w-full rounded-xl border p-4">
+                    <div class="relative">
+                        <input id="pass-confirm" type="password" autocomplete="new-password" minlength="12" maxlength="64" required class="w-full rounded-xl border p-4 pr-20">
+                        <button
+                            type="button"
+                            data-password-toggle
+                            data-password-target="pass-confirm"
+                            aria-controls="pass-confirm"
+                            aria-pressed="false"
+                            class="absolute inset-y-0 right-0 px-4 font-semibold text-blue-700 hover:text-blue-900"
+                        >
+                            Show
+                        </button>
+                    </div>
                 </div>
 
                 <div class="md:col-span-2">
@@ -155,9 +196,34 @@
                 <div class="md:col-span-2">
                     <label for="mobile" class="mb-1 block font-semibold">
                         Mobile number
-                        <span role="img" aria-label="Information" title="Include the country code. An SMS OTP will be sent after email verification." class="cursor-help text-blue-600">ⓘ</span>
+                        <span role="img" aria-label="Information" title="Select the calling code and enter only the mobile number digits. Mobile OTP verification is deferred until the production SMS service is activated." class="cursor-help text-blue-600">ⓘ</span>
                     </label>
-                    <input id="mobile" type="tel" autocomplete="tel" inputmode="tel" placeholder="+919876543210" maxlength="16" pattern="\+[1-9][0-9]{7,14}" required class="w-full rounded-xl border p-4">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-[12rem_minmax(0,1fr)]">
+                        <div>
+                            <label for="mobile-country-code" class="sr-only">
+                                Mobile country calling code
+                            </label>
+                            <select id="mobile-country-code" autocomplete="tel-country-code" required class="w-full rounded-xl border bg-white p-4">
+                                <option value="+91" selected>India (+91)</option>
+                                <option value="other">Other calling code</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="mobile" class="sr-only">
+                                Mobile number without country code
+                            </label>
+                            <input id="mobile" type="tel" autocomplete="tel-national" inputmode="numeric" placeholder="9876543210" minlength="4" maxlength="14" pattern="[0-9]{4,14}" required class="w-full rounded-xl border p-4">
+                        </div>
+                    </div>
+                    <div id="mobile-country-code-other-container" class="mt-3 hidden">
+                        <label for="mobile-country-code-other" class="mb-1 block text-sm font-semibold">
+                            Other country calling code
+                        </label>
+                        <input id="mobile-country-code-other" type="tel" autocomplete="tel-country-code" inputmode="tel" placeholder="+1" maxlength="4" pattern="\+[1-9][0-9]{0,2}" class="w-full rounded-xl border p-4">
+                    </div>
+                    <p id="mobile-guidance" class="mt-1 text-xs text-slate-500">
+                        India: enter the 10-digit mobile number without +91.
+                    </p>
                 </div>
 
                 <div class="md:col-span-2">
@@ -206,6 +272,9 @@
                         <span role="img" aria-label="Information" title="The postal code for your address; letters are accepted for international codes." class="cursor-help text-blue-600">ⓘ</span>
                     </label>
                     <input id="pin" autocomplete="postal-code" minlength="3" maxlength="12" required class="w-full rounded-xl border p-4">
+                    <p id="postal-code-guidance" class="mt-1 text-xs text-slate-500">
+                        Enter the six-digit Indian PIN code.
+                    </p>
                 </div>
 
                 <div class="md:col-span-2">
@@ -213,7 +282,16 @@
                         Country
                         <span role="img" aria-label="Information" title="Your country of residence." class="cursor-help text-blue-600">ⓘ</span>
                     </label>
-                    <input id="country" autocomplete="country-name" value="India" minlength="2" maxlength="56" required class="w-full rounded-xl border p-4">
+                    <select id="country" autocomplete="country-name" required class="w-full rounded-xl border bg-white p-4">
+                        <option value="India" selected>India</option>
+                        <option value="other">Other country</option>
+                    </select>
+                    <div id="country-other-container" class="mt-3 hidden">
+                        <label for="country-other" class="mb-1 block text-sm font-semibold">
+                            Country name
+                        </label>
+                        <input id="country-other" autocomplete="country-name" minlength="2" maxlength="56" class="w-full rounded-xl border p-4">
+                    </div>
                 </div>
 
                 <div class="md:col-span-2">
