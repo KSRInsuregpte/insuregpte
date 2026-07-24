@@ -38,6 +38,8 @@
 - [ ] Deploy and runtime-verify protected registration end to end
 - [ ] Deploy and runtime-verify first-active-page enforcement
 - [ ] Deploy and verify hardened `submit_quiz_answer`
+- [x] Keep the final quiz result visible and preserve login until the learner
+  explicitly returns to subject selection or logs out
 - [ ] Harden `start_quiz_attempt` entitlement, active-question, and concurrency rules
 - [ ] Make quiz finalization idempotent and time-limit safe
 - [ ] Complete remaining RPCs

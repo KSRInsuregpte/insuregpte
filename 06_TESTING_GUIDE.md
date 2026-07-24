@@ -25,3 +25,30 @@ Static verification:
 ```text
 npm test
 ```
+
+## Quiz completion flow
+
+After the final answer is recorded:
+
+1. The completed quiz result remains visible on `test.html`.
+2. The page does not call logout and does not navigate automatically.
+3. **Return to Subject Selection** releases only the page-level lock and opens
+   `dashboard.html` with the existing authenticated session.
+4. The dashboard reloads `get_my_quiz_attempts` and counts every created
+   attempt status, including `in_progress`, `completed`, and `abandoned`.
+
+The automated completion check uses a recorded 50-of-50 completion response,
+verifies that no automatic navigation occurs, and verifies the attempt counter
+with multiple statuses:
+
+```text
+node TESTING/quiz-completion-behavior-check.mjs
+```
+
+Production smoke testing must confirm:
+
+- the final result is shown after question 50;
+- the learner remains signed in;
+- selecting **Return to Subject Selection** opens the dashboard;
+- the relevant subject's **Attempts Used** increases immediately;
+- only the explicit **Logout** button returns the learner to the login screen.

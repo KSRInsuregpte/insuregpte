@@ -128,6 +128,12 @@ This project follows Semantic Versioning (SemVer).
   provider plan is approved
 - Added a reversible email-only activation migration, existing-user backfill,
   deployment verification SQL, and frontend regression coverage
+- Restored the quiz completion confirmation panel so submitting the final
+  answer no longer navigates away immediately, keeps the authenticated session
+  active, and returns to subject selection only when the learner requests it
+- Added regression coverage for final-result visibility, safe page-control
+  handoff, and dashboard attempt counts across completed, in-progress, and
+  abandoned attempts
 
 ### Planned
 

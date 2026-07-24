@@ -54,6 +54,9 @@ const requiredSnippets = {
         "callRpcWithTimeout('get_attempt_questions'",
         "button.innerText='Creating Attempt...'",
         "button.innerText='Loading Questions...'",
+        'return-dashboard-button',
+        "document.getElementById('final-result')",
+        'sessionControl.releasePageControl()',
         "window.location.replace('dashboard.html')"
     ]
 };

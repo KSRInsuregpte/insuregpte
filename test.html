@@ -98,10 +98,11 @@
     </aside>
   </section>
 
-  <section id="final-result" class="mx-auto mt-8 hidden max-w-2xl rounded-2xl border border-emerald-300 bg-emerald-100 p-8 text-center">
+  <section id="final-result" class="mx-auto mt-8 hidden max-w-2xl rounded-2xl border border-emerald-300 bg-emerald-100 p-8 text-center" aria-live="polite">
     <h2 class="text-3xl font-bold text-emerald-900">Quiz Completed</h2>
     <p id="final-score" class="mt-3 text-xl text-emerald-900"></p>
-    <a href="dashboard.html" class="mt-6 inline-block rounded-xl bg-emerald-700 px-6 py-3 font-bold text-white hover:bg-emerald-800">Back to Dashboard</a>
+    <p class="mt-3 text-emerald-800">Your completed attempt has been recorded.</p>
+    <button id="return-dashboard-button" type="button" class="mt-6 inline-block rounded-xl bg-emerald-700 px-6 py-3 font-bold text-white hover:bg-emerald-800">Return to Subject Selection</button>
   </section>
 </main>
 
@@ -237,7 +238,23 @@ function toggleReview(){const q=questions[currentQuestionIndex];reviewQuestions.
 function updateReviewButton(id){const b=document.getElementById('review-button'),m=reviewQuestions.has(id);b.innerText=m?'Remove Review Mark':'Mark for Review';b.className=m?'rounded-xl border border-red-500 bg-red-100 px-4 py-2 font-semibold text-red-800 hover:bg-red-200':'rounded-xl border border-red-300 bg-red-50 px-4 py-2 font-semibold text-red-700 hover:bg-red-100'}
 function refreshPalette(){document.querySelectorAll('.qbtn').forEach(b=>{const i=Number(b.dataset.index),q=questions[i];b.className='qbtn';if(answerResults[q.question_id])b.classList.add('answered');if(reviewQuestions.has(q.question_id)){b.classList.remove('answered');b.classList.add('review')}if(i===currentQuestionIndex)b.classList.add('current')})}
 function updateScore(){document.getElementById('answered-count').innerText=`${answeredCount} / ${totalQuestions}`;document.getElementById('score-count').innerText=`${currentScore} / ${totalQuestions}`;const p=Math.round(answeredCount/totalQuestions*100);document.getElementById('progress-label').innerText=`${p}%`;document.getElementById('progress-circle').style.strokeDashoffset=String(PROGRESS_CIRCUMFERENCE-(p/100)*PROGRESS_CIRCUMFERENCE)}
-function showFinal(){clearTimers();attemptInProgress=false;window.location.replace('dashboard.html')}
+function showFinal(){
+  clearTimers();
+  attemptInProgress=false;
+  document.getElementById('quiz-layout').classList.add('hidden');
+  document.getElementById('quiz-layout').classList.remove('grid');
+  document.getElementById('start-panel').classList.add('hidden');
+  document.getElementById('final-score').innerText=
+    'You answered '+answeredCount+' of '+totalQuestions+
+    ' questions and scored '+currentScore+' out of '+totalQuestions+'.';
+  const finalResult=document.getElementById('final-result');
+  finalResult.classList.remove('hidden');
+  finalResult.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function navigateToDashboard(){
+  sessionControl.releasePageControl();
+  window.location.replace('dashboard.html');
+}
 
 function startQuestionTimer(){if(questionTimerInterval)clearInterval(questionTimerInterval);updateQuestionTimer();questionTimerInterval=setInterval(updateQuestionTimer,1000)}
 function updateQuestionTimer(){if(!questionStartedAt)return;const e=Math.max(0,Math.floor((Date.now()-questionStartedAt)/1000));document.getElementById('question-time').innerText='Time on this question: '+formatMMSS(e)}
@@ -253,7 +270,7 @@ async function logout(){if(attemptInProgress&&!confirm('Your quiz is still in pr
 function escapeHtml(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}
 function appendCalc(v){document.getElementById('calculator-display').value+=v}function clearCalc(){document.getElementById('calculator-display').value=''}function backCalc(){const d=document.getElementById('calculator-display');d.value=d.value.slice(0,-1)}function equals(){const d=document.getElementById('calculator-display'),x=d.value.trim();if(!x)return;if(!/^[0-9+\-*/.()\s]+$/.test(x)){d.value='Error';return}try{const r=Function('"use strict";return('+x+')')();d.value=Number.isFinite(r)?String(r):'Error'}catch(e){d.value='Error'}}
 
-document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('logout-button').onclick=logout;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});initialisePage();
+document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('logout-button').onclick=logout;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});initialisePage();
 </script>
 </body>
 </html>
