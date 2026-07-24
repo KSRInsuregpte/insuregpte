@@ -39,8 +39,8 @@ for (const snippet of [
 }
 
 assert.ok(
-    migration.includes(
-        'public.save_user_profile(\n    user_id uuid,\n    fname text'
+    /public\.save_user_profile\(\r?\n    user_id uuid,\r?\n    fname text/.test(
+        migration
     ),
     'save_user_profile deployed signature must be preserved'
 );

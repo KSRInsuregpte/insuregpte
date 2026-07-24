@@ -109,6 +109,9 @@ This project follows Semantic Versioning (SemVer).
 - Added authentication-and-test-only screen protection that blocks copy, cut,
   paste, and protected-page printing, and adds a visible screenshot deterrence
   watermark without affecting dashboard or future learning pages
+- Changed active-quiz Back and Logout actions to finalize submitted answers
+  before returning to the dashboard or signing out, with an explicit
+  **Continue Quiz** option and no navigation when finalization fails
 - Disabled the right-click context menu only on the combined authentication,
   registration, and verification page while preserving it on the test,
   dashboard, and future learning pages

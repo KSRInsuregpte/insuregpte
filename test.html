@@ -23,13 +23,33 @@
 >
 <nav class="border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
   <div class="mx-auto flex max-w-[1500px] items-center justify-between gap-4">
-    <a href="dashboard.html" class="font-semibold text-slate-600 hover:text-blue-800">← Back</a>
+    <button id="back-button" type="button" class="font-semibold text-slate-600 hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50">← Back</button>
     <div class="text-center"><h1 class="text-xl font-bold text-blue-900">InsureGPTE Practice Quiz</h1><p id="subject-heading" class="text-sm text-slate-500">Preparing quiz...</p></div>
-    <button id="logout-button" type="button" class="font-semibold text-red-600 hover:text-red-800">Logout</button>
+    <button id="logout-button" type="button" class="font-semibold text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50">Logout</button>
   </div>
 </nav>
 <main class="mx-auto max-w-[1500px] p-4">
   <div id="message-box" class="hidden mb-4 rounded-xl p-4"></div>
+  <section
+    id="exit-confirmation"
+    class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-950/60 p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="exit-confirmation-title"
+    aria-describedby="exit-confirmation-message"
+    aria-hidden="true"
+  >
+    <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+      <h2 id="exit-confirmation-title" class="text-2xl font-bold text-slate-900">Finish this attempt?</h2>
+      <p id="exit-confirmation-message" class="mt-3 text-slate-700">
+        This will finish the attempt. Submitted answers will be scored and unanswered questions will receive zero.
+      </p>
+      <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <button id="continue-quiz-button" type="button" class="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-700 hover:bg-slate-50">Continue Quiz</button>
+        <button id="confirm-exit-button" type="button" class="rounded-xl bg-red-600 px-5 py-3 font-bold text-white hover:bg-red-700">Finish Attempt &amp; Return</button>
+      </div>
+    </div>
+  </section>
   <section id="start-panel" class="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
     <h2 id="start-heading" class="text-2xl font-bold text-blue-900">Ready to begin?</h2>
     <p class="mt-3 text-slate-600">You will receive 50 random questions. Each correct answer carries 1 mark. An attempt is counted when you click the button below.</p>
@@ -94,7 +114,8 @@
           <button class="calc eq col-span-4" id="calculator-equals">=</button>
         </div>
       </section>
-      <button id="finish-attempt-button" type="button" class="w-full rounded-xl bg-red-600 px-4 py-3 text-center font-bold text-white shadow-sm hover:bg-red-700">Finish Attempt Now</button><a href="dashboard.html" class="block rounded-xl border border-slate-300 bg-white px-4 py-3 text-center font-bold text-slate-700 shadow-sm hover:bg-slate-50">← Back to Dashboard</a>
+      <button id="finish-attempt-button" type="button" class="w-full rounded-xl bg-red-600 px-4 py-3 text-center font-bold text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50">Finish Attempt Now</button>
+      <button id="dashboard-exit-button" type="button" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-center font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50">← Back to Dashboard</button>
     </aside>
   </section>
 
@@ -117,7 +138,7 @@
 
 let totalQuestions=50,sessionLimitSeconds=7200;
 const PROGRESS_CIRCUMFERENCE=301.59,RPC_TIMEOUT_MS=20000;
-let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false;
+let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false,pendingExitAction=null,lastExitTrigger=null;
 const selectedAnswers={},answerResults={},reviewQuestions=new Set();
 
 function selectedSubject(){const p=new URLSearchParams(location.search),id=p.get('subject_id'),code=p.get('subject_code'),n=Number(id);return id&&code&&Number.isInteger(n)&&n>0?{id:n,code}:null}
@@ -215,6 +236,7 @@ async function startQuiz(){
     document.getElementById('quiz-layout').classList.remove('hidden');
     document.getElementById('quiz-layout').classList.add('grid');
     document.getElementById('attempt-badge').innerText=`Attempt ${currentAttemptNumber}`;
+    updateExitActions();
     restoreReview();
     buildPalette();
     renderQuestion();
@@ -241,6 +263,7 @@ function updateScore(){document.getElementById('answered-count').innerText=`${an
 function showFinal(){
   clearTimers();
   attemptInProgress=false;
+  updateExitActions();
   document.getElementById('quiz-layout').classList.add('hidden');
   document.getElementById('quiz-layout').classList.remove('grid');
   document.getElementById('start-panel').classList.add('hidden');
@@ -255,22 +278,117 @@ function navigateToDashboard(){
   sessionControl.releasePageControl();
   window.location.replace('dashboard.html');
 }
+function updateExitActions(){
+  const returnLabel=attemptInProgress?'Finish Attempt & Return':'← Back';
+  document.getElementById('back-button').innerText=returnLabel;
+  document.getElementById('dashboard-exit-button').innerText=attemptInProgress?'Finish Attempt & Return':'← Back to Dashboard';
+  document.getElementById('logout-button').innerText=attemptInProgress?'Finish Attempt & Logout':'Logout';
+}
+function setExitActionsBusy(busy){
+  ['back-button','dashboard-exit-button','logout-button','finish-attempt-button'].forEach(id=>{
+    document.getElementById(id).disabled=busy;
+  });
+}
+function showExitConfirmation(action,trigger){
+  pendingExitAction=action;
+  lastExitTrigger=trigger||document.activeElement;
+  document.getElementById('exit-confirmation-title').innerText=action==='logout'?'Finish attempt and logout?':'Finish attempt and return?';
+  document.getElementById('confirm-exit-button').innerText=action==='logout'?'Finish Attempt & Logout':'Finish Attempt & Return';
+  const confirmation=document.getElementById('exit-confirmation');
+  confirmation.classList.remove('hidden');
+  confirmation.classList.add('flex');
+  confirmation.setAttribute('aria-hidden','false');
+  document.getElementById('continue-quiz-button').focus();
+}
+function closeExitConfirmation(restoreFocus=true){
+  const confirmation=document.getElementById('exit-confirmation');
+  confirmation.classList.add('hidden');
+  confirmation.classList.remove('flex');
+  confirmation.setAttribute('aria-hidden','true');
+  pendingExitAction=null;
+  if(restoreFocus&&lastExitTrigger?.focus)lastExitTrigger.focus();
+  lastExitTrigger=null;
+}
+function requestDashboardExit(){
+  if(!attemptInProgress){
+    navigateToDashboard();
+    return;
+  }
+  showExitConfirmation('dashboard',document.activeElement);
+}
 
 function startQuestionTimer(){if(questionTimerInterval)clearInterval(questionTimerInterval);updateQuestionTimer();questionTimerInterval=setInterval(updateQuestionTimer,1000)}
 function updateQuestionTimer(){if(!questionStartedAt)return;const e=Math.max(0,Math.floor((Date.now()-questionStartedAt)/1000));document.getElementById('question-time').innerText='Time on this question: '+formatMMSS(e)}
 function startSessionTimer(){if(sessionTimerInterval)clearInterval(sessionTimerInterval);updateSessionTimer();sessionTimerInterval=setInterval(updateSessionTimer,1000)}
 async function updateSessionTimer(){if(!attemptStartedAt||!attemptInProgress||isFinalising)return;const e=Math.floor((Date.now()-attemptStartedAt.getTime())/1000),r=Math.max(sessionLimitSeconds-e,0);document.getElementById('session-timer').innerText=formatHHMMSS(r);if(r<=300)document.getElementById('session-timer').classList.add('text-red-700');if(r===0){clearInterval(sessionTimerInterval);await finaliseAttempt('The session time limit has been reached. Your answered questions will now be scored.')}}
-async function finaliseAttempt(message){if(!currentAttemptId||isFinalising||!attemptInProgress)return;isFinalising=true;try{const{data,error}=await client.rpc('finalize_quiz_attempt',{p_attempt_id:currentAttemptId});if(error)throw error;if(data?.length){answeredCount=data[0].answered_count;currentScore=data[0].score}attemptInProgress=false;clearTimers();clearReview();if(message)alert(message);showFinal()}catch(e){console.error(e);if(await redirectForInactiveSession(e))return;msg(e.message||'Unable to finish the attempt.','error');isFinalising=false}}
+async function finaliseAttempt(message,showResult=true){
+  if(!currentAttemptId||isFinalising||!attemptInProgress)return false;
+  isFinalising=true;
+  setExitActionsBusy(true);
+  try{
+    const{data,error}=await client.rpc('finalize_quiz_attempt',{p_attempt_id:currentAttemptId});
+    if(error)throw error;
+    if(data?.length){
+      answeredCount=data[0].answered_count;
+      currentScore=data[0].score;
+    }
+    attemptInProgress=false;
+    clearTimers();
+    clearReview();
+    if(message)alert(message);
+    if(showResult)showFinal();
+    else updateExitActions();
+    return true;
+  }catch(e){
+    console.error(e);
+    if(await redirectForInactiveSession(e))return false;
+    msg(e.message||'Unable to finish the attempt.','error');
+    return false;
+  }finally{
+    isFinalising=false;
+    setExitActionsBusy(false);
+  }
+}
 function clearTimers(){if(sessionTimerInterval)clearInterval(sessionTimerInterval);if(questionTimerInterval)clearInterval(questionTimerInterval)}
 function formatMMSS(t){const m=Math.floor(t/60),s=t%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function formatHHMMSS(t){const h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=t%60;return[h,m,s].map(v=>String(v).padStart(2,'0')).join(':')}
 function key(){return`insuregpte-review-${currentAttemptId}`}function saveReview(){if(currentAttemptId)localStorage.setItem(key(),JSON.stringify([...reviewQuestions]))}function restoreReview(){try{JSON.parse(localStorage.getItem(key())||'[]').forEach(id=>reviewQuestions.add(Number(id)))}catch(e){console.error(e)}}function clearReview(){if(currentAttemptId)localStorage.removeItem(key());reviewQuestions.clear()}
 function msg(m,t){const b=document.getElementById('message-box');b.innerText=m;b.className=t==='error'?'mb-4 rounded-xl bg-red-100 p-4 text-red-800':'mb-4 rounded-xl bg-blue-100 p-4 text-blue-800';b.classList.remove('hidden')}function hideMsg(){document.getElementById('message-box').classList.add('hidden')}
-async function logout(){if(attemptInProgress&&!confirm('Your quiz is still in progress. Do you want to log out?'))return;const result=await sessionControl.logoutEverywhere(client);if(!result.success){msg('Unable to log out. Please try again.','error');return}location.replace('index.html')}
+async function logoutWithoutFinalising(){
+  setExitActionsBusy(true);
+  const result=await sessionControl.logoutEverywhere(client);
+  if(!result.success){
+    setExitActionsBusy(false);
+    msg('Unable to log out. Please try again.','error');
+    return false;
+  }
+  location.replace('index.html');
+  return true;
+}
+function logout(){
+  if(!attemptInProgress){
+    void logoutWithoutFinalising();
+    return;
+  }
+  showExitConfirmation('logout',document.activeElement);
+}
+async function confirmExit(){
+  const action=pendingExitAction;
+  if(!action)return;
+  closeExitConfirmation(false);
+  const finalised=await finaliseAttempt(null,false);
+  if(!finalised)return;
+  if(action==='logout'){
+    const loggedOut=await logoutWithoutFinalising();
+    if(!loggedOut)showFinal();
+    return;
+  }
+  navigateToDashboard();
+}
 function escapeHtml(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}
 function appendCalc(v){document.getElementById('calculator-display').value+=v}function clearCalc(){document.getElementById('calculator-display').value=''}function backCalc(){const d=document.getElementById('calculator-display');d.value=d.value.slice(0,-1)}function equals(){const d=document.getElementById('calculator-display'),x=d.value.trim();if(!x)return;if(!/^[0-9+\-*/.()\s]+$/.test(x)){d.value='Error';return}try{const r=Function('"use strict";return('+x+')')();d.value=Number.isFinite(r)?String(r):'Error'}catch(e){d.value='Error'}}
 
-document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('logout-button').onclick=logout;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});initialisePage();
+document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('back-button').onclick=requestDashboardExit;document.getElementById('dashboard-exit-button').onclick=requestDashboardExit;document.getElementById('logout-button').onclick=logout;document.getElementById('continue-quiz-button').onclick=()=>closeExitConfirmation();document.getElementById('confirm-exit-button').onclick=confirmExit;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers();updateExitActions()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});initialisePage();
 </script>
 </body>
 </html>
