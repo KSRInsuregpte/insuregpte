@@ -86,9 +86,7 @@
             registrationSourceDetail: clean(
                 values.registrationSourceDetail
             ),
-            subjects: Array.isArray(values.subjects)
-                ? [...new Set(values.subjects.map(clean).filter(Boolean))]
-                : []
+            subjects: []
         };
         const errors = {};
 
@@ -161,10 +159,6 @@
         ) {
             errors.registrationSourceDetail =
                 'Briefly describe how you learned about InsureGPTE.';
-        }
-
-        if (data.subjects.length < 1 || data.subjects.length > 20) {
-            errors.subjects = 'Select at least one subject.';
         }
 
         return {

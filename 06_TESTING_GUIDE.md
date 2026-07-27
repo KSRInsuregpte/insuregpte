@@ -83,3 +83,68 @@ Production smoke testing must separately confirm:
 - a simulated or observed finalization error prevents both navigation and
   logout;
 - an unexpected tab closure preserves the attempt for recovery.
+
+## Catalogue, registration, cart, and demo
+
+Static verification:
+
+```text
+npm test
+```
+
+Database verification after the catalogue migration:
+
+```text
+TESTING/sql/catalogue-commerce-verification.sql
+```
+
+Database verification after the demo/entitlement migration:
+
+```text
+TESTING/sql/demo-entitlement-quiz-verification.sql
+```
+
+Controlled runtime testing must confirm:
+
+- registration succeeds without choosing subjects;
+- the catalogue is available before login;
+- category filtering and subject search work;
+- Learning, Free Demo, and Add to Cart reflect each subject's database state;
+- an authenticated learner can add and remove a subject from the cart;
+- a demo starts only when ten active `advanced` questions are available;
+- demo attempts do not change the paid practice-attempt count;
+- a learner without an active entitlement cannot start paid practice;
+- a learner with a migrated complimentary or purchased entitlement can start
+  paid practice;
+- checkout remains disabled until payment webhook processing is implemented.
+
+## Administrator portal
+
+Run the repository static checks, then deploy:
+
+```text
+supabase/migrations/20260727180000_build_admin_portal.sql
+```
+
+Run:
+
+```text
+TESTING/sql/admin-portal-verification.sql
+```
+
+Expected result: `Success. No rows returned`.
+
+Controlled browser checks:
+
+1. A normal learner does not see **Administration** on `dashboard.html`.
+2. Opening `admin-dashboard.html` as a normal learner shows no management data.
+3. The active administrator sees the Administration link and dashboard.
+4. Create a new inactive subject, edit it, and confirm an audit-history row.
+5. Create and edit one controlled MCQ; verify Easy, Moderate, and Hard render
+   correctly and the correct answer/explanation persist.
+6. Change a controlled email-verified user between `verification_pending` and
+   `active`; confirm passwords and roles are unchanged.
+7. Add one controlled future examination notice and retire it; confirm it no
+   longer appears through the learner examination-information RPC.
+8. Confirm anonymous and normal authenticated browser roles cannot read or
+   write `subjects`, `questions`, or `admin_audit_events` directly.

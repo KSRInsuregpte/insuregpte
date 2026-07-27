@@ -2,462 +2,80 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>InsureGPTE | Member Dashboard</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureGPTE | My Learning & Practice</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/session-control.js?v=20260720"></script>
+    <script defer src="js/dashboard.js?v=20260725"></script>
 </head>
-
-<body class="bg-slate-50 min-h-screen">
-
-    <nav class="bg-white border-b border-slate-200 p-4 shadow-sm">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-
+<body class="min-h-screen bg-slate-50 text-slate-900">
+    <nav class="border-b border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-5">
-                <a
-                    href="index.html"
-                    class="text-slate-600 hover:text-blue-800 font-medium"
-                >
-                    ← Back
+                <a href="catalogue.html" class="font-medium text-slate-600 hover:text-blue-800">
+                    ← Catalogue
                 </a>
-
-                <h1 class="text-xl font-bold text-blue-900">
-                    InsureGPTE Portal
-                </h1>
+                <h1 class="text-xl font-bold text-blue-900">InsureGPTE Portal</h1>
             </div>
-
-            <button
-                type="button"
-                onclick="logout()"
-                class="text-red-600 font-medium hover:text-red-800"
-            >
-                Logout
-            </button>
-
+            <div class="flex items-center gap-4">
+                <a id="admin-link" href="admin-dashboard.html" class="hidden font-semibold text-violet-700 hover:text-violet-900">
+                    Administration
+                </a>
+                <a href="cart.html" class="font-semibold text-sky-700 hover:text-sky-900">Cart</a>
+                <button id="logout-button" type="button" class="font-medium text-red-600 hover:text-red-800">
+                    Logout
+                </button>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-5xl mx-auto p-4 md:p-6 mt-6">
-
-        <div
-            class="bg-blue-900 p-6 md:p-8 rounded-3xl
-                   text-white shadow-lg mb-8"
-        >
-            <h2 id="welcome" class="text-3xl font-bold">
-                Welcome back!
-            </h2>
-
-            <p class="opacity-80 mt-1">
-                Select a subject to begin or continue your practice quiz.
+    <main class="mx-auto mt-6 max-w-6xl p-4 md:p-6">
+        <section class="mb-8 rounded-3xl bg-blue-900 p-6 text-white shadow-lg md:p-8">
+            <p class="text-sm font-bold uppercase tracking-[0.2em] text-blue-200">My account</p>
+            <h2 id="welcome" class="mt-2 text-3xl font-bold">Welcome back!</h2>
+            <p class="mt-1 text-blue-100">
+                Continue learning, take a demonstration, or start practice for subjects you can access.
             </p>
-        </div>
-
-        <div
-            id="message-box"
-            class="hidden mb-5 p-4 rounded-xl"
-        ></div>
-
-        <section class="bg-white border rounded-2xl shadow-sm overflow-hidden">
-
-            <div class="p-5 border-b">
-                <h3 class="text-xl font-bold text-slate-800">
-                    My Selected Subjects
-                </h3>
-
-                <p class="text-sm text-slate-500 mt-1">
-                    Maximum permitted attempts per subject: 5
-                </p>
+            <div class="mt-6 flex flex-wrap gap-3">
+                <a href="catalogue.html" class="rounded-xl bg-white px-5 py-3 font-bold text-blue-900 hover:bg-blue-50">
+                    Browse Subject Catalogue
+                </a>
+                <a href="cart.html" class="rounded-xl border border-blue-300 px-5 py-3 font-bold text-white hover:bg-blue-800">
+                    View Cart
+                </a>
             </div>
-
-            <div class="overflow-x-auto">
-
-                <table class="w-full border-collapse">
-
-                    <thead class="bg-slate-100">
-
-                        <tr>
-                            <th
-                                class="text-left px-5 py-4 border-b
-                                       text-slate-700"
-                            >
-                                Subject
-                            </th>
-
-                            <th
-                                class="text-center px-5 py-4 border-b
-                                       text-slate-700"
-                            >
-                                Attempts Used
-                            </th>
-
-                            <th
-                                class="text-center px-5 py-4 border-b
-                                       text-slate-700"
-                            >
-                                Total Attempts Allowed
-                            </th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="test-list">
-
-                        <tr>
-                            <td
-                                colspan="3"
-                                class="px-5 py-8 text-center text-slate-500"
-                            >
-                                Loading your subjects...
-                            </td>
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
         </section>
 
+        <div id="message-box" role="alert" class="hidden mb-5 rounded-xl p-4"></div>
+
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b p-5">
+                <h3 class="text-xl font-bold text-slate-800">My Practice Access</h3>
+                <p class="mt-1 text-sm text-slate-500">
+                    Only subjects with an active entitlement appear here. Practice attempts are counted separately from free demonstrations.
+                </p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="border-b px-5 py-4 text-left text-slate-700">Subject</th>
+                            <th class="border-b px-5 py-4 text-center text-slate-700">Attempts Used</th>
+                            <th class="border-b px-5 py-4 text-center text-slate-700">Total Allowed</th>
+                            <th class="border-b px-5 py-4 text-center text-slate-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="test-list">
+                        <tr>
+                            <td colspan="4" class="px-5 py-10 text-center text-slate-500">
+                                Loading your subject access…
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
-
-    <script>
-        const sessionControl = window.InsureGPTESessionControl;
-        const client = window.supabase.createClient(
-            'https://tvjsivuibvzybdbjtesq.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU',
-            sessionControl.clientOptions()
-        );
-
-        const MAX_ATTEMPTS = 5;
-
-        async function redirectForInactiveSession(error) {
-            return sessionControl.handleInactiveSessionError(error);
-        }
-
-        async function init() {
-            const pageControl = sessionControl.acquirePageControl();
-
-            if (!pageControl.acquired) {
-                return;
-            }
-
-            try {
-                const {
-                    data: { user },
-                    error: userError
-                } = await client.auth.getUser();
-
-                if (userError || !user) {
-                    sessionControl.releasePageControl();
-                    window.location.href = "index.html";
-                    return;
-                }
-
-                if (!await sessionControl.activateProtectedPage(
-                    client,
-                    pageControl.tookOver
-                )) {
-                    return;
-                }
-
-                const { data: profile, error: profileError } =
-                    await client
-                        .from('profiles')
-                        .select(
-                            'first_name, interested_business_areas, ' +
-                            'status, role, subscription_plan'
-                        )
-                        .eq('id', user.id)
-                        .single();
-
-                if (profileError) {
-                    throw profileError;
-                }
-
-                if (profile.status !== 'active') {
-                    showMessage(
-                        "Your account is not active. " +
-                        "Please complete email verification or contact support.",
-                        "error"
-                    );
-
-                    document.getElementById('test-list').innerHTML = `
-                        <tr>
-                            <td
-                                colspan="3"
-                                class="px-5 py-8 text-center text-red-700"
-                            >
-                                Quiz access is currently unavailable.
-                            </td>
-                        </tr>
-                    `;
-
-                    return;
-                }
-
-                document.getElementById('welcome').innerText =
-                    "Welcome, " + (profile.first_name || "Member");
-
-                const selectedSubjectCodes =
-                    normaliseSelectedSubjects(
-                        profile.interested_business_areas
-                    );
-
-                if (selectedSubjectCodes.length === 0) {
-                    document.getElementById('test-list').innerHTML = `
-                        <tr>
-                            <td
-                                colspan="3"
-                                class="px-5 py-8 text-center text-slate-500"
-                            >
-                                No subjects were selected during registration.
-                            </td>
-                        </tr>
-                    `;
-
-                    return;
-                }
-
-                await loadDashboardSubjects(selectedSubjectCodes);
-
-            } catch (error) {
-                console.error("Dashboard loading error:", error);
-
-                if (await redirectForInactiveSession(error)) {
-                    return;
-                }
-
-                showMessage(
-                    error.message || "Unable to load the dashboard.",
-                    "error"
-                );
-            }
-        }
-
-        function normaliseSelectedSubjects(value) {
-            if (Array.isArray(value)) {
-                return value;
-            }
-
-            if (typeof value === 'string') {
-                try {
-                    const parsed = JSON.parse(value);
-
-                    return Array.isArray(parsed) ? parsed : [];
-                } catch (error) {
-                    console.error(
-                        "Unable to parse selected subjects:",
-                        error
-                    );
-
-                    return [];
-                }
-            }
-
-            return [];
-        }
-
-        async function loadDashboardSubjects(selectedSubjectCodes) {
-            /*
-              Fetch the subject IDs and codes corresponding to the
-              user's registration choices.
-            */
-            const { data: subjects, error: subjectError } =
-                await client
-                    .from('subjects')
-                    .select('id, code, title')
-                    .in('code', selectedSubjectCodes)
-                    .order('id');
-
-            if (subjectError) {
-                throw subjectError;
-            }
-
-            /*
-              The RPC returns only the logged-in user's quiz attempts.
-            */
-            const { data: attempts, error: attemptError } =
-                await client.rpc('get_my_quiz_attempts');
-
-            if (attemptError) {
-                throw attemptError;
-            }
-
-            const attemptCountBySubject =
-                countAttemptsBySubject(attempts);
-
-            renderSubjects(
-                subjects || [],
-                attemptCountBySubject
-            );
-        }
-
-        function countAttemptsBySubject(attempts) {
-            const attemptCountBySubject = {};
-
-            /*
-              Count all attempts already created, including:
-              - in_progress
-              - completed
-              - abandoned
-
-              This mirrors the server-side five-attempt restriction.
-            */
-            (attempts || []).forEach(attempt => {
-                const subjectId = String(attempt.subject_id);
-
-                attemptCountBySubject[subjectId] =
-                    (attemptCountBySubject[subjectId] || 0) + 1;
-            });
-
-            return attemptCountBySubject;
-        }
-
-        function renderSubjects(subjects, attemptCountBySubject) {
-            const tableBody =
-                document.getElementById('test-list');
-
-            if (subjects.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td
-                            colspan="3"
-                            class="px-5 py-8 text-center text-slate-500"
-                        >
-                            No matching subjects were found.
-                        </td>
-                    </tr>
-                `;
-
-                return;
-            }
-
-            tableBody.innerHTML = subjects.map(subject => {
-                const attemptsUsed =
-                    attemptCountBySubject[String(subject.id)] || 0;
-
-                const attemptsRemaining =
-                    Math.max(MAX_ATTEMPTS - attemptsUsed, 0);
-
-                const limitReached =
-                    attemptsUsed >= MAX_ATTEMPTS;
-
-                const subjectLabel =
-                    subject.title
-                        ? `${subject.code} — ${subject.title}`
-                        : subject.code;
-
-                const subjectLink = limitReached
-                    ? `
-                        <span
-                            class="font-semibold text-slate-400
-                                   cursor-not-allowed"
-                            title="Maximum attempts completed"
-                        >
-                            ${escapeHtml(subjectLabel)}
-                        </span>
-
-                        <p class="text-xs text-red-600 mt-1">
-                            Attempt limit reached
-                        </p>
-                    `
-                    : `
-                        <a
-                            href="test.html?subject_id=${encodeURIComponent(
-                                subject.id
-                            )}&subject_code=${encodeURIComponent(
-                                subject.code
-                            )}"
-                            class="font-semibold text-blue-700
-                                   hover:text-blue-900 hover:underline"
-                        >
-                            ${escapeHtml(subjectLabel)}
-                        </a>
-
-                        <p class="text-xs text-slate-500 mt-1">
-                            ${attemptsRemaining}
-                            attempt${attemptsRemaining === 1 ? '' : 's'}
-                            remaining
-                        </p>
-                    `;
-
-                return `
-                    <tr class="hover:bg-slate-50">
-
-                        <td class="px-5 py-5 border-b">
-                            ${subjectLink}
-                        </td>
-
-                        <td
-                            class="px-5 py-5 border-b
-                                   text-center font-bold"
-                        >
-                            ${attemptsUsed}
-                        </td>
-
-                        <td
-                            class="px-5 py-5 border-b
-                                   text-center font-bold"
-                        >
-                            ${MAX_ATTEMPTS}
-                        </td>
-
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function showMessage(message, type) {
-            const box =
-                document.getElementById('message-box');
-
-            box.innerText = message;
-
-            if (type === 'error') {
-                box.className =
-                    "mb-5 p-4 rounded-xl bg-red-100 text-red-800";
-            } else {
-                box.className =
-                    "mb-5 p-4 rounded-xl bg-blue-100 text-blue-800";
-            }
-
-            box.classList.remove('hidden');
-        }
-
-        async function logout() {
-            const result = await sessionControl.logoutEverywhere(client);
-
-            if (!result.success) {
-                console.error("Logout error:", result.error);
-
-                showMessage(
-                    "Unable to log out. Please try again.",
-                    "error"
-                );
-
-                return;
-            }
-
-            window.location.replace("index.html");
-        }
-
-        function escapeHtml(value) {
-            const div = document.createElement('div');
-            div.textContent = String(value ?? '');
-            return div.innerHTML;
-        }
-
-        init();
-    </script>
-
 </body>
 </html>

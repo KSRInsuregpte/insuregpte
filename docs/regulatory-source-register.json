@@ -1,0 +1,680 @@
+{
+  "schema_version": 1,
+  "registry_id": "insuregpte-regulatory-source-register",
+  "registry_scope": "trial",
+  "as_of_date": "2026-07-26",
+  "authorities": [
+    {
+      "code": "III",
+      "name": "Insurance Institute of India",
+      "official_website": "https://www.insuranceinstituteofindia.com/"
+    }
+  ],
+  "review_policy": {
+    "controlling_source_order": [
+      "current official examination handbook",
+      "current official syllabus or credit-point notice",
+      "subject-specific official amendment or withdrawal notice",
+      "session-specific official timetable and centre list"
+    ],
+    "filename_dates_are_authoritative": false,
+    "full_study_material_may_be_republished": false,
+    "session_documents_must_expire": true,
+    "sale_requires_reviewed_learning_content": true,
+    "amendment_process": [
+      "record the official amendment and its printed date",
+      "map the amendment to the affected subject and base edition",
+      "review affected lessons and questions",
+      "publish a reviewed content version",
+      "retain the previous version for audit"
+    ]
+  },
+  "documents": [
+    {
+      "id": "iii-examination-handbook-2026",
+      "document_type": "handbook",
+      "title": "Examination Handbook",
+      "authority_code": "III",
+      "official_url": "https://www.insuranceinstituteofindia.com/documents/d/guest/examination-handbook-new",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Examination Handbook New 26-07-2026.pdf",
+      "published_on": null,
+      "subject_codes": [],
+      "content_usage": "reference_only",
+      "verification_status": "official_url_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-professional-syllabus-2025-07-07",
+      "document_type": "syllabus",
+      "title": "Professional Examination syllabus and subject contents",
+      "authority_code": "III",
+      "official_url": "https://www.insuranceinstituteofindia.com/documents/d/guest/1-professional-examination-only-contents-updated-on-7-7-2025",
+      "archive_path": "1/Institute Hand books credit points exam center lists/1. Professional Examination - only contents - updated on 7.7.2025.pdf",
+      "published_on": "2025-07-07",
+      "subject_codes": [],
+      "content_usage": "reference_only",
+      "verification_status": "official_url_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-credit-points-2025-03-27",
+      "document_type": "credit_points",
+      "title": "Credit Point System",
+      "authority_code": "III",
+      "official_url": "https://www.insuranceinstituteofindia.com/documents/d/guest/credit-point-system",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Credit Point System 26-07-2026.pdf",
+      "published_on": "2025-03-27",
+      "subject_codes": [],
+      "content_usage": "metadata_only",
+      "verification_status": "official_url_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-yearly-examination-schedule-2026",
+      "document_type": "schedule",
+      "title": "Online Examination Schedule for the Year 2026",
+      "authority_code": "III",
+      "official_url": "https://www.insuranceinstituteofindia.com/documents/d/guest/yearly-schedule-2026-ticker-15-12-2025-",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Yearly Schedule-2026 (Ticker-15.12.2025).pdf",
+      "published_on": "2025-12-15",
+      "session_code": "III-2026",
+      "valid_until": "2026-12-31",
+      "subject_codes": [],
+      "content_usage": "metadata_only",
+      "verification_status": "official_url_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-september-2026-examination-schedule",
+      "document_type": "schedule",
+      "title": "Online Examination Schedule for September 2026",
+      "authority_code": "III",
+      "official_url": "https://www.insuranceinstituteofindia.com/documents/d/guest/online-examination-schedule-for-sep-2026",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Online Examination Schedule for Sep 2026.pdf",
+      "published_on": "2026-07-01",
+      "session_code": "III-2026-09",
+      "valid_until": "2026-09-30",
+      "subject_codes": [],
+      "content_usage": "metadata_only",
+      "verification_status": "official_url_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-september-2026-indian-centres",
+      "document_type": "centre_list",
+      "title": "September 2026 Online Examination Indian Centers List",
+      "authority_code": "III",
+      "official_url": null,
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Centre list September 2026 Online Exam.pdf",
+      "published_on": null,
+      "session_code": "III-2026-09",
+      "valid_until": "2026-09-30",
+      "subject_codes": [],
+      "content_usage": "metadata_only",
+      "verification_status": "visual_source_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-september-2026-overseas-centres",
+      "document_type": "centre_list",
+      "title": "September 2026 Online Examination Overseas Centers List",
+      "authority_code": "III",
+      "official_url": null,
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Online Examination Overseas centres list September 2026.pdf",
+      "published_on": "2026-07-06",
+      "session_code": "III-2026-09",
+      "valid_until": "2026-09-30",
+      "subject_codes": [],
+      "content_usage": "metadata_only",
+      "verification_status": "visual_source_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-september-2026-bilingual-subjects",
+      "document_type": "language_list",
+      "title": "September 2026 Bilingual Subject List",
+      "authority_code": "III",
+      "official_url": null,
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Bilingual list - Sep-2026.pdf",
+      "published_on": null,
+      "session_code": "III-2026-09",
+      "valid_until": "2026-09-30",
+      "subject_codes": [],
+      "content_usage": "metadata_only",
+      "verification_status": "visual_source_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-withdrawal-ic23-ic82-2021-11-29",
+      "document_type": "withdrawal_notice",
+      "title": "Discontinuation of IC23 and IC82",
+      "authority_code": "III",
+      "official_url": null,
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Institute Hand books credit points exam center lists/Discontinuation of the IC23-Application of Life Assu.pdf",
+      "published_on": "2021-11-29",
+      "effective_from": "2022-09-01",
+      "subject_codes": [
+        "IC23",
+        "IC82"
+      ],
+      "content_usage": "metadata_only",
+      "verification_status": "visual_source_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-as03-2024-07-29",
+      "document_type": "subject_amendment",
+      "title": "AS03 amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/AS-03_29.07.2024.pdf",
+      "published_on": "2024-07-29",
+      "subject_codes": [
+        "AS03"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-as05v-2026-07-01",
+      "document_type": "subject_amendment",
+      "title": "AS05(v) Actuarial Aspects of Risk Management amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/AS-05 (v) Actuarial Aspects of Risk Management.pdf",
+      "published_on": "2026-07-01",
+      "subject_codes": [
+        "AS05V"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic01-2025-05-22",
+      "document_type": "subject_amendment",
+      "title": "IC01 Principles of Insurance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-01 Principles of Insurance.pdf",
+      "published_on": "2025-05-22",
+      "subject_codes": [
+        "IC01"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic02-2024-12-19",
+      "document_type": "subject_amendment",
+      "title": "IC02 Practice of Life Insurance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-02 19.12.2024.pdf",
+      "published_on": "2024-12-19",
+      "subject_codes": [
+        "IC02"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic14-2023-08-07",
+      "document_type": "subject_amendment",
+      "title": "IC14 Regulations of Insurance Business amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-14-new_30032022.pdf",
+      "published_on": "2023-08-07",
+      "subject_codes": [
+        "IC14"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic26-2026-03-25",
+      "document_type": "subject_amendment",
+      "title": "IC26 Life Insurance Finance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-26 - English.pdf",
+      "published_on": "2026-03-25",
+      "subject_codes": [
+        "IC26"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic36-2025-03-18",
+      "document_type": "subject_amendment",
+      "title": "IC36 Health Insurance Claims Management amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-36_23.09.2024.pdf",
+      "published_on": "2025-03-18",
+      "subject_codes": [
+        "IC36"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic37-2024-09-23",
+      "document_type": "subject_amendment",
+      "title": "IC37 Health Insurance Operations amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-37_19.07.2024.pdf",
+      "published_on": "2024-09-23",
+      "subject_codes": [
+        "IC37"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic39-2026-04-28",
+      "document_type": "subject_amendment",
+      "title": "IC39 Fraud Risk Management in Insurance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-39_Fraud Risk Management In Insurance.pdf",
+      "published_on": "2026-04-28",
+      "subject_codes": [
+        "IC39"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic45-2025-09-01",
+      "document_type": "subject_amendment",
+      "title": "IC45 General Insurance Underwriting amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-45 - English 01.09.2025.pdf",
+      "published_on": "2025-09-01",
+      "subject_codes": [
+        "IC45"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic46-2026-04-08",
+      "document_type": "subject_amendment",
+      "title": "IC46 General Insurance Accounts and Regulation of Investment amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-46 (E).pdf",
+      "published_on": "2026-04-08",
+      "subject_codes": [
+        "IC46"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic57-2026-01-06",
+      "document_type": "subject_amendment",
+      "title": "IC57 Fire and Consequential Loss Insurance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-57 Fire and Consequential loss Insurance (English).pdf",
+      "published_on": "2026-01-06",
+      "subject_codes": [
+        "IC57"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic58-2025-09-11",
+      "document_type": "subject_amendment",
+      "title": "IC58 Fire Insurance Coverages amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-58 Fire Insurance Coverages 11.09.2025.pdf",
+      "published_on": "2025-09-11",
+      "subject_codes": [
+        "IC58"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic60-2026-06-25",
+      "document_type": "subject_amendment",
+      "title": "IC60 Marine Cargo Insurance Principles and Underwriting amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/ic-60-marine-cargo-insurance-principles-and-underwriting-e-.pdf",
+      "published_on": "2026-06-25",
+      "subject_codes": [
+        "IC60"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic66-2025-06-16",
+      "document_type": "subject_amendment",
+      "title": "IC66 Marine Insurance Claims amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-66 Marine Insurance claims 16.06.2025.pdf",
+      "published_on": "2025-06-16",
+      "subject_codes": [
+        "IC66"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic67-2025-09-11",
+      "document_type": "subject_amendment",
+      "title": "IC67 Marine Insurance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-67 Marine Insurance (1).pdf",
+      "published_on": "2025-09-11",
+      "subject_codes": [
+        "IC67"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic70-2026-07-02",
+      "document_type": "subject_amendment",
+      "title": "IC70 Marine Hull Insurance Underwriting and Claims amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC 70- Marine Hull Insurance Underwriting and Claims (E).pdf",
+      "published_on": "2026-07-02",
+      "subject_codes": [
+        "IC70"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic74-2024-09-30",
+      "document_type": "subject_amendment",
+      "title": "IC74 Liability Insurance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-74-Eng-07-8-23.pdf",
+      "published_on": "2024-09-30",
+      "subject_codes": [
+        "IC74"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic83-2026-03-16",
+      "document_type": "subject_amendment",
+      "title": "IC83 Group Insurance and Retirement Benefit Schemes amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-83 Group Insurance & Retirement benefit schemes  16.03.2026.pdf",
+      "published_on": "2026-03-16",
+      "subject_codes": [
+        "IC83"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic89-2024-02-20",
+      "document_type": "subject_amendment",
+      "title": "IC89 Management Accounting amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-89-Management Accounting-20.02.2024.pdf",
+      "published_on": "2024-02-20",
+      "subject_codes": [
+        "IC89"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic90-2026-06-15",
+      "document_type": "subject_amendment",
+      "title": "IC90 Human Resources Management amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-90 (E).pdf",
+      "published_on": "2026-06-15",
+      "subject_codes": [
+        "IC90"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic92-2026-03-17",
+      "document_type": "subject_amendment",
+      "title": "IC92 Actuarial Aspects of Product Development amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-92  Actuarial Aspects of produc Development 06.10.2025.pdf",
+      "published_on": "2026-03-17",
+      "subject_codes": [
+        "IC92"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-ic103-2025-07-22",
+      "document_type": "subject_amendment",
+      "title": "IC103 amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-103-22.07.2025.pdf",
+      "published_on": "2025-07-22",
+      "subject_codes": [
+        "IC103"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-icaiu01-2025-06-16",
+      "document_type": "subject_amendment",
+      "title": "IC-AIU01 Advanced Diploma in Life Insurance Underwriting amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-AIU 01-- 16.06.2025.pdf",
+      "published_on": "2025-06-16",
+      "subject_codes": [
+        "ICAIU01"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-s01-2024-11-22",
+      "document_type": "subject_amendment",
+      "title": "S01 Principles and Practice of General Insurance and Insurance Surveys amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/S-01-new-29.01.2024.pdf",
+      "published_on": "2024-11-22",
+      "subject_codes": [
+        "S01"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-s06-2024-03-11",
+      "document_type": "subject_amendment",
+      "title": "S06 amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/S-06 11.03.2024.pdf",
+      "published_on": "2024-03-11",
+      "subject_codes": [
+        "S06"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    },
+    {
+      "id": "iii-amendment-s07-2025-08-22",
+      "document_type": "subject_amendment",
+      "title": "S07 Miscellaneous Insurance amendment",
+      "authority_code": "III",
+      "discovery_url": "https://www.insuranceinstituteofindia.com/sitemap",
+      "archive_path": "1/Ammendments to subjects 26-07-2026/S-07 Miscellanceous Insurance.pdf",
+      "published_on": "2025-08-22",
+      "subject_codes": [
+        "S07"
+      ],
+      "content_usage": "reference_only",
+      "verification_status": "document_date_verified",
+      "verified_on": "2026-07-26"
+    }
+  ],
+  "pilot_subjects": [
+    {
+      "subject_code": "IC01",
+      "official_status": "active",
+      "trial_release_state": "metadata_ready",
+      "learning_content_state": "review_required",
+      "commercial_state": "not_approved",
+      "source_document_ids": [
+        "iii-professional-syllabus-2025-07-07",
+        "iii-credit-points-2025-03-27",
+        "iii-amendment-ic01-2025-05-22"
+      ]
+    },
+    {
+      "subject_code": "IC02",
+      "official_status": "active",
+      "trial_release_state": "metadata_ready",
+      "learning_content_state": "review_required",
+      "commercial_state": "not_approved",
+      "source_document_ids": [
+        "iii-professional-syllabus-2025-07-07",
+        "iii-credit-points-2025-03-27",
+        "iii-amendment-ic02-2024-12-19"
+      ]
+    },
+    {
+      "subject_code": "IC11",
+      "official_status": "active",
+      "trial_release_state": "metadata_ready",
+      "learning_content_state": "review_required",
+      "commercial_state": "not_approved",
+      "source_document_ids": [
+        "iii-professional-syllabus-2025-07-07",
+        "iii-credit-points-2025-03-27"
+      ]
+    },
+    {
+      "subject_code": "IC14",
+      "official_status": "active",
+      "trial_release_state": "metadata_ready",
+      "learning_content_state": "review_required",
+      "commercial_state": "not_approved",
+      "source_document_ids": [
+        "iii-professional-syllabus-2025-07-07",
+        "iii-credit-points-2025-03-27",
+        "iii-amendment-ic14-2023-08-07"
+      ]
+    }
+  ],
+  "withdrawn_subjects": [
+    {
+      "subject_code": "IC23",
+      "official_status": "withdrawn",
+      "effective_from": "2022-09-01",
+      "commercial_state": "blocked",
+      "source_document_id": "iii-withdrawal-ic23-ic82-2021-11-29"
+    },
+    {
+      "subject_code": "IC82",
+      "official_status": "withdrawn",
+      "effective_from": "2022-09-01",
+      "commercial_state": "blocked",
+      "source_document_id": "iii-withdrawal-ic23-ic82-2021-11-29"
+    }
+  ],
+  "quarantine": [
+    {
+      "archive_path": "1/Ammendments to subjects 26-07-2026/IC-14-regulations.pdf",
+      "reason": "Third-party 2019 study material; not an official III amendment."
+    },
+    {
+      "archive_path": "1/Ammendments to subjects 26-07-2026/getInstituteReportPDF.pdf",
+      "reason": "Associated-institute report containing contact information; not a subject amendment."
+    },
+    {
+      "archive_path": "1/Institute Hand books credit points exam center lists/ASSOCIATED INSTITUTES REPORT.xls",
+      "reason": "HTML report mislabeled as XLS and containing institute contact information; not an examination-centre list."
+    },
+    {
+      "archive_path": "1/subject materials",
+      "reason": "Older and mixed-origin study books require edition, copyright, and current-amendment review before any learning content is published."
+    }
+  ],
+  "duplicate_groups": [
+    [
+      "1/Ammendments to subjects 26-07-2026/AS-03_29.07.2024.pdf",
+      "1/Ammendments to subjects 26-07-2026/AS-03_29.07.2024 (1).pdf",
+      "1/Ammendments to subjects 26-07-2026/AS-03_29.07.2024 (2).pdf"
+    ],
+    [
+      "1/Ammendments to subjects 26-07-2026/IC-83 Group Insurance & Retirement benefit schemes  16.03.2026.pdf",
+      "1/Ammendments to subjects 26-07-2026/IC-83 Group Insurance.pdf"
+    ],
+    [
+      "1/Ammendments to subjects 26-07-2026/IC-89-Management Accounting-20.02.2024.pdf",
+      "1/Ammendments to subjects 26-07-2026/IC-89-Management Accounting-20.02.2024 (1).pdf"
+    ],
+    [
+      "1/Institute Hand books credit points exam center lists/Credit Point System 26-07-2026.pdf",
+      "1/Institute Hand books credit points exam center lists/Credit Point System New.pdf"
+    ],
+    [
+      "1/Ammendments to subjects 26-07-2026/IC-14-regulations.pdf",
+      "1/subject materials/IC-14-regulations.pdf"
+    ]
+  ]
+}

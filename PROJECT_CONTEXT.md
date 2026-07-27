@@ -266,6 +266,14 @@
 
 # not stored in application tables.
 
+# Registration does not collect subject interests. Learners select learning,
+
+# demo, and purchasable subjects from the catalogue after registration.
+
+# Existing learner access and all new paid access are controlled by
+
+# user_entitlements, never by browser state.
+
 # 
 
 # Account Status
@@ -584,11 +592,33 @@
 
 # Phase 2
 
-# 
+#
 
 # RPC Layer Development
 
-# 
+#
+
+# Current trial release
+
+#
+
+# The administration release reuses the existing academic, question, profile,
+# entitlement, and regulatory metadata tables. It adds one administrator audit
+# history table and administrator-only RPCs for subject master, MCQ question
+# bank, verified user activation, and official examination information.
+
+#
+
+# The hidden admin dashboard is not an authorization boundary. Every operation
+# is authorized again in PostgreSQL for an active administrator. The browser
+# does not receive direct subject, question, or audit-table access.
+
+#
+
+# Payment collection remains disabled. A production payment provider and
+# signed server-side webhook fulfilment design require separate approval.
+
+#
 
 # \---
 
@@ -628,7 +658,7 @@
 
 # 8\. Production Deployment
 
-# 
+#
 
 # \---
 

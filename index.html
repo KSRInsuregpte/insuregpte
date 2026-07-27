@@ -12,8 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/session-control.js?v=20260720"></script>
     <script defer src="js/screen-protection.js?v=2026072302"></script>
-    <script defer src="js/registration-validation.js?v=20260723"></script>
-    <script defer src="js/index-auth.js?v=20260723"></script>
+    <script defer src="js/registration-validation.js?v=20260725"></script>
+    <script defer src="js/index-auth.js?v=20260725"></script>
     <script
         async
         defer
@@ -94,6 +94,14 @@
                 >
                     Register Now
                 </button>
+            </p>
+            <p class="mt-3 text-center">
+                <a
+                    href="catalogue.html"
+                    class="font-semibold text-emerald-700 hover:underline"
+                >
+                    Browse learning and practice subjects
+                </a>
             </p>
         </section>
 
@@ -320,16 +328,11 @@
                     <input id="registration-source-detail" minlength="2" maxlength="120" class="w-full rounded-xl border p-4">
                 </div>
 
-                <fieldset class="mt-2 md:col-span-2">
-                    <legend class="mb-1 font-bold text-slate-700">
-                        Interested subjects
-                        <span role="img" aria-label="Information" title="Select at least one subject. You may select more than one." class="cursor-help text-blue-600">ⓘ</span>
-                    </legend>
-                    <p class="mb-3 text-xs text-slate-500">At least one subject is required.</p>
-                    <div id="subject-list" tabindex="-1" class="grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-                        <p class="text-slate-500">Loading subjects…</p>
-                    </div>
-                </fieldset>
+                <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 md:col-span-2">
+                    Subject selection is available after registration. Explore
+                    Licentiate, Associate, Fellowship, specialized diploma,
+                    and broker examination subjects in the catalogue.
+                </div>
 
                 <div class="md:col-span-2">
                     <div id="registration-captcha" class="flex justify-center"></div>

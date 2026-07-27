@@ -11,14 +11,23 @@ const repositoryRoot = path.resolve(
 const htmlFiles = [
     'index.html',
     'dashboard.html',
-    'test.html'
+    'test.html',
+    'catalogue.html',
+    'subject.html',
+    'cart.html',
+    'admin-dashboard.html'
 ];
 
 const javascriptFiles = [
     'js/session-control.js',
     'js/screen-protection.js',
     'js/registration-validation.js',
-    'js/index-auth.js'
+    'js/index-auth.js',
+    'js/dashboard.js',
+    'js/catalogue.js',
+    'js/subject.js',
+    'js/cart.js',
+    'js/admin.js'
 ];
 
 const requiredSnippets = {
@@ -38,9 +47,34 @@ const requiredSnippets = {
     ],
     'dashboard.html': [
         'js/session-control.js',
-        'sessionControl.clientOptions()',
-        'sessionControl.activateProtectedPage',
-        'sessionControl.logoutEverywhere'
+        'js/dashboard.js',
+        'id="admin-link"',
+        'class="hidden'
+    ],
+    'catalogue.html': [
+        'js/session-control.js',
+        'js/catalogue.js',
+        'Practice Test Login / Sign Up'
+    ],
+    'subject.html': [
+        'js/session-control.js',
+        'js/subject.js',
+        'Learning content rollout'
+    ],
+    'cart.html': [
+        'js/session-control.js',
+        'js/cart.js',
+        'Secure Checkout — Coming Soon'
+    ],
+    'admin-dashboard.html': [
+        'js/session-control.js',
+        'js/admin.js',
+        'id="admin-portal"',
+        'data-admin-tab="subjects"',
+        'data-admin-tab="questions"',
+        'data-admin-tab="users"',
+        'data-admin-tab="exam-information"',
+        'data-admin-tab="audit"'
     ],
     'test.html': [
         'js/session-control.js',
@@ -52,6 +86,8 @@ const requiredSnippets = {
         'RPC_TIMEOUT_MS=20000',
         "callRpcWithTimeout('start_quiz_attempt'",
         "callRpcWithTimeout('get_attempt_questions'",
+        "p_test_mode:currentTestMode",
+        "p.get('mode')==='demo'",
         "button.innerText='Creating Attempt...'",
         "button.innerText='Loading Questions...'",
         'return-dashboard-button',
@@ -61,7 +97,50 @@ const requiredSnippets = {
     ]
 };
 
+const dashboardJavascriptRequirements = [
+        'sessionControl.clientOptions()',
+        'sessionControl.activateProtectedPage',
+        'sessionControl.logoutEverywhere',
+        "client.rpc('get_subject_catalogue')",
+        "client.rpc('get_my_quiz_attempts')",
+        "client.rpc('fn_is_admin')",
+        "attempt.test_mode === 'practice'"
+];
+
 const requiredJavascriptSnippets = {
+    'js/dashboard.js': dashboardJavascriptRequirements,
+    'js/catalogue.js': [
+        'sessionControl.clientOptions()',
+        'sessionControl.activateProtectedPage',
+        "'get_subject_catalogue'",
+        "client.rpc('add_subject_to_cart'",
+        'advanced_question_count'
+    ],
+    'js/subject.js': [
+        'sessionControl.clientOptions()',
+        "'get_subject_catalogue'",
+        "client.rpc('add_subject_to_cart'",
+        '&mode=demo'
+    ],
+    'js/cart.js': [
+        'sessionControl.clientOptions()',
+        'sessionControl.activateProtectedPage',
+        "client.rpc('get_my_cart')",
+        "'remove_subject_from_cart'"
+    ],
+    'js/admin.js': [
+        'sessionControl.clientOptions()',
+        'sessionControl.activateProtectedPage',
+        "client.rpc('fn_is_admin')",
+        "client.rpc('admin_save_subject'",
+        "client.rpc('admin_save_question'",
+        "client.rpc('admin_list_users')",
+        "client.rpc('admin_set_user_status'",
+        "'admin_save_exam_information'",
+        "'admin_retire_exam_information'",
+        "'admin_list_audit_events'",
+        'sessionControl.logoutEverywhere'
+    ],
     'js/session-control.js': [
         'x-insuregpte-client-id',
         "client.rpc('claim_active_client'",
@@ -88,8 +167,7 @@ const requiredJavascriptSnippets = {
         'password.length >= 12',
         'MOBILE_PATTERN',
         'composeMobileNumber',
-        'INDIA_PIN_PATTERN',
-        'Select at least one subject.'
+        'INDIA_PIN_PATTERN'
     ],
     'js/index-auth.js': [
         'sessionControl.clientOptions()',

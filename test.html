@@ -52,7 +52,7 @@
   </section>
   <section id="start-panel" class="mx-auto mt-8 max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
     <h2 id="start-heading" class="text-2xl font-bold text-blue-900">Ready to begin?</h2>
-    <p class="mt-3 text-slate-600">You will receive 50 random questions. Each correct answer carries 1 mark. An attempt is counted when you click the button below.</p>
+    <p id="start-description" class="mt-3 text-slate-600">You will receive 50 random questions. Each correct answer carries 1 mark. An attempt is counted when you click the button below.</p>
     <button id="start-button" type="button" class="mt-6 rounded-xl bg-blue-700 px-8 py-3 font-bold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50">Start This Attempt</button>
   </section>
 
@@ -138,10 +138,10 @@
 
 let totalQuestions=50,sessionLimitSeconds=7200;
 const PROGRESS_CIRCUMFERENCE=301.59,RPC_TIMEOUT_MS=20000;
-let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false,pendingExitAction=null,lastExitTrigger=null;
+let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,currentTestMode='practice',questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false,pendingExitAction=null,lastExitTrigger=null;
 const selectedAnswers={},answerResults={},reviewQuestions=new Set();
 
-function selectedSubject(){const p=new URLSearchParams(location.search),id=p.get('subject_id'),code=p.get('subject_code'),n=Number(id);return id&&code&&Number.isInteger(n)&&n>0?{id:n,code}:null}
+function selectedSubject(){const p=new URLSearchParams(location.search),id=p.get('subject_id'),code=p.get('subject_code'),mode=p.get('mode')==='demo'?'demo':'practice',n=Number(id);return id&&code&&Number.isInteger(n)&&n>0?{id:n,code,mode}:null}
 async function redirectForInactiveSession(error){
   return sessionControl.handleInactiveSessionError(error);
 }
@@ -159,14 +159,6 @@ async function initialisePage(){
 
     if(!await sessionControl.activateProtectedPage(client,pageControl.tookOver))return;
 
-    const{data:profile,error:pe}=await client.from('profiles').select('status').eq('id',user.id).single();
-    if(pe)throw pe;
-    if(profile.status!=='active'){
-      msg('Your account is not active. Please verify your email or contact support.','error');
-      document.getElementById('start-button').disabled=true;
-      return;
-    }
-
     const s=selectedSubject();
     if(!s){
       msg('No valid subject was selected. Please return to the dashboard and select a subject.','error');
@@ -176,8 +168,12 @@ async function initialisePage(){
 
     currentSubjectId=s.id;
     currentSubjectCode=s.code;
-    document.getElementById('subject-heading').innerText=`${s.code} · Practice Quiz · 1 Mark Each`;
-    document.getElementById('start-heading').innerText=`Ready to begin ${s.code}?`;
+    currentTestMode=s.mode;
+    const modeLabel=currentTestMode==='demo'?'Free Advanced Demo':'Practice Quiz';
+    const questionLabel=currentTestMode==='demo'?'10 advanced questions':'50 random questions';
+    document.getElementById('subject-heading').innerText=`${s.code} · ${modeLabel} · 1 Mark Each`;
+    document.getElementById('start-heading').innerText=`Ready to begin ${s.code} ${currentTestMode==='demo'?'demo':'practice'}?`;
+    document.getElementById('start-description').innerText=`You will receive ${questionLabel}. Each correct answer carries 1 mark. An attempt is counted when you click the button below.`;
   }catch(e){
     console.error(e);
     if(await redirectForInactiveSession(e))return;
@@ -187,7 +183,7 @@ async function initialisePage(){
 }
 
 async function callRpcWithTimeout(functionName,parameters){let timeoutId;const timeout=new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error(`${functionName} did not respond within ${RPC_TIMEOUT_MS/1000} seconds.`)),RPC_TIMEOUT_MS)});try{return await Promise.race([client.rpc(functionName,parameters),timeout])}finally{clearTimeout(timeoutId)}}
-function quizStartError(error,stage){const detail=String(error?.message||'');const safePatterns=[/did not respond within/i,/not active/i,/does not contain enough questions/i,/maximum permitted/i,/not currently available/i,/configuration is invalid/i,/did not return the required/i,/start time is invalid/i];return safePatterns.some(pattern=>pattern.test(detail))?detail:`${stage} failed. Please try again.`}
+function quizStartError(error,stage){const detail=String(error?.message||'');const safePatterns=[/did not respond within/i,/not active/i,/does not contain enough/i,/maximum permitted/i,/not currently available/i,/configuration is invalid/i,/did not return the required/i,/start time is invalid/i,/purchase or obtain access/i,/free demo is not available/i,/active advanced questions/i];return safePatterns.some(pattern=>pattern.test(detail))?detail:`${stage} failed. Please try again.`}
 
 async function startQuiz(){
   const button=document.getElementById('start-button');
@@ -197,7 +193,7 @@ async function startQuiz(){
   hideMsg();
 
   try{
-    const{data:attempts,error:attemptError}=await callRpcWithTimeout('start_quiz_attempt',{p_subject_id:currentSubjectId,p_test_mode:'practice'});
+    const{data:attempts,error:attemptError}=await callRpcWithTimeout('start_quiz_attempt',{p_subject_id:currentSubjectId,p_test_mode:currentTestMode});
     if(attemptError)throw attemptError;
     if(!attempts?.length)throw new Error('The quiz attempt could not be created.');
 
@@ -231,7 +227,7 @@ async function startQuiz(){
     currentScore=0;
     currentQuestionIndex=0;
     attemptInProgress=true;
-    document.getElementById('subject-heading').innerText=`${currentSubjectCode} · ${totalQuestions} Questions · 1 Mark Each`;
+    document.getElementById('subject-heading').innerText=`${currentSubjectCode} · ${currentTestMode==='demo'?'Free Advanced Demo':'Practice Quiz'} · ${totalQuestions} Questions · 1 Mark Each`;
     document.getElementById('start-panel').classList.add('hidden');
     document.getElementById('quiz-layout').classList.remove('hidden');
     document.getElementById('quiz-layout').classList.add('grid');

@@ -89,6 +89,12 @@ It is based on the current Supabase schema supplied for InsureGPTE and must rema
 - `cart_items`
 - `user_entitlements`
 
+### Administration and Audit
+
+- `admin_audit_events` — administrator action history containing identifiers
+  and non-sensitive change summaries; business records remain in their existing
+  domain tables
+
 ---
 
 ## 4. Entity Relationship Overview
@@ -98,6 +104,7 @@ auth.users
     |
     +---- profiles
     +---- active_client_leases
+    +---- admin_audit_events
     +---- quiz_attempts
     +---- attempts
     +---- user_topic_progress
@@ -131,6 +138,11 @@ quiz_attempts
               |
               +---- questions
 ```
+
+Administrator RPCs reuse `subjects`, `questions`, `profiles`, the academic
+hierarchy, and `regulatory_academic_publications`. They do not introduce
+parallel subject, question, user, timetable, centre, amendment, or notice
+tables.
 
 ---
 

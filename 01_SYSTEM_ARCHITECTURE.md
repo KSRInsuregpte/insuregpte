@@ -1,9 +1,9 @@
 # InsureGPTE System Architecture
 
 **Document:** 01_SYSTEM_ARCHITECTURE.md  
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Approved — Architecture Frozen  
-**Approval Date:** 2026-07-20  
+**Approval Date:** 2026-07-25
 **Project Owner:** Sundararajan Desikan  
 **Platform:** InsureGPTE  
 **Primary Stack:** HTML, Tailwind CSS, JavaScript, Supabase, PostgreSQL, Vercel  
@@ -159,7 +159,9 @@ subscription_plan = free
 Protected registration policy:
 
 - all profile fields and a referral source are required;
-- at least one active subject must be selected;
+- subject selection is not collected during registration;
+- learners choose demos, learning paths, and purchasable subjects from the
+  catalogue after registration;
 - the browser and the Before User Created Auth hook validate registration;
 - the trusted profile trigger repeats critical validation as a backstop;
 - new protected accounts remain `verification_pending` until the email is
@@ -488,16 +490,33 @@ Combined page for:
 
 No separate `register.html` is required.
 
+### `catalogue.html`
+
+Public catalogue grouped by the existing qualification, programme, section,
+and subject hierarchy. Each subject may expose Learning, Free Demo, Add to Cart,
+or Open Practice actions according to content, demo, cart, and entitlement
+state.
+
 ### `dashboard.html`
 
 Authenticated learner landing page for:
 
-- subject catalogue;
 - entitled subjects;
 - resume learning;
 - progress;
 - recent attempts;
 - navigation.
+
+### `subject.html`
+
+Public subject overview and learning-path entry page. Premium learning and
+practice actions remain entitlement controlled.
+
+### `cart.html`
+
+Authenticated cart using server-validated subject prices. The browser must not
+create an entitlement. Checkout remains unavailable until a payment provider,
+signed webhook verification, reconciliation, and refund process are approved.
 
 ### `test.html`
 
@@ -512,16 +531,29 @@ Quiz page for:
 - finalization;
 - result or review.
 
+### `admin-dashboard.html`
+
+Authenticated administrator workspace for:
+
+- subject master and commercial display settings;
+- current MCQ question text, answer options, correct answer, explanation, and
+  Easy/Moderate/Hard difficulty;
+- verified user activation status;
+- official examination schedules, centres, languages, handbooks, syllabi,
+  credit points, amendments, and withdrawal notices;
+- administrator audit history.
+
+The page is hidden until `fn_is_admin()` confirms an active administrator.
+Every read and write is separately authorized by a `SECURITY DEFINER` admin RPC.
+Direct browser-table access is not an authorization mechanism.
+
 Future pages may include:
 
-- `subject.html`
 - `learning.html`
 - `flashcards.html`
 - `quiz-history.html`
 - `quiz-review.html`
 - `profile.html`
-- `cart.html`
-- `admin-dashboard.html`
 
 ---
 
@@ -532,13 +564,13 @@ Future pages may include:
 ```text
 Open index.html
 → Register
-→ Browser validates every required field and at least one subject
+→ Browser validates every required identity and profile field
 → Cloudflare Turnstile challenge
 → Before User Created hook validates the request server-side
 → Supabase creates Auth user and trusted pending profile
 → Enter email OTP
 → Database confirms email verification and activates the profile
-→ Dashboard
+→ Catalogue or dashboard
 ```
 
 ### Login
@@ -600,9 +632,22 @@ Read instructions
 Select paid subject
 → Add to cart
 → Server validates price
-→ Payment verified
+→ Payment provider creates and confirms an order server-side
+→ Signed payment webhook is verified and reconciled
 → Entitlement created
 → Access activated
+```
+
+### Free Demo
+
+```text
+Open catalogue subject
+→ Sign in or register
+→ Start Free Demo
+→ Server verifies demo availability
+→ Allocate up to 10 active advanced-difficulty questions
+→ Demo attempt remains separate from paid practice-attempt counts
+→ Show result and return to catalogue or dashboard
 ```
 
 ---
@@ -711,6 +756,9 @@ Never expose:
 - `get_my_profile`
 - `get_my_entitlements`
 - `get_subject_catalogue`
+- `get_my_cart`
+- `add_subject_to_cart`
+- `remove_subject_from_cart`
 - `get_subject_hierarchy`
 - `get_modules_by_subject`
 - `get_chapters_by_module`
@@ -1026,6 +1074,9 @@ Any architecture change must document:
 - **Requested change:** prevent incomplete/direct automated registration,
   validate all registration fields, require at least one subject, record the
   referral source, and verify both email and mobile ownership by OTP.
+- **Supersession note:** the subject-selection requirement is superseded by the
+  approved catalogue-first registration change dated 2026-07-25. All other
+  validation and protection controls remain applicable.
 - **Business reason:** protect learner identity quality, SMS/email reputation,
   platform access, and examination integrity before public registration is
   reopened.
@@ -1070,6 +1121,39 @@ Any architecture change must document:
   activation and returns protected accounts without matching confirmed mobile
   data to `verification_pending`.
 - **Approval decision:** approved by the project owner on 2026-07-23.
+
+### Approved catalogue-first learning and practice access — 2026-07-25
+
+- **Requested change:** remove subject selection from registration; present
+  Licentiate, Associate, Fellowship, specialized diploma, and broker streams
+  as categorized subject cards with Learning, Free Demo, Add to Cart, and
+  Practice actions.
+- **Business reason:** registration establishes learner identity, while the
+  catalogue manages product discovery, learning paths, demonstrations,
+  purchases, and subject-specific access.
+- **Database impact:** reuse the existing academic hierarchy, `subjects`,
+  `carts`, `cart_items`, `user_entitlements`, questions, and learning-resource
+  tables. Registration security version 3 stores an empty compatibility array.
+  Existing registration-selected subjects receive migration-tagged
+  complimentary entitlements. No duplicate table is created.
+- **RPC impact:** add `get_subject_catalogue`, `get_my_cart`,
+  `add_subject_to_cart`, and `remove_subject_from_cart`. Preserve the deployed
+  `start_quiz_attempt(bigint, text)` signature while adding entitlement checks,
+  active-question filtering, serialized attempt creation, and demo mode.
+- **Demo rule:** a demo uses up to ten active `advanced` questions and does not
+  consume the paid practice-attempt allowance.
+- **Payment rule:** adding to cart never creates access. Entitlements from
+  purchase may be issued only after a future server-side payment order, signed
+  webhook verification, reconciliation, and idempotent fulfilment flow.
+- **Frontend impact:** add catalogue, subject overview, and cart pages; change
+  the dashboard to entitlement-based access; retain the current quiz UI for
+  both paid practice and demo mode.
+- **Rollback impact:** each migration has a matching rollback. Rollback refuses
+  to delete version-3 registrations or demo attempt history.
+- **Approval decision:** approved by the project owner on 2026-07-25.
+- **Implementation status:** repository implementation and automated static
+  verification are complete. Production SQL deployment, seed-data review,
+  browser acceptance testing, and payment-provider selection remain pending.
 
 ---
 
