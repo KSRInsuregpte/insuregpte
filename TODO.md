@@ -49,7 +49,9 @@
 - [x] Map reviewed regulatory metadata to the existing academic hierarchy in a guarded trial migration
 - [x] Add session-aware examination information through an audited RPC
 - [ ] Deploy and verify the regulatory metadata/session-information migration in trial
-- [ ] Deploy and runtime-verify catalogue, cart, entitlement, and demo migrations
+- [x] Deploy and runtime-verify catalogue, cart, entitlement, and demo migrations
+- [x] Run the catalogue/admin compatibility repair after the catalogue, demo,
+  regulatory metadata, and admin migrations are deployed in timestamp order
 - [ ] Select a production payment provider and approve signed-webhook fulfilment design
 - [ ] Make quiz finalization idempotent and time-limit safe
 - [ ] Complete remaining RPCs

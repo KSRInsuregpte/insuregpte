@@ -68,6 +68,9 @@ This project follows Semantic Versioning (SemVer).
   a payment provider and signed-webhook fulfilment flow are approved
 - Subject and question browser-table privileges are removed; learner and
   administrator access now uses the approved RPC boundaries
+- Added a non-duplicating catalogue/admin compatibility repair that validates
+  migration order, restores approved RPC ownership and grants, preserves
+  subject/question hardening, and runtime-tests the public catalogue as anon
 - Question difficulty labels map Easy, Moderate, and Hard to the existing
   Foundation, Intermediate, and Advanced database values
 - Security moved to RPC-first architecture

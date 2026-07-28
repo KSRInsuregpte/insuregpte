@@ -25,8 +25,8 @@ BEGIN
     )
     INTO v_definition;
 
-    IF v_definition NOT LIKE '%registration_security_version%' ||
-       v_definition NOT LIKE '%<> ''3''%' ||
+    IF v_definition NOT LIKE '%registration_security_version%' OR
+       v_definition NOT LIKE '%<> ''3''%' OR
        v_definition NOT LIKE
            '%Choose subjects from the catalogue after registration.%' THEN
         RAISE EXCEPTION

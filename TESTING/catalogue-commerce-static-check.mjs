@@ -24,6 +24,17 @@ const catalogueRollback = read(
 const quizRollback = read(
     'supabase/rollbacks/20260725121000_gate_quiz_access_and_enable_demo.sql'
 );
+const compatibilityMigration = read(
+    'supabase/migrations/'
+    + '20260728100000_restore_catalogue_admin_compatibility.sql'
+);
+const compatibilityRollback = read(
+    'supabase/rollbacks/'
+    + '20260728100000_restore_catalogue_admin_compatibility.sql'
+);
+const compatibilityVerification = read(
+    'TESTING/sql/catalogue-admin-compatibility-verification.sql'
+);
 const indexHtml = read('index.html');
 const indexAuth = read('js/index-auth.js');
 const validation = read('js/registration-validation.js');
@@ -124,6 +135,43 @@ assert.ok(
         'version-3 registrations exist'
     ),
     'catalogue rollback must protect new learner data'
+);
+assert.ok(
+    !/CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION/i.test(
+        compatibilityMigration
+    ) && !/CREATE\s+TABLE/i.test(compatibilityMigration),
+    'compatibility repair must not duplicate tables or RPCs'
+);
+for (const signature of [
+    'public.get_subject_catalogue()',
+    'public.add_subject_to_cart(bigint)',
+    'public.remove_subject_from_cart(bigint)',
+    'public.get_my_cart()'
+]) {
+    assert.ok(
+        compatibilityMigration.includes(signature),
+        `compatibility repair is missing ${signature}`
+    );
+}
+assert.ok(
+    compatibilityMigration.includes(
+        'REVOKE ALL ON TABLE public.subjects'
+    ) && compatibilityMigration.includes(
+        'REVOKE ALL ON TABLE public.questions'
+    ),
+    'compatibility repair must preserve subject/question hardening'
+);
+assert.ok(
+    compatibilityVerification.includes(
+        'FROM public.get_subject_catalogue()'
+    ) && compatibilityVerification.includes('SET LOCAL ROLE anon'),
+    'compatibility verification must execute the public catalogue as anon'
+);
+assert.ok(
+    compatibilityRollback.includes(
+        'created no table, function, or learner data'
+    ),
+    'compatibility rollback must preserve existing RPCs and learner data'
 );
 
 for (const source of [dashboard, catalogue, cart]) {
