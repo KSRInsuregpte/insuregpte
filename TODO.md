@@ -64,7 +64,7 @@
 - [x] Deploy and runtime-verify the admin migration and admin dashboard
 - [x] Repair administrator question saves to preserve the quiz engine's
   full-answer-text scoring contract
-- [ ] Deploy and verify the administrator question-answer compatibility repair
+- [x] Deploy and verify the administrator question-answer compatibility repair
 
 ---
 
