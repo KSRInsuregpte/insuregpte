@@ -22,9 +22,38 @@ const verificationPath = resolve(
   'sql',
   'admin-portal-verification.sql'
 );
+const answerRepairMigrationPath = resolve(
+  repositoryRoot,
+  'supabase',
+  'migrations',
+  '20260730120000_repair_admin_question_answer_storage.sql'
+);
+const answerRepairRollbackPath = resolve(
+  repositoryRoot,
+  'supabase',
+  'rollbacks',
+  '20260730120000_repair_admin_question_answer_storage.sql'
+);
+const answerRepairVerificationPath = resolve(
+  here,
+  'sql',
+  'admin-question-answer-storage-verification.sql'
+);
 const migration = readFileSync(migrationPath, 'utf8');
 const rollback = readFileSync(rollbackPath, 'utf8');
 const verification = readFileSync(verificationPath, 'utf8');
+const answerRepairMigration = readFileSync(
+  answerRepairMigrationPath,
+  'utf8'
+);
+const answerRepairRollback = readFileSync(
+  answerRepairRollbackPath,
+  'utf8'
+);
+const answerRepairVerification = readFileSync(
+  answerRepairVerificationPath,
+  'utf8'
+);
 const adminHtml = readFileSync(
   resolve(repositoryRoot, 'admin-dashboard.html'),
   'utf8'
@@ -108,6 +137,53 @@ assert.match(
   migration,
   /create\s+function\s+public\.admin_save_question[\s\S]*when\s+'easy'\s+then\s+'foundation'[\s\S]*when\s+'moderate'\s+then\s+'intermediate'[\s\S]*when\s+'hard'\s+then\s+'advanced'/i
 );
+assert.doesNotMatch(
+  answerRepairMigration,
+  /\bcreate\s+table\b/i,
+  'The answer repair must reuse the existing question and audit tables.'
+);
+assert.match(
+  answerRepairMigration,
+  /create\s+or\s+replace\s+function\s+public\.admin_save_question\s*\(\s*p_question\s+jsonb\s*\)/i,
+  'The answer repair must preserve admin_save_question(jsonb).'
+);
+for (const [tag, option] of [
+  ['A', 'v_option_a'],
+  ['B', 'v_option_b'],
+  ['C', 'v_option_c'],
+  ['D', 'v_option_d'],
+]) {
+  assert.match(
+    answerRepairMigration,
+    new RegExp(`when\\s+'${tag}'\\s+then\\s+${option}`, 'i'),
+    `The answer repair must resolve ${tag} to ${option}.`
+  );
+}
+assert.match(
+  answerRepairMigration,
+  /correct_option\s*=\s*v_correct_answer/i,
+  'Updated questions must store the full correct-answer text.'
+);
+assert.match(
+  answerRepairMigration,
+  /insert\s+into\s+public\.questions[\s\S]*v_correct_answer/i,
+  'New questions must store the full correct-answer text.'
+);
+assert.match(
+  answerRepairMigration,
+  /admin_audit_events[\s\S]*entity_type\s*=\s*'question'/i,
+  'Existing tag repair must be limited by administrator audit provenance.'
+);
+assert.match(
+  answerRepairRollback,
+  /revoke\s+execute\s+on\s+function\s+public\.admin_save_question\s*\(\s*jsonb\s*\)[\s\S]*from\s+authenticated/i,
+  'The safe rollback must freeze writes without restoring answer tags.'
+);
+assert.doesNotMatch(
+  answerRepairRollback,
+  /update\s+public\.questions/i,
+  'The safe rollback must not damage repaired scoring data.'
+);
 assert.match(
   migration,
   /create\s+function\s+public\.admin_set_user_status[\s\S]*\('active',\s*'verification_pending'\)/i
@@ -166,6 +242,18 @@ for (const rpcName of [
   );
 }
 
+for (const requiredFrontendRepair of [
+  'function correctOptionTag(question)',
+  'function correctAnswerText(question)',
+  'correctOptionTag(question)',
+  'correctAnswerText(question)',
+]) {
+  assert.ok(
+    adminJavascript.includes(requiredFrontendRepair),
+    `Admin frontend answer compatibility is missing ${requiredFrontendRepair}.`
+  );
+}
+
 assert.doesNotMatch(
   adminJavascript,
   /\.from\s*\(/,
@@ -194,7 +282,20 @@ for (const expected of [
   );
 }
 
+for (const expectedRepairVerification of [
+  'admin_save_question does not store the selected option text',
+  'An administrator-edited question still stores an answer tag',
+  'An active question has a correct answer that does not match its options',
+  'The RPC-only question-table boundary was weakened',
+]) {
+  assert.ok(
+    answerRepairVerification.includes(expectedRepairVerification),
+    `Answer repair verification must include: ${expectedRepairVerification}`
+  );
+}
+
 console.log(
   'Admin portal static checks passed: authorization, audited RPC-only writes, ' +
-  'difficulty mapping, user activation limits, and hidden navigation.'
+  'answer-text scoring compatibility, difficulty mapping, user activation ' +
+  'limits, and hidden navigation.'
 );

@@ -73,6 +73,9 @@ This project follows Semantic Versioning (SemVer).
   subject/question hardening, and runtime-tests the public catalogue as anon
 - Question difficulty labels map Easy, Moderate, and Hard to the existing
   Foundation, Intermediate, and Advanced database values
+- Repaired administrator question saves so A/B/C/D form tags are resolved to
+  the full option text required by quiz scoring, with a guarded repair for
+  affected administrator-audited questions
 - Security moved to RPC-first architecture
 - Repaired the quiz-start client script so it parses and relies on the existing
   quiz RPC flow without directly reading `quiz_attempts`

@@ -48,7 +48,7 @@
 - [x] Add a privacy-safe live hierarchy and examination-object audit
 - [x] Map reviewed regulatory metadata to the existing academic hierarchy in a guarded trial migration
 - [x] Add session-aware examination information through an audited RPC
-- [ ] Deploy and verify the regulatory metadata/session-information migration in trial
+- [x] Deploy and verify the regulatory metadata/session-information migration in trial
 - [x] Deploy and runtime-verify catalogue, cart, entitlement, and demo migrations
 - [x] Run the catalogue/admin compatibility repair after the catalogue, demo,
   regulatory metadata, and admin migrations are deployed in timestamp order
@@ -61,7 +61,10 @@
 - [ ] Recommendation APIs
 - [x] Add a privacy-safe live admin-role, management-object, and commerce audit
 - [x] Add server-enforced, audited admin APIs and the hidden admin dashboard
-- [ ] Deploy and runtime-verify the admin migration and admin dashboard
+- [x] Deploy and runtime-verify the admin migration and admin dashboard
+- [x] Repair administrator question saves to preserve the quiz engine's
+  full-answer-text scoring contract
+- [ ] Deploy and verify the administrator question-answer compatibility repair
 
 ---
 

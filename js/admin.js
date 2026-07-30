@@ -79,6 +79,51 @@
         }[value] || 'easy';
     }
 
+    const QUESTION_OPTION_TAGS = ['A', 'B', 'C', 'D'];
+
+    function questionOptionValue(question, tag) {
+        return String(
+            question[`option_${String(tag).toLowerCase()}`] || ''
+        ).trim();
+    }
+
+    function correctOptionTag(question) {
+        const storedAnswer = String(
+            question.correct_option || ''
+        ).trim();
+        const matchingTag = QUESTION_OPTION_TAGS.find(
+            (tag) => questionOptionValue(question, tag) === storedAnswer
+        );
+
+        if (matchingTag) {
+            return matchingTag;
+        }
+
+        const legacyTag = storedAnswer.toUpperCase();
+        return storedAnswer.length === 1
+            && QUESTION_OPTION_TAGS.includes(legacyTag)
+            ? legacyTag
+            : '';
+    }
+
+    function correctAnswerText(question) {
+        const storedAnswer = String(
+            question.correct_option || ''
+        ).trim();
+        const matchingTag = QUESTION_OPTION_TAGS.find(
+            (tag) => questionOptionValue(question, tag) === storedAnswer
+        );
+
+        if (matchingTag) {
+            return storedAnswer;
+        }
+
+        const legacyTag = correctOptionTag(question);
+        return legacyTag
+            ? questionOptionValue(question, legacyTag) || storedAnswer
+            : storedAnswer;
+    }
+
     function populateSelect(select, records, options = {}) {
         const {
             placeholder = 'Not assigned',
@@ -297,7 +342,7 @@
                     <p class="mt-1 text-xs text-slate-500">Order ${escapeHtml(question.display_order)}</p>
                 </td>
                 <td class="px-4 py-4">${escapeHtml(difficultyLabel(question.difficulty_level))}</td>
-                <td class="px-4 py-4 font-bold">${escapeHtml(question.correct_option)}</td>
+                <td class="px-4 py-4 font-bold">${escapeHtml(correctAnswerText(question))}</td>
                 <td class="px-4 py-4">${question.is_active ? 'Active' : 'Inactive'}</td>
                 <td class="px-4 py-4">
                     <button type="button" data-edit-question="${question.question_id}" class="font-bold text-blue-700 hover:text-blue-900">Edit</button>
@@ -333,7 +378,7 @@
         byId('question-option-c').value = question.option_c || '';
         byId('question-option-d').value = question.option_d || '';
         byId('question-correct-option').value =
-            question.correct_option || 'A';
+            correctOptionTag(question);
         byId('question-difficulty').value =
             difficultyInput(question.difficulty_level);
         byId('question-explanation').value =

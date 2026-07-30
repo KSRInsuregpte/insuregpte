@@ -101,6 +101,8 @@ calls `fn_is_admin()` and rejects a caller unless the current profile has
   current MCQ bank for administrator editing.
 - `admin_save_question(p_question jsonb)` creates or updates an MCQ and maps
   Easy, Moderate, and Hard to `foundation`, `intermediate`, and `advanced`.
+  The form submits an A/B/C/D tag, but the RPC resolves that tag and stores the
+  corresponding full option text required by the existing quiz scorer.
 
 ### User and examination-information management
 

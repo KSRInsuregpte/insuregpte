@@ -134,6 +134,17 @@ TESTING/sql/admin-portal-verification.sql
 
 Expected result: `Success. No rows returned`.
 
+After deploying the administrator question-answer compatibility repair, run:
+
+```text
+TESTING/sql/admin-question-answer-storage-verification.sql
+```
+
+Expected result: `Success. No rows returned`. The check confirms that
+administrator-edited questions store the complete option text used by quiz
+scoring, all active correct answers match one of their four options, and the
+RPC-only question-table boundary remains intact.
+
 Controlled browser checks:
 
 1. A normal learner does not see **Administration** on `dashboard.html`.
@@ -141,7 +152,8 @@ Controlled browser checks:
 3. The active administrator sees the Administration link and dashboard.
 4. Create a new inactive subject, edit it, and confirm an audit-history row.
 5. Create and edit one controlled MCQ; verify Easy, Moderate, and Hard render
-   correctly and the correct answer/explanation persist.
+   correctly, the Answer column shows the full option text rather than an
+   A/B/C/D tag, and the correct answer/explanation persist.
 6. Change a controlled email-verified user between `verification_pending` and
    `active`; confirm passwords and roles are unchanged.
 7. Add one controlled future examination notice and retire it; confirm it no

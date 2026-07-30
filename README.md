@@ -28,6 +28,9 @@ learners and every management operation is independently authorized by the
 database. The current administration release manages subjects, reviewed MCQ
 questions and explanations, user activation status, and verified examination
 information. It does not change Auth passwords or administrator roles.
+Administrator question forms use A/B/C/D selectors for usability, while the
+database stores the corresponding full option text required by the existing
+quiz-scoring contract.
 
 The trial database migrations must be deployed in timestamp order. In
 particular, deploy the catalogue and demo migrations before the admin
