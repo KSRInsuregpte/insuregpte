@@ -12,8 +12,8 @@ const testHtml = fs.readFileSync(
     path.join(repositoryRoot, 'test.html'),
     'utf8'
 );
-const dashboardHtml = fs.readFileSync(
-    path.join(repositoryRoot, 'dashboard.html'),
+const dashboardSource = fs.readFileSync(
+    path.join(repositoryRoot, 'js', 'dashboard.js'),
     'utf8'
 );
 
@@ -421,11 +421,12 @@ assert(
 const attemptCountContext = {};
 vm.createContext(attemptCountContext);
 vm.runInContext(
-    `${extractFunction(dashboardHtml, 'countAttemptsBySubject')}\n` +
-        'result = countAttemptsBySubject([' +
-        "{subject_id: 1, attempt_status: 'completed'}," +
-        "{subject_id: 1, attempt_status: 'in_progress'}," +
-        "{subject_id: 2, attempt_status: 'abandoned'}" +
+    `${extractFunction(dashboardSource, 'countPracticeAttempts')}\n` +
+        'result = countPracticeAttempts([' +
+        "{subject_id: 1, test_mode: 'practice', attempt_status: 'completed'}," +
+        "{subject_id: 1, test_mode: 'practice', attempt_status: 'in_progress'}," +
+        "{subject_id: 2, test_mode: 'practice', attempt_status: 'abandoned'}," +
+        "{subject_id: 1, test_mode: 'demo', attempt_status: 'completed'}" +
         ']);',
     attemptCountContext
 );
@@ -433,7 +434,7 @@ vm.runInContext(
 assert(
     attemptCountContext.result['1'] === 2 &&
         attemptCountContext.result['2'] === 1,
-    'Dashboard attempt totals must count every created attempt status.'
+    'Dashboard totals must count every practice status and exclude demos.'
 );
 assert(
     testHtml.includes(

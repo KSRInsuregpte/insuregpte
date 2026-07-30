@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureGPTE | Subject Learning Path</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/session-control.js?v=20260720"></script>
+    <script defer src="js/subject.js?v=20260725"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+    <nav class="border-b border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
+            <a href="catalogue.html" class="font-semibold text-slate-600 hover:text-blue-800">← Catalogue</a>
+            <a id="account-link" href="index.html" class="rounded-lg bg-blue-700 px-4 py-2 font-bold text-white hover:bg-blue-800">
+                Practice Test Login / Sign Up
+            </a>
+        </div>
+    </nav>
+
+    <main class="mx-auto max-w-5xl p-4 py-10 md:p-6">
+        <div id="message-box" role="alert" class="hidden mb-6 rounded-xl p-4"></div>
+        <section id="subject-loading" class="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+            Loading the subject…
+        </section>
+        <div id="subject-content" class="hidden space-y-6">
+            <section class="overflow-hidden rounded-3xl bg-blue-950 p-8 text-white shadow-lg">
+                <p id="subject-stream" class="text-sm font-bold uppercase tracking-[0.2em] text-blue-200"></p>
+                <h1 id="subject-title" class="mt-3 text-4xl font-extrabold"></h1>
+                <p id="subject-description" class="mt-5 max-w-3xl leading-8 text-blue-100"></p>
+                <div id="subject-actions" class="mt-7 flex flex-wrap gap-3"></div>
+            </section>
+
+            <section class="grid gap-6 md:grid-cols-3">
+                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p class="text-sm font-bold uppercase tracking-wide text-emerald-700">Step 1</p>
+                    <h2 class="mt-2 text-xl font-bold">Learn</h2>
+                    <p id="learning-status" class="mt-3 leading-7 text-slate-600"></p>
+                </article>
+                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p class="text-sm font-bold uppercase tracking-wide text-red-700">Step 2</p>
+                    <h2 class="mt-2 text-xl font-bold">Free Demo</h2>
+                    <p id="demo-status" class="mt-3 leading-7 text-slate-600"></p>
+                </article>
+                <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <p class="text-sm font-bold uppercase tracking-wide text-blue-700">Step 3</p>
+                    <h2 class="mt-2 text-xl font-bold">Practice</h2>
+                    <p id="practice-status" class="mt-3 leading-7 text-slate-600"></p>
+                </article>
+            </section>
+
+            <section class="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+                <h2 class="text-xl font-bold text-amber-950">Learning content rollout</h2>
+                <p class="mt-3 leading-7 text-amber-900">
+                    This release establishes the learning path and access model.
+                    Module, chapter, topic, reading, flashcard, and progress
+                    screens will use the existing academic hierarchy and
+                    learning-resource tables in the next controlled release.
+                </p>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

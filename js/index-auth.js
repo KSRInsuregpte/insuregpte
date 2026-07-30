@@ -6,7 +6,7 @@
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
         + 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.'
         + 'meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
-    const REGISTRATION_SECURITY_VERSION = 2;
+    const REGISTRATION_SECURITY_VERSION = 3;
     const MOBILE_VERIFICATION_REQUIRED = false;
     const OTP_PATTERN = /^[0-9]{6}$/;
     const sessionControl = global.InsureGPTESessionControl;
@@ -244,59 +244,6 @@
         global.history.replaceState({}, '', cleanUrl);
     }
 
-    function addSubjectCheckbox(subject, container) {
-        const label = document.createElement('label');
-        const checkbox = document.createElement('input');
-        const title = document.createElement('span');
-
-        label.className =
-            'flex cursor-pointer items-start gap-2 rounded-lg border p-3 hover:bg-slate-50';
-        checkbox.type = 'checkbox';
-        checkbox.value = subject.code;
-        checkbox.className = 'mt-1';
-        title.textContent = `${subject.code} — ${subject.title}`;
-        label.append(checkbox, title);
-        container.append(label);
-    }
-
-    async function loadSubjects() {
-        const container = byId('subject-list');
-
-        if (!container) {
-            return;
-        }
-
-        try {
-            const { data, error } = await client
-                .from('subjects')
-                .select('code, title')
-                .eq('is_active', true)
-                .order('display_order');
-
-            if (error) {
-                throw error;
-            }
-
-            container.replaceChildren();
-
-            for (const subject of data || []) {
-                addSubjectCheckbox(subject, container);
-            }
-
-            if (!data?.length) {
-                throw new Error('No active subjects are available.');
-            }
-        } catch (error) {
-            console.error('Unable to load registration subjects:', error);
-            container.textContent =
-                'Subjects are temporarily unavailable. Please try again later.';
-            setMessage(
-                'registration-error',
-                'Registration cannot continue until the subject list is available.'
-            );
-        }
-    }
-
     function selectedCallingCode() {
         const selection = byId('mobile-country-code')?.value || '';
 
@@ -427,9 +374,7 @@
             registrationSource: byId('registration-source')?.value,
             registrationSourceDetail:
                 byId('registration-source-detail')?.value,
-            subjects: Array.from(
-                document.querySelectorAll('#subject-list input:checked')
-            ).map((checkbox) => checkbox.value)
+            subjects: []
         };
     }
 
@@ -459,8 +404,7 @@
                 ? 'country-other'
                 : 'country',
             registrationSource: 'registration-source',
-            registrationSourceDetail: 'registration-source-detail',
-            subjects: 'subject-list'
+            registrationSourceDetail: 'registration-source-detail'
         };
         const firstKey = Object.keys(errors)[0];
         byId(idByKey[firstKey])?.focus();
@@ -490,11 +434,7 @@
             'Enter a valid postal or PIN code.',
             'Enter a valid country.',
             'Select how you learned about InsureGPTE.',
-            'Describe how you learned about InsureGPTE.',
-            'Select at least one subject.',
-            'Select between 1 and 20 subjects.',
-            'The selected subjects are invalid.',
-            'One or more selected subjects are unavailable.'
+            'Describe how you learned about InsureGPTE.'
         ];
 
         return approvedMessages.find((item) => message.includes(item))
@@ -773,6 +713,41 @@
         return state.pageControl.acquired;
     }
 
+    function postSignInDestination() {
+        const requested = new URLSearchParams(
+            global.location.search
+        ).get('next');
+
+        if (!requested) {
+            return 'dashboard.html';
+        }
+
+        try {
+            const destination = new URL(requested, global.location.href);
+            const allowedPages = new Set([
+                'dashboard.html',
+                'catalogue.html',
+                'subject.html',
+                'cart.html',
+                'test.html',
+                'admin-dashboard.html'
+            ]);
+            const pageName = destination.pathname.split('/').pop();
+
+            if (
+                destination.origin === global.location.origin
+                && allowedPages.has(pageName)
+            ) {
+                return destination.pathname.split('/').pop()
+                    + destination.search;
+            }
+        } catch (error) {
+            console.warn('Ignored invalid post-sign-in destination:', error);
+        }
+
+        return 'dashboard.html';
+    }
+
     async function enterDashboard() {
         if (!await acquirePageControlIfNeeded()) {
             return;
@@ -784,7 +759,7 @@
         );
 
         if (activated) {
-            global.location.replace('dashboard.html');
+            global.location.replace(postSignInDestination());
         }
     }
 
@@ -1077,7 +1052,6 @@
         updateCountrySelection();
         resetPasswordVisibility();
         updatePasswordGuidance();
-        loadSubjects();
         renderCaptchaWidgets();
         resumePendingVerification();
     });

@@ -33,6 +33,23 @@ This project follows Semantic Versioning (SemVer).
 - User activity tracking
 - Shopping cart
 - User entitlements
+- Public categorized subject catalogue
+- Subject learning-path overview
+- Server-priced learner cart
+- Ten-question advanced-difficulty demo mode
+- Trial regulatory source register for official syllabus, timetable, centre,
+  withdrawal, and subject-amendment governance
+- Privacy-safe, read-only live hierarchy and examination-object audit used to
+  prevent duplicate academic mappings, session tables, and RPCs
+- Guarded regulatory metadata mapping that reuses the academic hierarchy,
+  keeps IC02 inactive pending content review, and blocks withdrawn subjects
+- Authenticated `get_exam_information` RPC for current verified examination
+  schedules, centre lists, and language notices
+- Privacy-safe, read-only audit for live admin roles, management/payment object
+  conflicts, question difficulty distribution, table privileges, and commerce
+  aggregates
+- Administrator-only audit history, subject/question/user-activation/exam-
+  information RPCs, and hidden `admin-dashboard.html`
 - PROJECT_CONTEXT.md
 - CODING_RULES.md
 
@@ -40,6 +57,25 @@ This project follows Semantic Versioning (SemVer).
 
 - Database normalized into hierarchical academic structure
 - Quiz engine expanded to support Practice, Mock and Proctored Mock
+- Registration security version 3 removes subject selection from identity
+  registration and moves product choice to the catalogue
+- Existing registration-selected subjects are preserved as complimentary
+  entitlements so current learners retain access
+- Dashboard access is derived from active entitlements instead of profile JSON
+- Paid quiz starts require an active entitlement; demo attempts use active
+  advanced questions and remain separate from paid practice attempt counts
+- Cart changes use RPC-validated server prices; checkout remains disabled until
+  a payment provider and signed-webhook fulfilment flow are approved
+- Subject and question browser-table privileges are removed; learner and
+  administrator access now uses the approved RPC boundaries
+- Added a non-duplicating catalogue/admin compatibility repair that validates
+  migration order, restores approved RPC ownership and grants, preserves
+  subject/question hardening, and runtime-tests the public catalogue as anon
+- Question difficulty labels map Easy, Moderate, and Hard to the existing
+  Foundation, Intermediate, and Advanced database values
+- Repaired administrator question saves so A/B/C/D form tags are resolved to
+  the full option text required by quiz scoring, with a guarded repair for
+  affected administrator-audited questions
 - Security moved to RPC-first architecture
 - Repaired the quiz-start client script so it parses and relies on the existing
   quiz RPC flow without directly reading `quiz_attempts`

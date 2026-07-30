@@ -40,14 +40,31 @@
 - [ ] Deploy and verify hardened `submit_quiz_answer`
 - [x] Keep the final quiz result visible and preserve login until the learner
   explicitly returns to subject selection or logs out
-- [ ] Harden `start_quiz_attempt` entitlement, active-question, and concurrency rules
+- [x] Harden `start_quiz_attempt` entitlement, active-question, and concurrency rules in the repository
+- [x] Remove subject selection from registration and add the catalogue-first frontend
+- [x] Add server-priced cart RPCs and entitlement-based dashboard access
+- [x] Add a 10-question advanced-difficulty demo mode separate from practice counts
+- [x] Create and validate the trial regulatory source register
+- [x] Add a privacy-safe live hierarchy and examination-object audit
+- [x] Map reviewed regulatory metadata to the existing academic hierarchy in a guarded trial migration
+- [x] Add session-aware examination information through an audited RPC
+- [x] Deploy and verify the regulatory metadata/session-information migration in trial
+- [x] Deploy and runtime-verify catalogue, cart, entitlement, and demo migrations
+- [x] Run the catalogue/admin compatibility repair after the catalogue, demo,
+  regulatory metadata, and admin migrations are deployed in timestamp order
+- [ ] Select a production payment provider and approve signed-webhook fulfilment design
 - [ ] Make quiz finalization idempotent and time-limit safe
 - [ ] Complete remaining RPCs
 - [ ] Dashboard APIs
 - [ ] Learning APIs
 - [ ] Analytics APIs
 - [ ] Recommendation APIs
-- [ ] Admin APIs
+- [x] Add a privacy-safe live admin-role, management-object, and commerce audit
+- [x] Add server-enforced, audited admin APIs and the hidden admin dashboard
+- [x] Deploy and runtime-verify the admin migration and admin dashboard
+- [x] Repair administrator question saves to preserve the quiz engine's
+  full-answer-text scoring contract
+- [x] Deploy and verify the administrator question-answer compatibility repair
 
 ---
 

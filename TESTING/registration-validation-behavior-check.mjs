@@ -40,7 +40,7 @@ const validRegistration = {
     country: 'India',
     registrationSource: 'direct_invitation',
     registrationSourceDetail: '',
-    subjects: ['IC01']
+    subjects: []
 };
 
 assert.equal(
@@ -86,12 +86,20 @@ assert.equal(
     'invalid Indian mobile numbers should be rejected'
 );
 
-const missingSubject = validation.validate({
+const legacySubjectInput = validation.validate({
     ...validRegistration,
-    subjects: []
+    subjects: ['IC01']
 });
-assert.equal(missingSubject.valid, false);
-assert.equal(missingSubject.errors.subjects, 'Select at least one subject.');
+assert.equal(
+    legacySubjectInput.valid,
+    true,
+    'registration should no longer require a subject selection'
+);
+assert.deepEqual(
+    Array.from(legacySubjectInput.data.subjects),
+    [],
+    'registration should discard legacy subject input'
+);
 
 const invalidMobile = validation.validate({
     ...validRegistration,
@@ -125,15 +133,5 @@ const missingSourceDetail = validation.validate({
 });
 assert.equal(missingSourceDetail.valid, false);
 assert.match(missingSourceDetail.errors.registrationSourceDetail, /describe/);
-
-const duplicateSubjects = validation.validate({
-    ...validRegistration,
-    subjects: ['IC01', 'IC01']
-});
-assert.deepEqual(
-    Array.from(duplicateSubjects.data.subjects),
-    ['IC01'],
-    'duplicate subject choices should be normalized'
-);
 
 console.log('Registration validation behavior checks passed.');
