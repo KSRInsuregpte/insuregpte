@@ -83,7 +83,6 @@ Production smoke testing must separately confirm:
 - a simulated or observed finalization error prevents both navigation and
   logout;
 - an unexpected tab closure preserves the attempt for recovery.
-
 ## Catalogue, registration, cart, and demo
 
 Static verification:
