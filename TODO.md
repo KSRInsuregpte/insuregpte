@@ -70,6 +70,8 @@
   question-bank content, official exam information, and non-payment grants
 - [ ] Deploy and runtime-verify administrator bulk upload in trial before
   production use
+- [ ] Deploy and verify the administrator audit entity-type compatibility
+  repair before retrying the controlled bulk import
 
 ---
 

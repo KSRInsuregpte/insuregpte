@@ -57,6 +57,9 @@ This project follows Semantic Versioning (SemVer).
   and dedicated guarded administrator save RPCs, without new data tables
 - Existing examination-information metadata now accepts general official
   notices in addition to schedules, centre lists, amendments, and prior types
+- Expanded the existing administrator audit entity-type constraint so every
+  approved academic, learning-content, examination, and non-payment bulk
+  import can retain its required per-record audit history
 - PROJECT_CONTEXT.md
 - CODING_RULES.md
 

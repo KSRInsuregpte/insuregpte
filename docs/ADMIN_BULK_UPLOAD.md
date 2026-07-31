@@ -187,21 +187,25 @@ or subject. Every row requires a traceable `source_reference`.
 2. Run `TESTING/sql/admin-bulk-import-verification.sql`.
 3. Deploy `20260731120000_expand_admin_bulk_import.sql`.
 4. Run `TESTING/sql/admin-expanded-bulk-import-verification.sql`.
-5. Deploy the matching frontend branch to a Vercel Preview.
-6. Download formats from the Preview Admin page.
-7. Test one or two inactive/non-production rows in dependency order.
-8. Confirm each change in the existing Admin lists and Audit History.
-9. Confirm a failed row causes the complete file to save nothing.
-10. Approve production deployment only after the trial results pass.
+5. Deploy `20260731180000_expand_admin_audit_entity_types.sql`.
+6. Run `TESTING/sql/admin-audit-entity-types-verification.sql`.
+7. Deploy the matching frontend branch to a Vercel Preview.
+8. Download formats from the Preview Admin page.
+9. Test one or two inactive/non-production rows in dependency order.
+10. Confirm each change in the existing Admin lists and Audit History.
+11. Confirm a failed row causes the complete file to save nothing.
+12. Approve production deployment only after the trial results pass.
 
 ## Rollback
 
 Run the rollbacks in reverse order:
 
-1. `supabase/rollbacks/20260731120000_expand_admin_bulk_import.sql`
-2. `supabase/rollbacks/20260730150000_add_admin_bulk_import.sql`
+1. `supabase/rollbacks/20260731180000_expand_admin_audit_entity_types.sql`
+2. `supabase/rollbacks/20260731120000_expand_admin_bulk_import.sql`
+3. `supabase/rollbacks/20260730150000_add_admin_bulk_import.sql`
 
 Rollback removes the bulk routes but does not automatically delete legitimate
 audited records already imported. If an `official_notice` record exists, its
 compatible document-type constraint is retained so rollback cannot invalidate
-stored data.
+stored data. The audit-constraint rollback stops when expanded audit history
+exists; never delete audit records merely to force rollback.
