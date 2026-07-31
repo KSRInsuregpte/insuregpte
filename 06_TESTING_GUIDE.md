@@ -159,3 +159,28 @@ Controlled browser checks:
    longer appears through the learner examination-information RPC.
 8. Confirm anonymous and normal authenticated browser roles cannot read or
    write `subjects`, `questions`, or `admin_audit_events` directly.
+
+## Administrator bulk upload
+
+Deploy and verify in trial order:
+
+1. `20260730150000_add_admin_bulk_import.sql`
+2. `TESTING/sql/admin-bulk-import-verification.sql`
+3. `20260731120000_expand_admin_bulk_import.sql`
+4. `TESTING/sql/admin-expanded-bulk-import-verification.sql`
+
+Both verification scripts must return `Success. No rows returned`.
+
+In Vercel Preview:
+
+1. Confirm the selected upload type changes the CSV download.
+2. Confirm every CSV header matches its Excel-guide sheet.
+3. Upload one or two inactive test rows in the dependency order documented in
+   `docs/ADMIN_BULK_UPLOAD.md`.
+4. Confirm the records and Admin audit events.
+5. Upload a two-row file with one intentionally invalid row and confirm neither
+   row is saved.
+6. Confirm a normal learner and anonymous browser cannot call the save RPCs.
+7. Confirm entitlement CSV rejects `purchase` and `subscription`.
+8. Confirm exam schedules, centre lists, amendments, and official notices use
+   the existing examination-information list.

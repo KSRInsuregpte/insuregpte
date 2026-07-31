@@ -50,6 +50,13 @@ This project follows Semantic Versioning (SemVer).
   aggregates
 - Administrator-only audit history, subject/question/user-activation/exam-
   information RPCs, and hidden `admin-dashboard.html`
+- Downloadable administrator CSV formats and an illustrated Excel guide for
+  existing-user status, academic hierarchy, subjects, learning content,
+  question-bank data, official exam information, and non-payment entitlements
+- Atomic `admin_bulk_import(text,jsonb)` coordination through the existing
+  and dedicated guarded administrator save RPCs, without new data tables
+- Existing examination-information metadata now accepts general official
+  notices in addition to schedules, centre lists, amendments, and prior types
 - PROJECT_CONTEXT.md
 - CODING_RULES.md
 

@@ -65,6 +65,11 @@
 - [x] Repair administrator question saves to preserve the quiz engine's
   full-answer-text scoring contract
 - [x] Deploy and verify the administrator question-answer compatibility repair
+- [x] Add guarded, atomic administrator CSV formats and bulk upload for
+  existing-user status, the academic hierarchy, subjects, learning content,
+  question-bank content, official exam information, and non-payment grants
+- [ ] Deploy and runtime-verify administrator bulk upload in trial before
+  production use
 
 ---
 

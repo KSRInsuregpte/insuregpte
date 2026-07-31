@@ -32,6 +32,13 @@ Administrator question forms use A/B/C/D selectors for usability, while the
 database stores the corresponding full option text required by the existing
 quiz-scoring contract.
 
+The administrator **Bulk Upload** tab provides fixed CSV downloads for existing
+user status, academic hierarchy, subjects, learning content, questions,
+official examination information, and non-payment entitlements. Every file is
+previewed before import and then applied atomically through audited Admin save
+RPCs. See `docs/ADMIN_BULK_UPLOAD.md` for the required dependency order,
+formats, safeguards, deployment sequence, and rollback.
+
 The trial database migrations must be deployed in timestamp order. In
 particular, deploy the catalogue and demo migrations before the admin
 hardening migration. If admin hardening was applied first, deploy the missing

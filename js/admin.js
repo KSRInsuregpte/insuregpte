@@ -7,6 +7,7 @@
         + 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.'
         + 'meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
     const sessionControl = global.InsureGPTESessionControl;
+    const bulkUploadService = global.InsureGPTEAdminBulkUpload;
     const client = global.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
@@ -19,7 +20,8 @@
         questions: [],
         users: [],
         examInformation: [],
-        auditEvents: []
+        auditEvents: [],
+        bulkUpload: null
     };
 
     function byId(id) {
@@ -744,6 +746,194 @@
         renderAuditEvents();
     }
 
+    function syncBulkTemplateLink() {
+        const entity = byId('bulk-upload-entity').value;
+        const format = bulkUploadService.FORMATS[entity];
+        if (!format) {
+            return;
+        }
+        const link = byId('download-selected-template');
+        link.href = `admin-upload-templates/${format.fileName}`;
+        link.download = format.fileName;
+        byId('selected-template-description').textContent =
+            `${format.label} · ${format.fileName}`;
+    }
+
+    function resetBulkUpload() {
+        syncBulkTemplateLink();
+        state.bulkUpload = null;
+        byId('bulk-upload-file').value = '';
+        byId('bulk-upload-summary').textContent =
+            'Select the matching upload type and CSV file to begin.';
+        byId('bulk-upload-errors').className =
+            'mt-4 hidden rounded-xl bg-red-100 p-4 text-sm text-red-800';
+        byId('bulk-upload-errors').textContent = '';
+        byId('bulk-upload-preview-head').innerHTML = '';
+        byId('bulk-upload-preview-body').innerHTML =
+            '<tr><td class="px-4 py-8 text-center text-slate-500">No CSV preview loaded.</td></tr>';
+        const importButton = byId('run-bulk-upload-button');
+        if (importButton.dataset.defaultText) {
+            importButton.textContent = importButton.dataset.defaultText;
+        }
+        importButton.disabled = true;
+        importButton.classList.add('opacity-60');
+    }
+
+    function renderBulkUploadPreview(fileName, result) {
+        const errorBox = byId('bulk-upload-errors');
+        const importButton = byId('run-bulk-upload-button');
+        byId('bulk-upload-summary').textContent =
+            `${fileName}: ${result.rows.length} data row(s) checked.`;
+
+        if (result.errors.length > 0) {
+            errorBox.className =
+                'mt-4 rounded-xl bg-red-100 p-4 text-sm text-red-800';
+            errorBox.innerHTML = [
+                '<p class="font-bold">Correct these items before importing:</p>',
+                '<ul class="mt-2 list-disc space-y-1 pl-5">',
+                ...result.errors.slice(0, 25).map((error) => (
+                    `<li>CSV row ${escapeHtml(error.row)}: `
+                    + `${escapeHtml(error.message)}</li>`
+                )),
+                result.errors.length > 25
+                    ? `<li>${escapeHtml(result.errors.length - 25)} additional issue(s) are not shown.</li>`
+                    : '',
+                '</ul>'
+            ].join('');
+        } else {
+            errorBox.className =
+                'mt-4 rounded-xl bg-emerald-100 p-4 text-sm text-emerald-800';
+            errorBox.innerHTML =
+                '<span class="font-bold">Ready to import.</span> All browser checks passed. The database will validate every row again.';
+        }
+
+        byId('bulk-upload-preview-head').innerHTML = `
+            <tr>${result.headers.map(
+                (header) => `<th class="whitespace-nowrap px-3 py-3">${escapeHtml(header)}</th>`
+            ).join('')}</tr>
+        `;
+        byId('bulk-upload-preview-body').innerHTML =
+            result.rows.length > 0
+                ? result.rows.slice(0, 5).map((row) => `
+                    <tr class="border-t">${result.headers.map(
+                        (header) => `<td class="max-w-72 truncate px-3 py-3">${escapeHtml(row[header])}</td>`
+                    ).join('')}</tr>
+                `).join('')
+                : '<tr><td class="px-4 py-8 text-center text-slate-500">No valid data rows are available to preview.</td></tr>';
+
+        importButton.disabled =
+            result.errors.length > 0 || result.rows.length === 0;
+        importButton.classList.toggle(
+            'opacity-60',
+            importButton.disabled
+        );
+    }
+
+    async function reviewBulkUploadFile() {
+        clearMessage();
+        const fileInput = byId('bulk-upload-file');
+        const file = fileInput.files[0];
+        if (!file) {
+            resetBulkUpload();
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            resetBulkUpload();
+            showMessage(
+                'The CSV is larger than 5 MB. Split it into smaller files containing no more than 250 rows.'
+            );
+            return;
+        }
+
+        try {
+            const entity = byId('bulk-upload-entity').value;
+            const result = bulkUploadService.validateCsv(
+                entity,
+                await file.text()
+            );
+            state.bulkUpload = {
+                entity,
+                fileName: file.name,
+                result
+            };
+            renderBulkUploadPreview(file.name, result);
+        } catch (error) {
+            console.error('Unable to review bulk upload:', error);
+            resetBulkUpload();
+            showMessage(
+                error.message || 'Unable to read the selected CSV file.'
+            );
+        }
+    }
+
+    async function runBulkUpload() {
+        const upload = state.bulkUpload;
+        if (!upload
+            || upload.result.errors.length > 0
+            || upload.result.rows.length === 0) {
+            showMessage('Review a valid CSV file before importing.');
+            return;
+        }
+
+        if (!global.confirm(
+            `Import all ${upload.result.rows.length} reviewed `
+            + `${upload.entity} row(s)? If one row fails, none will be saved.`
+        )) {
+            return;
+        }
+
+        const button = byId('run-bulk-upload-button');
+        setBusy(button, true, 'Importing reviewed rows...');
+        try {
+            const { data, error } = await client.rpc(
+                'admin_bulk_import',
+                {
+                    p_entity: upload.entity,
+                    p_rows: upload.result.rows
+                }
+            );
+            if (error) {
+                throw error;
+            }
+
+            const processedCount =
+                Number(data?.processed_count) || upload.result.rows.length;
+            const entity = upload.entity;
+            resetBulkUpload();
+            await refreshCoreData();
+
+            if (entity === 'users') {
+                await loadUsers();
+            } else if (entity === 'exam_information') {
+                await loadExamInformation();
+            } else if (
+                entity === 'questions'
+                && byId('question-subject-filter').value
+            ) {
+                await loadQuestions();
+            }
+
+            showMessage(
+                `${processedCount} ${entity} row(s) imported and audited successfully.`,
+                'success'
+            );
+        } catch (error) {
+            console.error('Administrator bulk import failed:', error);
+            if (await sessionControl.handleInactiveSessionError(error)) {
+                return;
+            }
+            showMessage(
+                error.message
+                    || 'The CSV was not imported. No rows were saved.'
+            );
+        } finally {
+            if (state.bulkUpload) {
+                setBusy(button, false, '');
+            }
+        }
+    }
+
     async function refreshSummary() {
         const { data, error } =
             await client.rpc('get_admin_portal_summary');
@@ -875,6 +1065,22 @@
                 );
             }
         });
+        byId('bulk-upload-entity').addEventListener(
+            'change',
+            () => resetBulkUpload()
+        );
+        byId('bulk-upload-file').addEventListener(
+            'change',
+            () => void reviewBulkUploadFile()
+        );
+        byId('clear-bulk-upload-button').addEventListener(
+            'click',
+            resetBulkUpload
+        );
+        byId('run-bulk-upload-button').addEventListener(
+            'click',
+            () => void runBulkUpload()
+        );
         byId('exam-information-form').addEventListener(
             'submit',
             saveExamInformation
@@ -914,6 +1120,12 @@
         }
 
         try {
+            if (!bulkUploadService) {
+                throw new Error(
+                    'The administrator bulk-upload validator is unavailable.'
+                );
+            }
+
             const { data: { user }, error: userError } =
                 await client.auth.getUser();
             if (userError || !user) {
@@ -946,6 +1158,7 @@
             resetSubjectForm();
             resetQuestionForm();
             resetExamInformationForm();
+            resetBulkUpload();
             installListeners();
             byId('admin-loading').classList.add('hidden');
             byId('admin-portal').classList.remove('hidden');

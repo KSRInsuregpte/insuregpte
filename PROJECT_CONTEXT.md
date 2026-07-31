@@ -612,6 +612,13 @@
 # The hidden admin dashboard is not an authorization boundary. Every operation
 # is authorized again in PostgreSQL for an active administrator. The browser
 # does not receive direct subject, question, or audit-table access.
+#
+# Administrators may also download fixed CSV formats and atomically upload
+# existing-user status, academic hierarchy, subjects, learning content,
+# question-bank rows, official examination information, and non-payment
+# entitlements. The coordinator delegates every row to guarded audited Admin
+# functions. It adds no table, creates no Auth identity, changes no password or
+# role, and cannot create or modify purchase/subscription entitlements.
 
 #
 
