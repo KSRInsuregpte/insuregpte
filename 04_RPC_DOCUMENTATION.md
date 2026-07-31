@@ -119,3 +119,21 @@ calls `fn_is_admin()` and rejects a caller unless the current profile has
 
 The migration creates only `admin_audit_events`; it reuses all academic,
 profile, question, Auth, and regulatory tables identified by the live audit.
+
+### Bulk administration
+
+- `admin_bulk_import(p_entity text, p_rows jsonb)` atomically coordinates
+  1-250 reviewed CSV rows. It delegates existing subjects, questions, user
+  status, and exam information to their established save functions.
+- `admin_save_academic_content(p_entity text, p_record jsonb)` creates or
+  updates approved qualification, authority, programme, programme-section,
+  module, chapter, topic, resource-type, resource, or flashcard records by
+  stable code. It validates the complete hierarchy path and writes one
+  `admin_audit_events` row.
+- `admin_save_entitlement(p_entitlement jsonb)` creates or updates only
+  `complimentary`, `promotional`, and `admin_grant` access for an existing
+  active user. Purchase and subscription entitlements are rejected.
+
+The bulk release creates no data table. `admin_save_exam_information(jsonb)`
+also accepts `official_notice` and verifies that programme and section
+references belong to their stated authority and programme.

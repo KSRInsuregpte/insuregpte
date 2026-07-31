@@ -113,6 +113,25 @@ the admin RPCs and audit-history table but intentionally preserves subject,
 question, user-status, and examination-information business records changed by
 administrators. Direct browser writes to subjects and questions remain revoked.
 
+### Administrator bulk-upload extension
+
+After the Admin portal and question-answer repair are verified:
+
+1. Deploy `20260730150000_add_admin_bulk_import.sql`.
+2. Run `TESTING/sql/admin-bulk-import-verification.sql`.
+3. Deploy `20260731120000_expand_admin_bulk_import.sql`.
+4. Run `TESTING/sql/admin-expanded-bulk-import-verification.sql`.
+5. Deploy `20260731180000_expand_admin_audit_entity_types.sql`.
+6. Run `TESTING/sql/admin-audit-entity-types-verification.sql`.
+7. Deploy the trial branch frontend to Vercel Preview.
+8. Complete the controlled checks in `06_TESTING_GUIDE.md`.
+
+Do not deploy the expanded frontend before all three migrations pass. Roll
+back in reverse timestamp order. The audit-constraint rollback refuses to
+remove compatibility after a newly supported audit record exists; preserve
+audit history and use a forward correction instead. Imported business records
+remain audited and are not automatically deleted.
+
 Do not add live checkout during this release. Payment order creation, provider
 credentials, signed webhook verification, reconciliation, refunds, and
 entitlement fulfilment require a separately approved payment-provider design.
