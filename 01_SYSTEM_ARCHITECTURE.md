@@ -1155,6 +1155,46 @@ Any architecture change must document:
   verification are complete. Production SQL deployment, seed-data review,
   browser acceptance testing, and payment-provider selection remain pending.
 
+### Approved safety monitoring and controlled enforcement — 2026-08-02
+
+- **Requested change:** notify administrators about confirmed registrations,
+  sustained service pressure, continuously active sessions over 48 hours, and
+  credible harmful or data-manipulation activity; provide reviewed warnings,
+  suspension, appeal, and restoration controls.
+- **Business reason:** protect learner identity, educational content, quiz
+  integrity, administrator operations, and the future paid learning platform
+  without unfairly blocking normal duplicate-page, refresh, retry, or
+  connectivity behaviour.
+- **Enforcement rule:** ordinary unusual activity creates reviewable evidence
+  and a recommended action. It does not automatically block a learner. Up to
+  three administrator-confirmed warnings may be issued before suspension.
+  Clearly defined critical attacks may receive immediate temporary suspension.
+- **Database impact:** first run a privacy-safe duplicate-object audit. Subject
+  to that audit, add only the minimum security-event, enforcement-case, and
+  notification-outbox records needed for durable review and delivery. Reuse
+  `profiles`, `active_client_leases`, `admin_audit_events`, and Supabase Auth.
+- **RPC impact:** preserve `admin_set_user_status(uuid,text)` for its existing
+  activation workflow. Add separately named, server-authorized security review,
+  warning, suspension, restoration, session-scan, and notification-worker RPCs.
+- **Frontend impact:** add an administrator-only **Security & Alerts** panel;
+  every action remains independently authorized and audited by PostgreSQL.
+- **Privacy impact:** do not copy passwords, OTPs, tokens, question answers,
+  raw Auth payloads, full IP addresses, or unnecessary personal information
+  into application safety records or administrator email.
+- **Notification impact:** use administrator dashboard alerts and email first.
+  SMS remains optional for critical alerts after a production provider is
+  separately approved and configured.
+- **Testing impact:** duplicate-object audit, anonymous/learner/admin/service
+  authorization, false-positive handling, three-warning workflow, critical
+  suspension, active-quiz preservation, appeal/restoration, long-session scan,
+  notification retries, rollback, and existing regression tests are mandatory.
+- **Release impact:** implement on a dedicated branch, deploy to preview/trial,
+  apply versioned migrations only after audit review, and merge after owner
+  acceptance.
+- **Approval decision:** approved by the project owner on 2026-08-02.
+- **Implementation status:** live-object audit added to the repository; database
+  and frontend implementation await review of the exported audit result.
+
 ---
 
 ## 24. Next Document

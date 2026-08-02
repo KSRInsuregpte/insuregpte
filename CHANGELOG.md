@@ -60,6 +60,10 @@ This project follows Semantic Versioning (SemVer).
 - Expanded the existing administrator audit entity-type constraint so every
   approved academic, learning-content, examination, and non-payment bulk
   import can retain its required per-record audit history
+- Privacy-safe, read-only safety-system object audit covering existing Auth
+  audit logs, active-client leases, administrator audit history, potential
+  incident/warning/notification conflicts, extension availability, triggers,
+  constraints, privileges, and aggregate sessions claimed over 48 hours
 - PROJECT_CONTEXT.md
 - CODING_RULES.md
 

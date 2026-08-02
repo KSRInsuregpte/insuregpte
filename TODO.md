@@ -72,6 +72,13 @@
   production use
 - [ ] Deploy and verify the administrator audit entity-type compatibility
   repair before retrying the controlled bulk import
+- [x] Add a privacy-safe live safety-system object audit covering existing
+  Auth audit, session lease, administrator audit, notification, incident,
+  warning, enforcement, scheduling, and monitoring objects
+- [ ] Run and review `safety-system-object-audit.sql` before creating any
+  safety-system database object
+- [ ] Implement the approved administrator Security & Alerts foundation after
+  the live duplicate-object audit is reviewed
 
 ---
 
