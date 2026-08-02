@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/session-control.js?v=20260720"></script>
-    <script defer src="js/dashboard.js?v=20260725"></script>
+    <script defer src="js/dashboard.js?v=20260802"></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
     <nav class="border-b border-slate-200 bg-white p-4 shadow-sm">
@@ -45,6 +45,11 @@
                     View Cart
                 </a>
             </div>
+        </section>
+
+        <section id="security-notices" class="hidden mb-5 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950" aria-live="polite">
+            <h3 class="text-lg font-bold">Account Notice</h3>
+            <div id="security-notices-list" class="mt-3 space-y-3"></div>
         </section>
 
         <div id="message-box" role="alert" class="hidden mb-5 rounded-xl p-4"></div>

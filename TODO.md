@@ -75,10 +75,18 @@
 - [x] Add a privacy-safe live safety-system object audit covering existing
   Auth audit, session lease, administrator audit, notification, incident,
   warning, enforcement, scheduling, and monitoring objects
-- [ ] Run and review `safety-system-object-audit.sql` before creating any
+- [x] Run and review `safety-system-object-audit.sql` before creating any
   safety-system database object
-- [ ] Implement the approved administrator Security & Alerts foundation after
+- [x] Implement the approved administrator Security & Alerts foundation after
   the live duplicate-object audit is reviewed
+- [ ] Deploy the safety-system migration and run its read-only verification in
+  the trial Supabase project
+- [ ] Complete administrator/learner authorization, false-positive,
+  three-warning, suspension, restoration, and regression acceptance tests
+- [ ] Configure an approved server-side email worker for the notification
+  outbox; keep SMTP and service-role secrets outside the browser
+- [ ] Connect approved Vercel/Supabase/security provider monitors to the
+  service-role-only event-ingestion RPC
 
 ---
 

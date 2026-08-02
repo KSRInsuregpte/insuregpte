@@ -1192,8 +1192,13 @@ Any architecture change must document:
   apply versioned migrations only after audit review, and merge after owner
   acceptance.
 - **Approval decision:** approved by the project owner on 2026-08-02.
-- **Implementation status:** live-object audit added to the repository; database
-  and frontend implementation await review of the exported audit result.
+- **Implementation status:** the exported live-object audit was reviewed and
+  confirmed that no proposed safety relation or RPC already exists. The
+  versioned database foundation, rollback, administrator Security & Alerts
+  panel, learner warning banner, verification SQL, and regression checks are
+  implemented on the dedicated branch. Trial Supabase deployment, controlled
+  browser acceptance, provider-monitor integration, and the server-side email
+  worker remain pending.
 
 ---
 

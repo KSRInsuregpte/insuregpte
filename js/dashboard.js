@@ -41,6 +41,57 @@
         return counts;
     }
 
+    function renderSecurityNotices(notices) {
+        const panel = document.getElementById('security-notices');
+        const list = document.getElementById('security-notices-list');
+        if (!Array.isArray(notices) || notices.length === 0) {
+            panel.classList.add('hidden');
+            list.innerHTML = '';
+            return;
+        }
+
+        list.innerHTML = notices.map((notice) => `
+            <article class="rounded-xl border border-amber-200 bg-white p-4">
+                <p class="font-bold">${escapeHtml(notice.subject)}</p>
+                <p class="mt-1 text-sm">${escapeHtml(notice.message_body)}</p>
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <span class="text-xs text-amber-800">${escapeHtml(new Date(notice.created_at).toLocaleString())}</span>
+                    <button type="button" data-acknowledge-security-notice="${escapeHtml(notice.notification_id)}" class="rounded-lg border border-amber-600 px-3 py-2 text-sm font-bold text-amber-900">
+                        I Understand
+                    </button>
+                </div>
+            </article>
+        `).join('');
+        panel.classList.remove('hidden');
+    }
+
+    async function acknowledgeSecurityNotice(notificationId, button) {
+        button.disabled = true;
+        try {
+            const { error } = await client.rpc(
+                'acknowledge_my_security_notice',
+                { p_notification_id: Number(notificationId) }
+            );
+            if (error) {
+                throw error;
+            }
+            const { data, error: noticesError } = await client.rpc(
+                'get_my_security_notices',
+                { p_limit: 10 }
+            );
+            if (noticesError) {
+                console.warn(
+                    'Account notices are not available in this environment.'
+                );
+            }
+            renderSecurityNotices(data || []);
+        } catch (error) {
+            console.error('Unable to acknowledge account notice:', error);
+            button.disabled = false;
+            showMessage('Unable to acknowledge the account notice.');
+        }
+    }
+
     function renderSubjects(subjects, attempts) {
         const tableBody = document.getElementById('test-list');
         const counts = countPracticeAttempts(attempts);
@@ -142,11 +193,13 @@
             const [
                 { data: catalogue, error: catalogueError },
                 { data: attempts, error: attemptsError },
-                { data: isAdmin, error: adminError }
+                { data: isAdmin, error: adminError },
+                { data: securityNotices, error: noticesError }
             ] = await Promise.all([
                 client.rpc('get_subject_catalogue'),
                 client.rpc('get_my_quiz_attempts'),
-                client.rpc('fn_is_admin')
+                client.rpc('fn_is_admin'),
+                client.rpc('get_my_security_notices', { p_limit: 10 })
             ]);
 
             if (catalogueError) {
@@ -154,6 +207,9 @@
             }
             if (attemptsError) {
                 throw attemptsError;
+            }
+            if (noticesError) {
+                throw noticesError;
             }
             if (!adminError && isAdmin === true) {
                 document.getElementById('admin-link').classList.remove(
@@ -165,6 +221,7 @@
                 (catalogue || []).filter((subject) => subject.is_entitled),
                 attempts || []
             );
+            renderSecurityNotices(noticesError ? [] : (securityNotices || []));
         } catch (error) {
             console.error('Dashboard loading error:', error);
             if (await sessionControl.handleInactiveSessionError(error)) {
@@ -186,6 +243,20 @@
     document.getElementById('logout-button').addEventListener(
         'click',
         () => void logout()
+    );
+    document.getElementById('security-notices-list').addEventListener(
+        'click',
+        (event) => {
+            const button = event.target.closest(
+                '[data-acknowledge-security-notice]'
+            );
+            if (button) {
+                void acknowledgeSecurityNotice(
+                    button.dataset.acknowledgeSecurityNotice,
+                    button
+                );
+            }
+        }
     );
     void initialise();
 }(window));

@@ -64,6 +64,13 @@ This project follows Semantic Versioning (SemVer).
   audit logs, active-client leases, administrator audit history, potential
   incident/warning/notification conflicts, extension availability, triggers,
   constraints, privileges, and aggregate sessions claimed over 48 hours
+- Administrator-reviewed Security & Alerts foundation with privacy-safe
+  events, three-warning enforcement cases, critical-event suspension,
+  restoration, learner dashboard notices, and a service-side email outbox
+- Automatic informational registration alerts and administrator-triggered
+  scans that reuse active-client lease claim times for the 48-hour threshold
+- Service-role-only integration boundaries for approved provider safety
+  monitors and future email delivery workers
 - PROJECT_CONTEXT.md
 - CODING_RULES.md
 
@@ -91,6 +98,9 @@ This project follows Semantic Versioning (SemVer).
   the full option text required by quiz scoring, with a guarded repair for
   affected administrator-audited questions
 - Security moved to RPC-first architecture
+- Suspended or closed learners remain managed only through the audited
+  Security & Alerts workflow; the existing activation RPC signature and its
+  active/verification-pending boundary remain unchanged
 - Repaired the quiz-start client script so it parses and relies on the existing
   quiz RPC flow without directly reading `quiz_attempts`
 - Added repeatable frontend syntax and local-link verification
