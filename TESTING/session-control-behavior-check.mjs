@@ -37,6 +37,7 @@ function createBrowser({ sharedLocalStorage, confirmations = [] } = {}) {
     const documentListeners = new Map();
     const alerts = [];
     const redirects = [];
+    const timeoutDelays = [];
     let timerId = 0;
 
     const documentObject = {
@@ -94,8 +95,9 @@ function createBrowser({ sharedLocalStorage, confirmations = [] } = {}) {
             return timerId;
         },
         clearInterval() {},
-        setTimeout(callback) {
+        setTimeout(callback, delay = 0) {
             timerId += 1;
+            timeoutDelays.push(delay);
             if (typeof callback === 'function') {
                 callback();
             }
@@ -129,7 +131,8 @@ function createBrowser({ sharedLocalStorage, confirmations = [] } = {}) {
     return {
         alerts,
         control: windowObject.InsureGPTESessionControl,
-        redirects
+        redirects,
+        timeoutDelays
     };
 }
 
@@ -314,6 +317,10 @@ function createClient(claimResults = []) {
     );
     assert.equal(client.authCalls.length, 1);
     assert.equal(client.authCalls[0].scope, 'local');
+    assert.ok(
+        browser.timeoutDelays.includes(8000),
+        'Restricted learners must receive an eight-second readable notice.'
+    );
     assert.deepEqual(browser.redirects, ['index.html?session=restricted']);
 }
 

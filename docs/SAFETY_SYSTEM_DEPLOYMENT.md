@@ -85,11 +85,13 @@ full IP addresses, question text, or answer values.
 ### Suspension and restoration
 
 - After warning 3, suspend the controlled learner.
-- Confirm the learner's active page is displaced within one heartbeat cycle,
-  the local session is cleared, and login explains that the account is
-  suspended or inactive.
+- Confirm the learner's active page is blocked within one heartbeat cycle and
+  shows the suspension explanation for eight seconds before the local session
+  is cleared and the learner returns to sign-in.
 - Confirm the administrator account cannot be selected for learner suspension.
 - Restore the learner and confirm a new login can acquire page control.
+- Confirm one `User Restoration` email row is pending in the notification
+  outbox. Inbox delivery requires the separately approved email worker.
 - Confirm all actions appear in Administrator Audit History.
 
 ### Administrator interaction

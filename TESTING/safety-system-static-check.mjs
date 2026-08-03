@@ -199,10 +199,12 @@ assert.ok(
 assert.ok(
     source.sessionControl.includes('isRestrictedAccountError')
         && source.sessionControl.includes("signOut({ scope: 'local' })")
+        && source.sessionControl.includes('RESTRICTED_NOTICE_MS = 8000')
+        && source.sessionControl.includes('returned to sign-in in 8 seconds')
         && source.sessionControl.includes("session=restricted")
         && source.indexAuthentication.includes("'restricted'].includes(sessionReason)")
         && source.indexAuthentication.includes('account access is suspended or inactive'),
-    'A suspended or inactive account must be signed out locally and returned to login with a clear explanation.'
+    'A suspended or inactive account must receive a readable blocked notice, be signed out locally, and return to login with a clear explanation.'
 );
 
 assert.ok(

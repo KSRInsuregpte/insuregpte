@@ -86,6 +86,11 @@ This project follows Semantic Versioning (SemVer).
 - Security review, warning, suspension, and restoration decisions now use an
   accessible on-page administrator form instead of blocking browser prompt
   and confirmation dialogs.
+- Suspended learners now receive an immediately blocking explanation for eight
+  seconds before local sign-out, giving enough time to read the reason without
+  restoring any protected access.
+- Restoration continues to queue the existing audited learner email; actual
+  inbox delivery remains dependent on the approved server-side email worker.
 - Quiz engine expanded to support Practice, Mock and Proctored Mock
 - Registration security version 3 removes subject selection from identity
   registration and moves product choice to the catalogue

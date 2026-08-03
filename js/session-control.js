@@ -8,6 +8,7 @@
     const PAGE_LOCK_RENEW_MS = 5000;
     const HEARTBEAT_MS = 10000;
     const ACTIVITY_HEARTBEAT_MINIMUM_MS = 3000;
+    const RESTRICTED_NOTICE_MS = 8000;
     const UUID_PATTERN =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -596,9 +597,14 @@
         blockPage(
             'Your InsureGPTE account is suspended or inactive. Protected ' +
             'learning and practice access has stopped. Contact the ' +
-            'administrator if you believe this is an error.',
+            'administrator if you believe this is an error. You will be ' +
+            'returned to sign-in in 8 seconds.',
             'Account access unavailable'
         );
+
+        await new Promise(resolve => {
+            windowObject.setTimeout(resolve, RESTRICTED_NOTICE_MS);
+        });
 
         if (client) {
             const { error } = await client.auth.signOut({ scope: 'local' });
@@ -610,9 +616,7 @@
             }
         }
 
-        windowObject.setTimeout(() => {
-            windowObject.location.replace('index.html?session=restricted');
-        }, 100);
+        windowObject.location.replace('index.html?session=restricted');
     }
 
     function deactivateAndRedirect(message) {
