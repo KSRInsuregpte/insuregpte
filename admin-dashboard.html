@@ -6,9 +6,9 @@
     <title>InsureGPTE | Administration Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/session-control.js?v=20260720"></script>
+    <script src="js/session-control.js?v=20260803"></script>
     <script defer src="js/admin-bulk-upload.js?v=20260731"></script>
-    <script defer src="js/admin.js?v=20260731"></script>
+    <script defer src="js/admin.js?v=20260803"></script>
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900">
     <div id="admin-loading" class="flex min-h-screen items-center justify-center p-6">
@@ -55,7 +55,7 @@
                 <p class="text-sm font-bold uppercase tracking-[0.2em] text-blue-200">Administrator only</p>
                 <h2 class="mt-2 text-3xl font-bold">Content and platform management</h2>
                 <p class="mt-2 max-w-3xl text-blue-100">
-                    Manage subjects, current MCQ questions, user activation, and verified examination information.
+                    Manage subjects, current MCQ questions, user activation, verified examination information, and reviewed safety alerts.
                     Every change is recorded in the audit history.
                 </p>
             </section>
@@ -67,6 +67,7 @@
                 <button type="button" data-admin-tab="users" class="admin-tab rounded-xl px-4 py-3 font-bold text-slate-700 hover:bg-slate-100">Users</button>
                 <button type="button" data-admin-tab="bulk-upload" class="admin-tab rounded-xl px-4 py-3 font-bold text-slate-700 hover:bg-slate-100">Bulk Upload</button>
                 <button type="button" data-admin-tab="exam-information" class="admin-tab rounded-xl px-4 py-3 font-bold text-slate-700 hover:bg-slate-100">Exam Information</button>
+                <button type="button" data-admin-tab="security" class="admin-tab rounded-xl px-4 py-3 font-bold text-slate-700 hover:bg-slate-100">Security &amp; Alerts</button>
                 <button type="button" data-admin-tab="audit" class="admin-tab rounded-xl px-4 py-3 font-bold text-slate-700 hover:bg-slate-100">Audit History</button>
             </div>
 
@@ -502,6 +503,125 @@
                 </div>
             </section>
 
+            <section id="panel-security" data-admin-panel class="mt-6 hidden">
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-5 shadow-sm">
+                    <div>
+                        <h3 class="text-xl font-bold text-blue-950">Security &amp; Alerts</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Review evidence before acting. Ordinary unusual activity never blocks a learner automatically.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button id="scan-long-sessions-button" type="button" class="rounded-xl border border-blue-700 px-4 py-2 font-bold text-blue-800">
+                            Check Sessions Over 48 Hours
+                        </button>
+                        <button id="refresh-security-button" type="button" class="rounded-xl bg-blue-800 px-4 py-2 font-bold text-white">
+                            Refresh Alerts
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+                    <article class="rounded-2xl bg-white p-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase text-slate-500">Open alerts</p>
+                        <p id="security-open-events" class="mt-2 text-3xl font-bold text-blue-950">0</p>
+                    </article>
+                    <article class="rounded-2xl bg-white p-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase text-slate-500">Critical</p>
+                        <p id="security-critical-events" class="mt-2 text-3xl font-bold text-red-700">0</p>
+                    </article>
+                    <article class="rounded-2xl bg-white p-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase text-slate-500">Active cases</p>
+                        <p id="security-active-cases" class="mt-2 text-3xl font-bold text-amber-700">0</p>
+                    </article>
+                    <article class="rounded-2xl bg-white p-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase text-slate-500">Suspended</p>
+                        <p id="security-suspended-users" class="mt-2 text-3xl font-bold text-red-700">0</p>
+                    </article>
+                    <article class="rounded-2xl bg-white p-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase text-slate-500">Over 48 hours</p>
+                        <p id="security-long-sessions" class="mt-2 text-3xl font-bold text-violet-700">0</p>
+                    </article>
+                    <article class="rounded-2xl bg-white p-4 shadow-sm">
+                        <p class="text-xs font-bold uppercase text-slate-500">Email queue</p>
+                        <p id="security-pending-emails" class="mt-2 text-3xl font-bold text-sky-700">0</p>
+                    </article>
+                </div>
+
+                <div class="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm">
+                    <div class="border-b p-5">
+                        <h3 class="text-xl font-bold text-blue-950">Review Queue</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Dismiss benign activity or open a controlled learner case. Registration confirmations are informational.
+                        </p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-100 text-left text-slate-700">
+                                <tr>
+                                    <th class="px-4 py-3">Severity</th>
+                                    <th class="px-4 py-3">Event</th>
+                                    <th class="px-4 py-3">Learner</th>
+                                    <th class="px-4 py-3">Observed</th>
+                                    <th class="px-4 py-3">Recommendation</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Review</th>
+                                </tr>
+                            </thead>
+                            <tbody id="security-events-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm">
+                    <div class="border-b p-5">
+                        <h3 class="text-xl font-bold text-blue-950">Learner Enforcement Cases</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            A maximum of three confirmed warnings applies before ordinary suspension. Critical cases may be suspended immediately.
+                        </p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-100 text-left text-slate-700">
+                                <tr>
+                                    <th class="px-4 py-3">Learner</th>
+                                    <th class="px-4 py-3">Reason</th>
+                                    <th class="px-4 py-3">Warnings</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Last updated</th>
+                                    <th class="px-4 py-3">Controlled action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="enforcement-cases-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm">
+                    <div class="border-b p-5">
+                        <h3 class="text-xl font-bold text-blue-950">Notification Delivery Queue</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Dashboard notices are available immediately. Email rows remain pending until an approved server-side mail worker is configured.
+                        </p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-100 text-left text-slate-700">
+                                <tr>
+                                    <th class="px-4 py-3">Created</th>
+                                    <th class="px-4 py-3">Type</th>
+                                    <th class="px-4 py-3">Channel</th>
+                                    <th class="px-4 py-3">Recipient</th>
+                                    <th class="px-4 py-3">Subject</th>
+                                    <th class="px-4 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="notification-outbox-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <section id="panel-audit" data-admin-panel class="mt-6 hidden">
                 <div class="overflow-hidden rounded-2xl bg-white shadow-sm">
                     <div class="border-b p-5">
@@ -525,6 +645,41 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <div
+        id="admin-action-dialog"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 p-4"
+        role="presentation"
+    >
+        <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-action-dialog-title"
+            aria-describedby="admin-action-dialog-description"
+            class="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl"
+        >
+            <form id="admin-action-dialog-form">
+                <h2 id="admin-action-dialog-title" class="text-2xl font-bold text-blue-950"></h2>
+                <p id="admin-action-dialog-description" class="mt-3 leading-6 text-slate-700"></p>
+                <label id="admin-action-dialog-label" for="admin-action-dialog-input" class="mt-5 block font-bold text-slate-800"></label>
+                <textarea
+                    id="admin-action-dialog-input"
+                    rows="4"
+                    maxlength="1000"
+                    class="mt-2 w-full rounded-xl border border-slate-300 p-3 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                ></textarea>
+                <p id="admin-action-dialog-guidance" class="mt-2 text-sm text-slate-500"></p>
+                <div class="mt-6 flex flex-wrap justify-end gap-3">
+                    <button id="admin-action-dialog-cancel" type="button" class="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-700 hover:bg-slate-100">
+                        Cancel
+                    </button>
+                    <button id="admin-action-dialog-confirm" type="submit" class="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white hover:bg-blue-800">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </section>
     </div>
 </body>
 </html>

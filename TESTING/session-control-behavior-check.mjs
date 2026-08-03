@@ -37,6 +37,7 @@ function createBrowser({ sharedLocalStorage, confirmations = [] } = {}) {
     const documentListeners = new Map();
     const alerts = [];
     const redirects = [];
+    const timeoutDelays = [];
     let timerId = 0;
 
     const documentObject = {
@@ -94,8 +95,12 @@ function createBrowser({ sharedLocalStorage, confirmations = [] } = {}) {
             return timerId;
         },
         clearInterval() {},
-        setTimeout() {
+        setTimeout(callback, delay = 0) {
             timerId += 1;
+            timeoutDelays.push(delay);
+            if (typeof callback === 'function') {
+                callback();
+            }
             return timerId;
         },
         CustomEvent: class CustomEvent {
@@ -126,7 +131,8 @@ function createBrowser({ sharedLocalStorage, confirmations = [] } = {}) {
     return {
         alerts,
         control: windowObject.InsureGPTESessionControl,
-        redirects
+        redirects,
+        timeoutDelays
     };
 }
 
@@ -278,6 +284,44 @@ function createClient(claimResults = []) {
     assert.equal(result.success, true);
     assert.equal(client.rpcCalls[0].functionName, 'release_active_client');
     assert.deepEqual(client.authCalls, [null]);
+}
+
+{
+    const browser = createBrowser();
+    const client = createClient();
+
+    browser.control.acquirePageControl();
+
+    const handled = await browser.control.handleInactiveSessionError(
+        {
+            code: 'PT403',
+            message: 'Complete email verification before continuing.'
+        },
+        client
+    );
+
+    assert.equal(handled, true);
+    assert.equal(
+        browser.control.isRestrictedAccountError({
+            code: 'PT403',
+            message: 'Complete email verification before continuing.'
+        }),
+        true
+    );
+    assert.equal(
+        browser.control.isRestrictedAccountError({
+            code: 'PT403',
+            message: 'Administrator permission is required.'
+        }),
+        false
+    );
+    assert.equal(client.authCalls.length, 1);
+    assert.equal(client.authCalls[0].scope, 'local');
+    assert.ok(
+        browser.timeoutDelays.includes(8000),
+        'Restricted learners must receive an eight-second readable notice.'
+    );
+    assert.deepEqual(browser.redirects, ['index.html?session=restricted']);
 }
 
 console.log('Session-control behavior checks passed.');

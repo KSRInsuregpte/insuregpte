@@ -21,7 +21,15 @@
         users: [],
         examInformation: [],
         auditEvents: [],
+        securitySummary: null,
+        securityEvents: [],
+        enforcementCases: [],
+        notificationOutbox: [],
         bulkUpload: null
+    };
+    const adminActionDialogState = {
+        resolve: null,
+        returnFocus: null
     };
 
     function byId(id) {
@@ -475,6 +483,10 @@
         const table = byId('users-table');
         table.innerHTML = state.users.map((user) => {
             const isAdmin = user.role === 'admin';
+            const isSafetyManaged = ['suspended', 'closed'].includes(
+                user.status
+            );
+            const statusLocked = isAdmin || isSafetyManaged;
             return `
                 <tr class="border-b align-top">
                     <td class="px-4 py-4">
@@ -486,11 +498,14 @@
                     <td class="px-4 py-4 font-semibold">${escapeHtml(user.role)}</td>
                     <td class="px-4 py-4">
                         <div class="flex min-w-56 gap-2">
-                            <select data-user-status="${escapeHtml(user.user_id)}" class="rounded-lg border p-2" ${isAdmin ? 'disabled' : ''}>
+                            <select data-user-status="${escapeHtml(user.user_id)}" class="rounded-lg border p-2" ${statusLocked ? 'disabled' : ''}>
                                 <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
                                 <option value="verification_pending" ${user.status === 'verification_pending' ? 'selected' : ''}>Verification pending</option>
+                                ${isSafetyManaged
+                                    ? `<option value="${escapeHtml(user.status)}" selected>${escapeHtml(securityEventLabel(user.status))} — manage in Security & Alerts</option>`
+                                    : ''}
                             </select>
-                            <button type="button" data-save-user-status="${escapeHtml(user.user_id)}" class="rounded-lg bg-blue-800 px-3 py-2 font-bold text-white disabled:opacity-50" ${isAdmin ? 'disabled' : ''}>Save</button>
+                            <button type="button" data-save-user-status="${escapeHtml(user.user_id)}" class="rounded-lg bg-blue-800 px-3 py-2 font-bold text-white disabled:opacity-50" ${statusLocked ? 'disabled' : ''}>Save</button>
                         </div>
                     </td>
                 </tr>
@@ -746,6 +761,423 @@
         renderAuditEvents();
     }
 
+    function finishAdminActionDialog(confirmed) {
+        const dialog = byId('admin-action-dialog');
+        const input = byId('admin-action-dialog-input');
+        const resolve = adminActionDialogState.resolve;
+
+        dialog.classList.add('hidden');
+        dialog.classList.remove('flex');
+        adminActionDialogState.resolve = null;
+
+        if (adminActionDialogState.returnFocus?.isConnected) {
+            adminActionDialogState.returnFocus.focus();
+        }
+        adminActionDialogState.returnFocus = null;
+
+        if (resolve) {
+            resolve({
+                confirmed,
+                value: confirmed ? input.value.trim() : ''
+            });
+        }
+    }
+
+    function requestAdminAction(options) {
+        const settings = options || {};
+        const dialog = byId('admin-action-dialog');
+        const input = byId('admin-action-dialog-input');
+        const confirmButton = byId('admin-action-dialog-confirm');
+
+        if (adminActionDialogState.resolve) {
+            finishAdminActionDialog(false);
+        }
+
+        byId('admin-action-dialog-title').textContent = settings.title || '';
+        byId('admin-action-dialog-description').textContent =
+            settings.description || '';
+        byId('admin-action-dialog-label').textContent =
+            settings.inputLabel || 'Administrator note';
+        byId('admin-action-dialog-guidance').textContent =
+            settings.guidance || '';
+        input.value = settings.value || '';
+        input.required = settings.required !== false;
+        confirmButton.textContent = settings.confirmLabel || 'Confirm';
+        confirmButton.className = settings.danger
+            ? 'rounded-xl bg-red-700 px-5 py-3 font-bold text-white hover:bg-red-800'
+            : 'rounded-xl bg-blue-700 px-5 py-3 font-bold text-white hover:bg-blue-800';
+        adminActionDialogState.returnFocus = document.activeElement;
+
+        return new Promise((resolve) => {
+            adminActionDialogState.resolve = resolve;
+            dialog.classList.remove('hidden');
+            dialog.classList.add('flex');
+            global.setTimeout(() => input.focus(), 0);
+        });
+    }
+
+    function securitySeverityClass(severity) {
+        return {
+            critical: 'bg-red-100 text-red-800',
+            high: 'bg-orange-100 text-orange-800',
+            medium: 'bg-amber-100 text-amber-800',
+            low: 'bg-blue-100 text-blue-800',
+            info: 'bg-slate-200 text-slate-700'
+        }[severity] || 'bg-slate-200 text-slate-700';
+    }
+
+    function securityEventLabel(eventType) {
+        return String(eventType || '')
+            .split('_')
+            .filter(Boolean)
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
+
+    function renderSecuritySummary() {
+        const summary = state.securitySummary || {};
+        byId('security-open-events').textContent =
+            summary.open_events || 0;
+        byId('security-critical-events').textContent =
+            summary.critical_events || 0;
+        byId('security-active-cases').textContent =
+            summary.active_cases || 0;
+        byId('security-suspended-users').textContent =
+            summary.suspended_users || 0;
+        byId('security-long-sessions').textContent =
+            summary.sessions_over_48_hours || 0;
+        byId('security-pending-emails').textContent =
+            summary.pending_email_notifications || 0;
+    }
+
+    function renderSecurityEvents() {
+        const table = byId('security-events-table');
+        if (!state.securityEvents.length) {
+            table.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">No safety alerts have been recorded.</td></tr>';
+            return;
+        }
+
+        table.innerHTML = state.securityEvents.map((event) => {
+            const learner = event.user_email
+                ? `${escapeHtml(event.user_name || 'Learner')}<br><span class="text-xs text-slate-500">${escapeHtml(event.user_email)}</span>`
+                : '<span class="text-slate-500">Platform event</span>';
+            const canOpenCase = Boolean(event.user_id)
+                && event.severity !== 'info'
+                && event.event_type !== 'registration_confirmed'
+                && ['open', 'under_review'].includes(event.status);
+            const canDismiss = ['open', 'under_review'].includes(
+                event.status
+            );
+
+            return `
+                <tr class="border-b align-top">
+                    <td class="px-4 py-4">
+                        <span class="rounded-full px-2 py-1 text-xs font-bold ${securitySeverityClass(event.severity)}">
+                            ${escapeHtml(event.severity)}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4">
+                        <p class="font-bold text-blue-950">${escapeHtml(securityEventLabel(event.event_type))}</p>
+                        <p class="mt-1 text-xs text-slate-500">${escapeHtml(event.source)}</p>
+                    </td>
+                    <td class="px-4 py-4">${learner}</td>
+                    <td class="px-4 py-4">
+                        ${escapeHtml(new Date(event.occurred_at).toLocaleString())}
+                        ${event.occurrence_count > 1
+                            ? `<p class="mt-1 text-xs text-slate-500">Seen ${escapeHtml(event.occurrence_count)} times</p>`
+                            : ''}
+                    </td>
+                    <td class="max-w-sm px-4 py-4 text-slate-600">${escapeHtml(event.recommended_action || 'Review the evidence before taking action.')}</td>
+                    <td class="px-4 py-4 font-semibold">${escapeHtml(event.status)}</td>
+                    <td class="px-4 py-4">
+                        <div class="flex min-w-36 flex-col gap-2">
+                            ${canOpenCase
+                                ? `<button type="button" data-open-security-case="${event.event_id}" class="rounded-lg bg-amber-600 px-3 py-2 font-bold text-white">Open Case</button>`
+                                : ''}
+                            ${canDismiss
+                                ? `<button type="button" data-dismiss-security-event="${event.event_id}" class="rounded-lg border border-slate-400 px-3 py-2 font-bold text-slate-700">Dismiss</button>`
+                                : '<span class="text-xs text-slate-500">Reviewed</span>'}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderEnforcementCases() {
+        const table = byId('enforcement-cases-table');
+        if (!state.enforcementCases.length) {
+            table.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">No learner enforcement cases are open.</td></tr>';
+            return;
+        }
+
+        table.innerHTML = state.enforcementCases.map((item) => {
+            const warningAllowed = ['monitoring', 'warned'].includes(
+                item.status
+            ) && item.warning_count < 3;
+            const suspensionAllowed = ['monitoring', 'warned'].includes(
+                item.status
+            );
+            const restoreAllowed = item.status === 'suspended';
+
+            return `
+                <tr class="border-b align-top">
+                    <td class="px-4 py-4">
+                        <p class="font-bold text-blue-950">${escapeHtml(item.user_name || 'Learner')}</p>
+                        <p class="mt-1 text-xs text-slate-500">${escapeHtml(item.user_email)}</p>
+                    </td>
+                    <td class="max-w-sm px-4 py-4">
+                        <p class="font-semibold">${escapeHtml(securityEventLabel(item.reason_code))}</p>
+                        <p class="mt-1 text-xs text-slate-600">${escapeHtml(item.reason_summary)}</p>
+                        ${item.source_severity === 'critical'
+                            ? '<p class="mt-1 text-xs font-bold text-red-700">Critical-event override available</p>'
+                            : ''}
+                    </td>
+                    <td class="px-4 py-4 font-bold">${escapeHtml(item.warning_count)} / 3</td>
+                    <td class="px-4 py-4 font-semibold">${escapeHtml(item.status)}</td>
+                    <td class="px-4 py-4">${escapeHtml(new Date(item.updated_at).toLocaleString())}</td>
+                    <td class="px-4 py-4">
+                        <div class="flex min-w-40 flex-col gap-2">
+                            ${warningAllowed
+                                ? `<button type="button" data-warn-enforcement-case="${item.case_id}" class="rounded-lg bg-amber-600 px-3 py-2 font-bold text-white">Issue Warning</button>`
+                                : ''}
+                            ${suspensionAllowed
+                                ? `<button type="button" data-suspend-enforcement-case="${item.case_id}" class="rounded-lg bg-red-700 px-3 py-2 font-bold text-white">Suspend Access</button>`
+                                : ''}
+                            ${restoreAllowed
+                                ? `<button type="button" data-restore-enforcement-case="${item.case_id}" class="rounded-lg bg-emerald-700 px-3 py-2 font-bold text-white">Restore Access</button>`
+                                : ''}
+                            ${!warningAllowed && !suspensionAllowed && !restoreAllowed
+                                ? '<span class="text-xs text-slate-500">No action available</span>'
+                                : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderNotificationOutbox() {
+        const table = byId('notification-outbox-table');
+        if (!state.notificationOutbox.length) {
+            table.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">No safety notifications have been queued.</td></tr>';
+            return;
+        }
+
+        table.innerHTML = state.notificationOutbox.map((item) => `
+            <tr class="border-b align-top">
+                <td class="px-4 py-4">${escapeHtml(new Date(item.created_at).toLocaleString())}</td>
+                <td class="px-4 py-4">${escapeHtml(securityEventLabel(item.notification_type))}</td>
+                <td class="px-4 py-4">${escapeHtml(item.channel)}</td>
+                <td class="px-4 py-4">${escapeHtml(item.recipient_kind)}</td>
+                <td class="max-w-sm px-4 py-4">${escapeHtml(item.subject)}</td>
+                <td class="px-4 py-4 font-semibold">${escapeHtml(item.status)}</td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadSecurityData() {
+        const [
+            { data: summary, error: summaryError },
+            { data: events, error: eventsError },
+            { data: cases, error: casesError },
+            { data: outbox, error: outboxError }
+        ] = await Promise.all([
+            client.rpc('get_admin_security_summary'),
+            client.rpc('admin_list_security_events', { p_limit: 100 }),
+            client.rpc('admin_list_enforcement_cases', { p_limit: 100 }),
+            client.rpc('admin_list_notification_outbox', { p_limit: 100 })
+        ]);
+
+        const error = summaryError || eventsError || casesError
+            || outboxError;
+        if (error) {
+            throw error;
+        }
+
+        state.securitySummary = summary || {};
+        state.securityEvents = events || [];
+        state.enforcementCases = cases || [];
+        state.notificationOutbox = outbox || [];
+        renderSecuritySummary();
+        renderSecurityEvents();
+        renderEnforcementCases();
+        renderNotificationOutbox();
+    }
+
+    async function scanLongRunningSessions(button) {
+        clearMessage();
+        setBusy(button, true, 'Checking sessions\u2026');
+        try {
+            const { data, error } = await client.rpc(
+                'fn_scan_long_running_sessions'
+            );
+            if (error) {
+                throw error;
+            }
+            await Promise.all([loadSecurityData(), loadAuditEvents()]);
+            showMessage(
+                `${Number(data) || 0} continuously active session(s) crossed the 48-hour review threshold.`,
+                'success'
+            );
+        } catch (error) {
+            console.error('Unable to scan long-running sessions:', error);
+            showMessage(
+                error.message || 'Unable to check long-running sessions.'
+            );
+        } finally {
+            setBusy(button, false, '');
+        }
+    }
+
+    async function reviewSecurityEvent(eventId, decision) {
+        const actionLabel = decision === 'open_case'
+            ? 'open a controlled learner case'
+            : 'dismiss this alert';
+        const action = await requestAdminAction({
+            title: decision === 'open_case'
+                ? 'Open controlled learner case'
+                : 'Dismiss safety alert',
+            description:
+                `Confirm that you want to ${actionLabel}. The decision will be audited.`,
+            inputLabel: 'Review note',
+            guidance:
+                'Keep the note concise. Do not include passwords, OTPs, tokens, full IP addresses, or quiz answers.',
+            confirmLabel: decision === 'open_case' ? 'Open Case' : 'Dismiss Alert',
+            danger: decision === 'dismiss'
+        });
+        if (!action.confirmed) {
+            return;
+        }
+
+        try {
+            const { error } = await client.rpc(
+                'admin_review_security_event',
+                {
+                    p_event_id: Number(eventId),
+                    p_decision: decision,
+                    p_note: action.value
+                }
+            );
+            if (error) {
+                throw error;
+            }
+            await Promise.all([loadSecurityData(), loadAuditEvents()]);
+            showMessage('The security review decision was saved.', 'success');
+        } catch (error) {
+            console.error('Unable to review security event:', error);
+            showMessage(error.message || 'Unable to save the review decision.');
+        }
+    }
+
+    async function issueSecurityWarning(caseId) {
+        const action = await requestAdminAction({
+            title: 'Issue learner warning',
+            description:
+                'This audited warning will appear in the learner account. A maximum of three confirmed warnings is allowed.',
+            inputLabel: 'Warning message',
+            guidance:
+                'Explain the concern and the expected corrective action without including protected data.',
+            confirmLabel: 'Issue Warning'
+        });
+        if (!action.confirmed) {
+            return;
+        }
+
+        try {
+            const { data, error } = await client.rpc(
+                'admin_issue_security_warning',
+                {
+                    p_case_id: Number(caseId),
+                    p_message: action.value
+                }
+            );
+            if (error) {
+                throw error;
+            }
+            await Promise.all([loadSecurityData(), loadAuditEvents()]);
+            showMessage(`Warning ${Number(data)} of 3 was issued.`, 'success');
+        } catch (error) {
+            console.error('Unable to issue security warning:', error);
+            showMessage(error.message || 'Unable to issue the warning.');
+        }
+    }
+
+    async function suspendEnforcementCase(caseId) {
+        const action = await requestAdminAction({
+            title: 'Suspend learner access',
+            description:
+                'Ordinary cases require three confirmed warnings. If approved, protected access stops and the active learner page is displaced.',
+            inputLabel: 'Suspension reason',
+            guidance:
+                'This reason is recorded in the audit history and queued for delivery to the learner.',
+            confirmLabel: 'Suspend Access',
+            danger: true
+        });
+        if (!action.confirmed) {
+            return;
+        }
+
+        try {
+            const { error } = await client.rpc(
+                'admin_suspend_user_access',
+                {
+                    p_case_id: Number(caseId),
+                    p_reason: action.value,
+                    p_suspended_until: null
+                }
+            );
+            if (error) {
+                throw error;
+            }
+            await Promise.all([
+                loadSecurityData(),
+                loadAuditEvents(),
+                loadUsers()
+            ]);
+            showMessage('Learner access was suspended and audited.', 'success');
+        } catch (error) {
+            console.error('Unable to suspend learner access:', error);
+            showMessage(error.message || 'Unable to suspend learner access.');
+        }
+    }
+
+    async function restoreEnforcementCase(caseId) {
+        const action = await requestAdminAction({
+            title: 'Restore learner access',
+            description:
+                'Restoring access permits the learner to sign in and use entitled learning and practice services again.',
+            inputLabel: 'Restoration reason',
+            guidance: 'The restoration decision and reason will be audited.',
+            confirmLabel: 'Restore Access'
+        });
+        if (!action.confirmed) {
+            return;
+        }
+
+        try {
+            const { error } = await client.rpc(
+                'admin_restore_user_access',
+                {
+                    p_case_id: Number(caseId),
+                    p_note: action.value
+                }
+            );
+            if (error) {
+                throw error;
+            }
+            await Promise.all([
+                loadSecurityData(),
+                loadAuditEvents(),
+                loadUsers()
+            ]);
+            showMessage('Learner access was restored and audited.', 'success');
+        } catch (error) {
+            console.error('Unable to restore learner access:', error);
+            showMessage(error.message || 'Unable to restore learner access.');
+        }
+    }
+
     function syncBulkTemplateLink() {
         const entity = byId('bulk-upload-entity').value;
         const format = bulkUploadService.FORMATS[entity];
@@ -987,6 +1419,8 @@
                 await loadUsers();
             } else if (tabName === 'exam-information') {
                 await loadExamInformation();
+            } else if (tabName === 'security') {
+                await loadSecurityData();
             } else if (tabName === 'audit') {
                 await loadAuditEvents();
             }
@@ -1012,6 +1446,33 @@
     }
 
     function installListeners() {
+        byId('admin-action-dialog-form').addEventListener(
+            'submit',
+            (event) => {
+                event.preventDefault();
+                finishAdminActionDialog(true);
+            }
+        );
+        byId('admin-action-dialog-cancel').addEventListener(
+            'click',
+            () => finishAdminActionDialog(false)
+        );
+        byId('admin-action-dialog').addEventListener(
+            'click',
+            (event) => {
+                if (event.target === event.currentTarget) {
+                    finishAdminActionDialog(false);
+                }
+            }
+        );
+        document.addEventListener('keydown', (event) => {
+            if (
+                event.key === 'Escape'
+                && adminActionDialogState.resolve
+            ) {
+                finishAdminActionDialog(false);
+            }
+        });
         document.querySelectorAll('[data-admin-tab]').forEach((button) => {
             button.addEventListener(
                 'click',
@@ -1065,6 +1526,72 @@
                 );
             }
         });
+        byId('refresh-security-button').addEventListener(
+            'click',
+            () => void loadSecurityData().catch((error) => {
+                console.error('Unable to refresh safety alerts:', error);
+                showMessage('Unable to refresh safety alerts.');
+            })
+        );
+        byId('scan-long-sessions-button').addEventListener(
+            'click',
+            (event) => void scanLongRunningSessions(event.currentTarget)
+        );
+        byId('security-events-table').addEventListener(
+            'click',
+            (event) => {
+                const openButton = event.target.closest(
+                    '[data-open-security-case]'
+                );
+                if (openButton) {
+                    void reviewSecurityEvent(
+                        openButton.dataset.openSecurityCase,
+                        'open_case'
+                    );
+                    return;
+                }
+                const dismissButton = event.target.closest(
+                    '[data-dismiss-security-event]'
+                );
+                if (dismissButton) {
+                    void reviewSecurityEvent(
+                        dismissButton.dataset.dismissSecurityEvent,
+                        'dismiss'
+                    );
+                }
+            }
+        );
+        byId('enforcement-cases-table').addEventListener(
+            'click',
+            (event) => {
+                const warnButton = event.target.closest(
+                    '[data-warn-enforcement-case]'
+                );
+                if (warnButton) {
+                    void issueSecurityWarning(
+                        warnButton.dataset.warnEnforcementCase
+                    );
+                    return;
+                }
+                const suspendButton = event.target.closest(
+                    '[data-suspend-enforcement-case]'
+                );
+                if (suspendButton) {
+                    void suspendEnforcementCase(
+                        suspendButton.dataset.suspendEnforcementCase
+                    );
+                    return;
+                }
+                const restoreButton = event.target.closest(
+                    '[data-restore-enforcement-case]'
+                );
+                if (restoreButton) {
+                    void restoreEnforcementCase(
+                        restoreButton.dataset.restoreEnforcementCase
+                    );
+                }
+            }
+        );
         byId('bulk-upload-entity').addEventListener(
             'change',
             () => resetBulkUpload()

@@ -60,12 +60,37 @@ This project follows Semantic Versioning (SemVer).
 - Expanded the existing administrator audit entity-type constraint so every
   approved academic, learning-content, examination, and non-payment bulk
   import can retain its required per-record audit history
+- Privacy-safe, read-only safety-system object audit covering existing Auth
+  audit logs, active-client leases, administrator audit history, potential
+  incident/warning/notification conflicts, extension availability, triggers,
+  constraints, privileges, and aggregate sessions claimed over 48 hours
+- Administrator-reviewed Security & Alerts foundation with privacy-safe
+  events, three-warning enforcement cases, critical-event suspension,
+  restoration, learner dashboard notices, and a service-side email outbox
+- Automatic informational registration alerts and administrator-triggered
+  scans that reuse active-client lease claim times for the 48-hour threshold
+- Service-role-only integration boundaries for approved provider safety
+  monitors and future email delivery workers
 - PROJECT_CONTEXT.md
 - CODING_RULES.md
 
 ### Changed
 
 - Database normalized into hierarchical academic structure
+- Learner safety notices now refresh across every authenticated catalogue,
+  subject, cart, dashboard, and practice page instead of appearing only on the
+  dashboard.
+- Suspended or inactive accounts are signed out locally and returned to the
+  login page with a clear restricted-access explanation as soon as a protected
+  request or active-session heartbeat detects the restriction.
+- Security review, warning, suspension, and restoration decisions now use an
+  accessible on-page administrator form instead of blocking browser prompt
+  and confirmation dialogs.
+- Suspended learners now receive an immediately blocking explanation for eight
+  seconds before local sign-out, giving enough time to read the reason without
+  restoring any protected access.
+- Restoration continues to queue the existing audited learner email; actual
+  inbox delivery remains dependent on the approved server-side email worker.
 - Quiz engine expanded to support Practice, Mock and Proctored Mock
 - Registration security version 3 removes subject selection from identity
   registration and moves product choice to the catalogue
@@ -87,6 +112,9 @@ This project follows Semantic Versioning (SemVer).
   the full option text required by quiz scoring, with a guarded repair for
   affected administrator-audited questions
 - Security moved to RPC-first architecture
+- Suspended or closed learners remain managed only through the audited
+  Security & Alerts workflow; the existing activation RPC signature and its
+  active/verification-pending boundary remain unchanged
 - Repaired the quiz-start client script so it parses and relies on the existing
   quiz RPC flow without directly reading `quiz_attempts`
 - Added repeatable frontend syntax and local-link verification
@@ -183,6 +211,9 @@ This project follows Semantic Versioning (SemVer).
 - Added regression coverage for final-result visibility, safe page-control
   handoff, and dashboard attempt counts across completed, in-progress, and
   abandoned attempts
+- Repaired the safety-event helper's ten-column insert, preserved its existing
+  signature and restrictions, and added transactional insert/deduplication
+  verification so lazy PL/pgSQL statement errors cannot pass catalogue checks
 
 ### Planned
 

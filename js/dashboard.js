@@ -8,6 +8,7 @@
         + 'meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
     const MAX_ATTEMPTS = 5;
     const sessionControl = global.InsureGPTESessionControl;
+    const securityNotices = global.InsureGPTESecurityNotices;
     const client = global.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
@@ -132,6 +133,14 @@
             )) {
                 return;
             }
+
+            securityNotices.start({
+                client,
+                sessionControl,
+                panel: document.getElementById('security-notices'),
+                list: document.getElementById('security-notices-list'),
+                onError: showMessage
+            });
 
             const firstName = String(
                 user.user_metadata?.first_name || 'Member'
