@@ -18,7 +18,8 @@ full IP addresses, question text, or answer values.
   Supabase, or security-monitor integrations;
 - review, dismissal, case opening, three-warning, critical suspension,
   restoration, and audit controls;
-- learner dashboard warning notices;
+- learner warning notices on every authenticated catalogue, subject, cart,
+  dashboard, and practice page;
 - a durable email notification outbox and service-role-only worker RPCs;
 - a matching rollback and read-only verification SQL.
 
@@ -76,17 +77,29 @@ full IP addresses, question text, or answer values.
 
 - Open a case from a non-informational learner event.
 - Issue warning 1, warning 2, and warning 3.
-- Confirm the learner dashboard displays each warning until acknowledged.
+- Confirm each warning is visible on every authenticated learner page within
+  15 seconds, or immediately when that page regains focus, until acknowledged.
 - Confirm a fourth warning is rejected by PostgreSQL.
 - Confirm ordinary suspension before warning 3 is rejected.
 
 ### Suspension and restoration
 
 - After warning 3, suspend the controlled learner.
-- Confirm the learner's active page is displaced and protected access stops.
+- Confirm the learner's active page is displaced within one heartbeat cycle,
+  the local session is cleared, and login explains that the account is
+  suspended or inactive.
 - Confirm the administrator account cannot be selected for learner suspension.
 - Restore the learner and confirm a new login can acquire page control.
 - Confirm all actions appear in Administrator Audit History.
+
+### Administrator interaction
+
+- Confirm review, warning, suspension, and restoration open an on-page form,
+  not a browser prompt.
+- Confirm the form requires an auditable note or reason, supports Cancel and
+  Escape, and returns keyboard focus to the triggering action.
+- Confirm Vercel's interaction diagnostic no longer reports the multi-second
+  browser-dialog delay for these safety actions.
 
 ### Critical event
 

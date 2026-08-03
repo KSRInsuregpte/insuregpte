@@ -7,6 +7,7 @@
         + 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.'
         + 'meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
     const sessionControl = global.InsureGPTESessionControl;
+    const securityNotices = global.InsureGPTESecurityNotices;
     const client = global.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY,
@@ -166,6 +167,7 @@
                 )) {
                     return;
                 }
+                securityNotices.start({ client, sessionControl });
                 signedIn = true;
                 const accountLink = document.getElementById('account-link');
                 accountLink.href = 'dashboard.html';

@@ -94,8 +94,11 @@ function createBrowser({ sharedLocalStorage, confirmations = [] } = {}) {
             return timerId;
         },
         clearInterval() {},
-        setTimeout() {
+        setTimeout(callback) {
             timerId += 1;
+            if (typeof callback === 'function') {
+                callback();
+            }
             return timerId;
         },
         CustomEvent: class CustomEvent {
@@ -278,6 +281,40 @@ function createClient(claimResults = []) {
     assert.equal(result.success, true);
     assert.equal(client.rpcCalls[0].functionName, 'release_active_client');
     assert.deepEqual(client.authCalls, [null]);
+}
+
+{
+    const browser = createBrowser();
+    const client = createClient();
+
+    browser.control.acquirePageControl();
+
+    const handled = await browser.control.handleInactiveSessionError(
+        {
+            code: 'PT403',
+            message: 'Complete email verification before continuing.'
+        },
+        client
+    );
+
+    assert.equal(handled, true);
+    assert.equal(
+        browser.control.isRestrictedAccountError({
+            code: 'PT403',
+            message: 'Complete email verification before continuing.'
+        }),
+        true
+    );
+    assert.equal(
+        browser.control.isRestrictedAccountError({
+            code: 'PT403',
+            message: 'Administrator permission is required.'
+        }),
+        false
+    );
+    assert.equal(client.authCalls.length, 1);
+    assert.equal(client.authCalls[0].scope, 'local');
+    assert.deepEqual(browser.redirects, ['index.html?session=restricted']);
 }
 
 console.log('Session-control behavior checks passed.');

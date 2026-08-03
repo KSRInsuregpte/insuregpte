@@ -77,6 +77,15 @@ This project follows Semantic Versioning (SemVer).
 ### Changed
 
 - Database normalized into hierarchical academic structure
+- Learner safety notices now refresh across every authenticated catalogue,
+  subject, cart, dashboard, and practice page instead of appearing only on the
+  dashboard.
+- Suspended or inactive accounts are signed out locally and returned to the
+  login page with a clear restricted-access explanation as soon as a protected
+  request or active-session heartbeat detects the restriction.
+- Security review, warning, suspension, and restoration decisions now use an
+  accessible on-page administrator form instead of blocking browser prompt
+  and confirmation dialogs.
 - Quiz engine expanded to support Practice, Mock and Proctored Mock
 - Registration security version 3 removes subject selection from identity
   registration and moves product choice to the catalogue

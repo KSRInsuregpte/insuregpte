@@ -224,15 +224,22 @@
         const parameters = new URLSearchParams(global.location.search);
         const sessionReason = parameters.get('session');
 
-        if (!['replaced', 'conflict'].includes(sessionReason)) {
+        if (!['replaced', 'conflict', 'restricted'].includes(sessionReason)) {
             return;
         }
 
+        const messages = {
+            conflict:
+                'The second login was cancelled. Your first active page remains in control.',
+            replaced:
+                'This page was closed because another browser or page is now the active login. Sign in again only if you want to transfer control.',
+            restricted:
+                'Your InsureGPTE account access is suspended or inactive. Contact the administrator if you believe this is an error.'
+        };
+
         setMessage(
             'session-message',
-            sessionReason === 'conflict'
-                ? 'The second login was cancelled. Your first active page remains in control.'
-                : 'This page was closed because another browser or page is now the active login. Sign in again only if you want to transfer control.',
+            messages[sessionReason],
             'warning'
         );
 

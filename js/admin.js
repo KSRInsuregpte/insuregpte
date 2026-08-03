@@ -27,6 +27,10 @@
         notificationOutbox: [],
         bulkUpload: null
     };
+    const adminActionDialogState = {
+        resolve: null,
+        returnFocus: null
+    };
 
     function byId(id) {
         return document.getElementById(id);
@@ -757,6 +761,61 @@
         renderAuditEvents();
     }
 
+    function finishAdminActionDialog(confirmed) {
+        const dialog = byId('admin-action-dialog');
+        const input = byId('admin-action-dialog-input');
+        const resolve = adminActionDialogState.resolve;
+
+        dialog.classList.add('hidden');
+        dialog.classList.remove('flex');
+        adminActionDialogState.resolve = null;
+
+        if (adminActionDialogState.returnFocus?.isConnected) {
+            adminActionDialogState.returnFocus.focus();
+        }
+        adminActionDialogState.returnFocus = null;
+
+        if (resolve) {
+            resolve({
+                confirmed,
+                value: confirmed ? input.value.trim() : ''
+            });
+        }
+    }
+
+    function requestAdminAction(options) {
+        const settings = options || {};
+        const dialog = byId('admin-action-dialog');
+        const input = byId('admin-action-dialog-input');
+        const confirmButton = byId('admin-action-dialog-confirm');
+
+        if (adminActionDialogState.resolve) {
+            finishAdminActionDialog(false);
+        }
+
+        byId('admin-action-dialog-title').textContent = settings.title || '';
+        byId('admin-action-dialog-description').textContent =
+            settings.description || '';
+        byId('admin-action-dialog-label').textContent =
+            settings.inputLabel || 'Administrator note';
+        byId('admin-action-dialog-guidance').textContent =
+            settings.guidance || '';
+        input.value = settings.value || '';
+        input.required = settings.required !== false;
+        confirmButton.textContent = settings.confirmLabel || 'Confirm';
+        confirmButton.className = settings.danger
+            ? 'rounded-xl bg-red-700 px-5 py-3 font-bold text-white hover:bg-red-800'
+            : 'rounded-xl bg-blue-700 px-5 py-3 font-bold text-white hover:bg-blue-800';
+        adminActionDialogState.returnFocus = document.activeElement;
+
+        return new Promise((resolve) => {
+            adminActionDialogState.resolve = resolve;
+            dialog.classList.remove('hidden');
+            dialog.classList.add('flex');
+            global.setTimeout(() => input.focus(), 0);
+        });
+    }
+
     function securitySeverityClass(severity) {
         return {
             critical: 'bg-red-100 text-red-800',
@@ -975,17 +1034,19 @@
         const actionLabel = decision === 'open_case'
             ? 'open a controlled learner case'
             : 'dismiss this alert';
-        if (!global.confirm(
-            `Confirm that you want to ${actionLabel}. The decision will be audited.`
-        )) {
-            return;
-        }
-
-        const note = global.prompt(
-            'Enter a concise review note. Do not include passwords, OTPs, tokens, full IP addresses, or quiz answers.',
-            ''
-        );
-        if (note === null) {
+        const action = await requestAdminAction({
+            title: decision === 'open_case'
+                ? 'Open controlled learner case'
+                : 'Dismiss safety alert',
+            description:
+                `Confirm that you want to ${actionLabel}. The decision will be audited.`,
+            inputLabel: 'Review note',
+            guidance:
+                'Keep the note concise. Do not include passwords, OTPs, tokens, full IP addresses, or quiz answers.',
+            confirmLabel: decision === 'open_case' ? 'Open Case' : 'Dismiss Alert',
+            danger: decision === 'dismiss'
+        });
+        if (!action.confirmed) {
             return;
         }
 
@@ -995,7 +1056,7 @@
                 {
                     p_event_id: Number(eventId),
                     p_decision: decision,
-                    p_note: note
+                    p_note: action.value
                 }
             );
             if (error) {
@@ -1010,17 +1071,16 @@
     }
 
     async function issueSecurityWarning(caseId) {
-        const message = global.prompt(
-            'Enter the warning the learner will receive. Explain the concern and the expected corrective action.',
-            ''
-        );
-        if (message === null || !message.trim()) {
-            return;
-        }
-
-        if (!global.confirm(
-            'Issue this audited warning? A maximum of three confirmed warnings is allowed.'
-        )) {
+        const action = await requestAdminAction({
+            title: 'Issue learner warning',
+            description:
+                'This audited warning will appear in the learner account. A maximum of three confirmed warnings is allowed.',
+            inputLabel: 'Warning message',
+            guidance:
+                'Explain the concern and the expected corrective action without including protected data.',
+            confirmLabel: 'Issue Warning'
+        });
+        if (!action.confirmed) {
             return;
         }
 
@@ -1029,7 +1089,7 @@
                 'admin_issue_security_warning',
                 {
                     p_case_id: Number(caseId),
-                    p_message: message
+                    p_message: action.value
                 }
             );
             if (error) {
@@ -1044,17 +1104,17 @@
     }
 
     async function suspendEnforcementCase(caseId) {
-        const reason = global.prompt(
-            'Enter the suspension reason that will be emailed to the learner.',
-            ''
-        );
-        if (reason === null || !reason.trim()) {
-            return;
-        }
-
-        if (!global.confirm(
-            'Suspend this learner now? Ordinary cases require three confirmed warnings. The active page will be displaced.'
-        )) {
+        const action = await requestAdminAction({
+            title: 'Suspend learner access',
+            description:
+                'Ordinary cases require three confirmed warnings. If approved, protected access stops and the active learner page is displaced.',
+            inputLabel: 'Suspension reason',
+            guidance:
+                'This reason is recorded in the audit history and queued for delivery to the learner.',
+            confirmLabel: 'Suspend Access',
+            danger: true
+        });
+        if (!action.confirmed) {
             return;
         }
 
@@ -1063,7 +1123,7 @@
                 'admin_suspend_user_access',
                 {
                     p_case_id: Number(caseId),
-                    p_reason: reason,
+                    p_reason: action.value,
                     p_suspended_until: null
                 }
             );
@@ -1083,15 +1143,15 @@
     }
 
     async function restoreEnforcementCase(caseId) {
-        const note = global.prompt(
-            'Enter the reason for restoring access.',
-            ''
-        );
-        if (note === null || !note.trim()) {
-            return;
-        }
-
-        if (!global.confirm('Restore this learner account now?')) {
+        const action = await requestAdminAction({
+            title: 'Restore learner access',
+            description:
+                'Restoring access permits the learner to sign in and use entitled learning and practice services again.',
+            inputLabel: 'Restoration reason',
+            guidance: 'The restoration decision and reason will be audited.',
+            confirmLabel: 'Restore Access'
+        });
+        if (!action.confirmed) {
             return;
         }
 
@@ -1100,7 +1160,7 @@
                 'admin_restore_user_access',
                 {
                     p_case_id: Number(caseId),
-                    p_note: note
+                    p_note: action.value
                 }
             );
             if (error) {
@@ -1386,6 +1446,33 @@
     }
 
     function installListeners() {
+        byId('admin-action-dialog-form').addEventListener(
+            'submit',
+            (event) => {
+                event.preventDefault();
+                finishAdminActionDialog(true);
+            }
+        );
+        byId('admin-action-dialog-cancel').addEventListener(
+            'click',
+            () => finishAdminActionDialog(false)
+        );
+        byId('admin-action-dialog').addEventListener(
+            'click',
+            (event) => {
+                if (event.target === event.currentTarget) {
+                    finishAdminActionDialog(false);
+                }
+            }
+        );
+        document.addEventListener('keydown', (event) => {
+            if (
+                event.key === 'Escape'
+                && adminActionDialogState.resolve
+            ) {
+                finishAdminActionDialog(false);
+            }
+        });
         document.querySelectorAll('[data-admin-tab]').forEach((button) => {
             button.addEventListener(
                 'click',

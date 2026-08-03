@@ -24,7 +24,17 @@ const files = {
     adminHtml: resolve(repositoryRoot, 'admin-dashboard.html'),
     adminJavascript: resolve(repositoryRoot, 'js/admin.js'),
     dashboardHtml: resolve(repositoryRoot, 'dashboard.html'),
-    dashboardJavascript: resolve(repositoryRoot, 'js/dashboard.js')
+    dashboardJavascript: resolve(repositoryRoot, 'js/dashboard.js'),
+    catalogueHtml: resolve(repositoryRoot, 'catalogue.html'),
+    subjectHtml: resolve(repositoryRoot, 'subject.html'),
+    cartHtml: resolve(repositoryRoot, 'cart.html'),
+    testHtml: resolve(repositoryRoot, 'test.html'),
+    catalogueJavascript: resolve(repositoryRoot, 'js/catalogue.js'),
+    subjectJavascript: resolve(repositoryRoot, 'js/subject.js'),
+    cartJavascript: resolve(repositoryRoot, 'js/cart.js'),
+    securityNotices: resolve(repositoryRoot, 'js/security-notices.js'),
+    sessionControl: resolve(repositoryRoot, 'js/session-control.js'),
+    indexAuthentication: resolve(repositoryRoot, 'js/index-auth.js')
 };
 
 const source = Object.fromEntries(
@@ -149,13 +159,72 @@ for (const rpcCall of [
 
 assert.ok(
     source.dashboardHtml.includes('id="security-notices"')
-        && source.dashboardJavascript.includes(
-            "'get_my_security_notices'"
-        )
-        && source.dashboardJavascript.includes(
+        && source.securityNotices.includes("'get_my_security_notices'")
+        && source.securityNotices.includes(
             "'acknowledge_my_security_notice'"
-        ),
-    'Learners must receive and acknowledge active dashboard warnings.'
+        )
+        && source.securityNotices.includes('REFRESH_INTERVAL_MS = 15000'),
+    'Learners must receive, refresh, and acknowledge account warnings.'
+);
+
+for (const page of [
+    'dashboardHtml',
+    'catalogueHtml',
+    'subjectHtml',
+    'cartHtml',
+    'testHtml'
+]) {
+    assert.ok(
+        source[page].includes('js/security-notices.js'),
+        `${page} must load the shared learner account-notice service.`
+    );
+}
+
+for (const script of [
+    'dashboardJavascript',
+    'catalogueJavascript',
+    'subjectJavascript',
+    'cartJavascript'
+]) {
+    assert.ok(
+        source[script].includes('securityNotices.start('),
+        `${script} must start account-notice monitoring after authentication.`
+    );
+}
+assert.ok(
+    source.testHtml.includes('InsureGPTESecurityNotices.start('),
+    'The protected quiz page must start account-notice monitoring.'
+);
+
+assert.ok(
+    source.sessionControl.includes('isRestrictedAccountError')
+        && source.sessionControl.includes("signOut({ scope: 'local' })")
+        && source.sessionControl.includes("session=restricted")
+        && source.indexAuthentication.includes("'restricted'].includes(sessionReason)")
+        && source.indexAuthentication.includes('account access is suspended or inactive'),
+    'A suspended or inactive account must be signed out locally and returned to login with a clear explanation.'
+);
+
+assert.ok(
+    source.adminHtml.includes('id="admin-action-dialog"')
+        && source.adminJavascript.includes('requestAdminAction({'),
+    'Safety decisions must use the accessible on-page administrator action dialog.'
+);
+
+const safetyActionStart = source.adminJavascript.indexOf(
+    'async function reviewSecurityEvent'
+);
+const safetyActionEnd = source.adminJavascript.indexOf(
+    'function syncBulkTemplateLink'
+);
+const safetyActions = source.adminJavascript.slice(
+    safetyActionStart,
+    safetyActionEnd
+);
+assert.doesNotMatch(
+    safetyActions,
+    /global\.(?:prompt|confirm)\(/,
+    'Security review, warning, suspension, and restoration must not use blocking browser prompts.'
 );
 
 assert.match(

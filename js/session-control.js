@@ -268,6 +268,18 @@
         return error?.code === 'PT401';
     }
 
+    function isRestrictedAccountError(error) {
+        if (error?.code !== 'PT403') {
+            return false;
+        }
+
+        const message = String(error?.message || '').toLowerCase();
+        return message.includes('complete email verification before continuing')
+            || message.includes(
+                'complete email and mobile verification before continuing'
+            );
+    }
+
     async function claimActiveClient(client, takeOver) {
         const { data, error } = await client.rpc('claim_active_client', {
             p_client_id: clientId,
@@ -362,10 +374,20 @@
     }
 
     async function activateProtectedPage(client, takeoverAlreadyApproved) {
-        const result = await resolveDatabaseClaim(
-            client,
-            takeoverAlreadyApproved
-        );
+        let result;
+
+        try {
+            result = await resolveDatabaseClaim(
+                client,
+                takeoverAlreadyApproved
+            );
+        } catch (error) {
+            if (isRestrictedAccountError(error)) {
+                await deactivateRestrictedAccount(client);
+                return false;
+            }
+            throw error;
+        }
 
         if (!result) {
             const { error: localSignOutError } =
@@ -468,6 +490,11 @@
                 return;
             }
 
+            if (isRestrictedAccountError(error)) {
+                await deactivateRestrictedAccount(activeClient);
+                return;
+            }
+
             if (!isInactiveSessionError(error)) {
                 console.error('Unable to verify the active login:', error);
                 return;
@@ -537,7 +564,12 @@
         });
     }
 
-    async function handleInactiveSessionError(error) {
+    async function handleInactiveSessionError(error, client) {
+        if (isRestrictedAccountError(error)) {
+            await deactivateRestrictedAccount(client || heartbeatClient);
+            return true;
+        }
+
         if (!isInactiveSessionError(error)) {
             return false;
         }
@@ -546,6 +578,41 @@
             'This page was disabled because it is no longer the active login.'
         );
         return true;
+    }
+
+    async function deactivateRestrictedAccount(client) {
+        if (inactiveRedirectStarted) {
+            return;
+        }
+
+        inactiveRedirectStarted = true;
+        stopHeartbeat();
+        releasePageControl();
+
+        windowObject.dispatchEvent(
+            new CustomEvent('insuregpte:session-inactive')
+        );
+
+        blockPage(
+            'Your InsureGPTE account is suspended or inactive. Protected ' +
+            'learning and practice access has stopped. Contact the ' +
+            'administrator if you believe this is an error.',
+            'Account access unavailable'
+        );
+
+        if (client) {
+            const { error } = await client.auth.signOut({ scope: 'local' });
+            if (error) {
+                console.error(
+                    'Unable to clear the restricted local session:',
+                    error
+                );
+            }
+        }
+
+        windowObject.setTimeout(() => {
+            windowObject.location.replace('index.html?session=restricted');
+        }, 100);
     }
 
     function deactivateAndRedirect(message) {
@@ -568,11 +635,11 @@
         }, 100);
     }
 
-    function blockPage(message) {
+    function blockPage(message, headingText) {
         if (!windowObject.document.body) {
             windowObject.document.addEventListener(
                 'DOMContentLoaded',
-                () => blockPage(message),
+                () => blockPage(message, headingText),
                 { once: true }
             );
             return;
@@ -610,7 +677,8 @@
             ].join(';');
 
             const heading = windowObject.document.createElement('h2');
-            heading.textContent = 'This page is no longer active';
+            heading.id = 'insuregpte-session-overlay-heading';
+            heading.textContent = headingText || 'This page is no longer active';
             heading.style.cssText = 'font-size:26px;margin:0 0 12px';
 
             const detail = windowObject.document.createElement('p');
@@ -628,6 +696,14 @@
 
         if (detail) {
             detail.textContent = message;
+        }
+
+        const heading = windowObject.document.getElementById(
+            'insuregpte-session-overlay-heading'
+        );
+
+        if (heading) {
+            heading.textContent = headingText || 'This page is no longer active';
         }
 
         windowObject.document.documentElement.style.overflow = 'hidden';
@@ -732,6 +808,7 @@
         clientOptions,
         handleInactiveSessionError,
         isInactiveSessionError,
+        isRestrictedAccountError,
         logoutEverywhere,
         releasePageControl
     });

@@ -6,7 +6,8 @@
   <title>InsureGPTE | Practice Quiz</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/session-control.js?v=20260720"></script>
+  <script src="js/session-control.js?v=20260803"></script>
+  <script src="js/security-notices.js?v=20260803"></script>
   <script defer src="js/screen-protection.js?v=2026072302"></script>
   <style>
     body{font-family:Arial,Helvetica,sans-serif}
@@ -158,6 +159,7 @@ async function initialisePage(){
     }
 
     if(!await sessionControl.activateProtectedPage(client,pageControl.tookOver))return;
+    window.InsureGPTESecurityNotices.start({client,sessionControl});
 
     const s=selectedSubject();
     if(!s){
