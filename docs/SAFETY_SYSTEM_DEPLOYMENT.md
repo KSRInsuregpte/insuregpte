@@ -38,12 +38,16 @@ full IP addresses, question text, or answer values.
 1. Confirm a Supabase database backup is available.
 2. Run:
    `supabase/migrations/20260802150000_add_safety_monitoring_and_enforcement.sql`
-3. Run:
+3. Run the safety-event insert repair:
+   `supabase/migrations/20260803100000_repair_security_event_insert.sql`
+4. Run:
    `TESTING/sql/safety-system-verification.sql`
-4. Confirm the result is **Success. No rows returned**.
-5. Deploy the `agent/safety-system` branch to a Vercel preview.
-6. Test with one administrator and one standard learner account.
-7. Do not merge into `main` until the controlled tests below pass.
+5. Run the transactional execution check:
+   `TESTING/sql/security-event-insert-repair-verification.sql`
+6. Confirm both verification scripts return **Success. No rows returned**.
+7. Deploy the `agent/safety-system` branch to a Vercel preview.
+8. Test with one administrator and one standard learner account.
+9. Do not merge into `main` until the controlled tests below pass.
 
 ## Controlled acceptance tests
 
@@ -109,7 +113,14 @@ A future server-side worker must:
 
 ## Rollback
 
-Run:
+To roll back only the safety-event insert implementation, run:
+`supabase/rollbacks/20260803100000_repair_security_event_insert.sql`
+
+This safe rollback continues to rely on the existing `updated_at` table
+default; it does not restore the malformed statement that prevented safety
+events from being recorded.
+
+To remove the complete safety system, run:
 `supabase/rollbacks/20260802150000_add_safety_monitoring_and_enforcement.sql`
 
 The rollback restores learners suspended by an open safety case, removes the

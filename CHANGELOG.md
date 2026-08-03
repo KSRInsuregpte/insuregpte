@@ -197,6 +197,9 @@ This project follows Semantic Versioning (SemVer).
 - Added regression coverage for final-result visibility, safe page-control
   handoff, and dashboard attempt counts across completed, in-progress, and
   abandoned attempts
+- Repaired the safety-event helper's ten-column insert, preserved its existing
+  signature and restrictions, and added transactional insert/deduplication
+  verification so lazy PL/pgSQL statement errors cannot pass catalogue checks
 
 ### Planned
 
