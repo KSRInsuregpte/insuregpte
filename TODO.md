@@ -81,9 +81,9 @@
   the live duplicate-object audit is reviewed
 - [x] Deploy the safety-system migration and run its read-only verification in
   the trial Supabase project
-- [ ] Complete administrator/learner authorization, false-positive,
+- [x] Complete administrator/learner authorization, false-positive,
   three-warning, suspension, restoration, and regression acceptance tests
-- [ ] Runtime-verify the shared learner notices, immediate restricted-account
+- [x] Runtime-verify the shared learner notices, immediate restricted-account
   displacement, and on-page administrator safety-action form in the updated
   trial preview before merging the safety branch
 - [ ] Configure an approved server-side email worker for the notification
