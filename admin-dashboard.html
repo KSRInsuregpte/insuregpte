@@ -162,7 +162,14 @@
                                 <select id="subject-section" class="mt-1 w-full rounded-xl border p-3"></select>
                             </label>
                             <label class="font-semibold">Category
-                                <input id="subject-category" maxlength="120" class="mt-1 w-full rounded-xl border p-3">
+                                <input id="subject-category" list="subject-category-options" required maxlength="120" autocomplete="off" placeholder="Select or enter a category" class="mt-1 w-full rounded-xl border p-3">
+                                <datalist id="subject-category-options">
+                                    <option value="General Insurance"></option>
+                                    <option value="Life Insurance"></option>
+                                    <option value="Common (Life &amp; Non-Life)"></option>
+                                    <option value="Regulation and Compliance"></option>
+                                </datalist>
+                                <span class="mt-1 block text-xs font-normal text-slate-500">Choose an existing category or enter a new one. Saved categories are added to future suggestions.</span>
                             </label>
                             <label class="font-semibold">Syllabus version
                                 <input id="subject-syllabus" maxlength="120" class="mt-1 w-full rounded-xl border p-3">

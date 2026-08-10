@@ -1,9 +1,9 @@
 # InsureGPTE System Architecture
 
 **Document:** 01_SYSTEM_ARCHITECTURE.md  
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Approved — Architecture Frozen  
-**Approval Date:** 2026-07-25
+**Approval Date:** 2026-08-10
 **Project Owner:** Sundararajan Desikan  
 **Platform:** InsureGPTE  
 **Primary Stack:** HTML, Tailwind CSS, JavaScript, Supabase, PostgreSQL, Vercel  
@@ -23,6 +23,8 @@ All implementation must remain consistent with:
 - `CODING_RULES.md`
 - `PROJECT_GOVERNANCE.md`
 - this document
+- `docs/ACADEMIC_HIERARCHY_FREEZE.md`
+- `docs/DEVELOPMENT_WORKFLOW.md`
 
 ---
 

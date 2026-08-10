@@ -171,12 +171,37 @@
             `${counts.current_exam_information || 0} current`;
     }
 
+    const DEFAULT_SUBJECT_CATEGORIES = Object.freeze([
+        'General Insurance',
+        'Life Insurance',
+        'Common (Life & Non-Life)',
+        'Regulation and Compliance'
+    ]);
+
+    function populateSubjectCategoryOptions() {
+        const categories = new Set(DEFAULT_SUBJECT_CATEGORIES);
+        state.subjects.forEach((subject) => {
+            const category = String(subject.category || '').trim();
+            if (category) {
+                categories.add(category);
+            }
+        });
+        byId('subject-category-options').innerHTML = [...categories]
+            .sort((left, right) => left.localeCompare(right))
+            .map((category) =>
+                `<option value="${escapeHtml(category)}"></option>`
+            )
+            .join('');
+    }
+
     function populateReferenceSelects() {
         const summary = state.summary || {};
         const qualificationLevels = summary.qualification_levels || [];
         const programmes = summary.training_programmes || [];
         const sections = summary.programme_sections || [];
         const authorities = summary.exam_authorities || [];
+
+        populateSubjectCategoryOptions();
 
         populateSelect(
             byId('subject-qualification'),

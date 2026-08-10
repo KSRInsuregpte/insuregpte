@@ -372,6 +372,9 @@ Existing controls:
 - active flag;
 - display order.
 
+The approved Version 1.0 codes and names are frozen in
+`docs/ACADEMIC_HIERARCHY_FREEZE.md`.
+
 Recommended index:
 
 ```sql
@@ -410,6 +413,10 @@ exam_authority_id → exam_authorities.id
 2. Official pass percentage and recommended readiness percentage are separate concepts.
 3. Programme codes should remain stable after publication.
 4. `negative_marking` should preferably become `NOT NULL` with a default after rules are finalised.
+5. `programme_category` is restricted to `professional_qualification`,
+   `broker_exam`, `surveyor_exam`, or `specialized_diploma_exam`.
+6. NIA has only Direct Broker, Reinsurance Broker, and Composite Broker
+   programmes. Life is part of Direct Broker.
 
 Recommended index:
 
@@ -431,6 +438,7 @@ training_programme_id → training_programmes.id
 1. Section code should be unique within a programme.
 2. Recommended practice count may differ from official exam count.
 3. Only active sections should appear in active catalogue views.
+4. Section codes are restricted to the frozen programme-section vocabulary.
 
 Recommended unique constraint:
 
@@ -464,6 +472,9 @@ ON public.programme_sections(training_programme_id, is_active, display_order);
 5. A programme section must belong to the stated programme.
 6. `is_demo_available = false` must prevent demo questions even when a positive limit exists.
 7. `syllabus_version` should be required where content changes by exam cycle.
+8. `category` remains text and provides four initial Admin suggestions.
+9. Administrators may add a trimmed custom category of 2–120 characters; saved
+   subject categories become future suggestions.
 
 ### Design Concern
 

@@ -76,6 +76,18 @@ This project follows Semantic Versioning (SemVer).
 
 ### Changed
 
+- Froze the Version 1.0 academic hierarchy with eight qualification levels,
+  five III programmes, three NIA broker programmes, four programme categories,
+  nine programme-section codes, and four subject-category dropdown values
+- Consolidated the former standalone NIA Life Broker programme into Direct
+  Broker while preserving linked subjects and examination information
+- Added III Specialised Diploma and Surveyor programmes and database-enforced
+  hierarchy vocabulary checks
+- Added an editable Admin subject-category suggestion list: approved defaults
+  remain selectable and reviewed custom values become future suggestions
+- Clarified Direct Broker as `Direct Broker Training` with the description
+  `General, Life and Health Training`
+
 - Database normalized into hierarchical academic structure
 - Learner safety notices now refresh across every authenticated catalogue,
   subject, cart, dashboard, and practice page instead of appearing only on the

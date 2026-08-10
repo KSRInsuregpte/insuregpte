@@ -4,6 +4,23 @@
     const MAX_ROWS = 250;
     const BOOLEAN_VALUES = new Set(['true', 'false']);
     const USER_STATUSES = new Set(['active', 'verification_pending']);
+    const PROGRAMME_CATEGORIES = new Set([
+        'professional_qualification',
+        'broker_exam',
+        'surveyor_exam',
+        'specialized_diploma_exam'
+    ]);
+    const PROGRAMME_SECTION_CODES = new Set([
+        'compulsory',
+        'compulsory_optional',
+        'optional_credit',
+        'general_insurance',
+        'life_insurance',
+        'reinsurance',
+        'broker',
+        'surveyor',
+        'spl_diploma'
+    ]);
     const DIFFICULTY_VALUES = new Set([
         'easy',
         'moderate',
@@ -521,6 +538,15 @@
             );
             validateCode(row, 'authority_code', errors);
             validateCode(row, 'code', errors);
+            if (!PROGRAMME_CATEGORIES.has(
+                row.values.programme_category.toLowerCase()
+            )) {
+                addError(
+                    errors,
+                    row,
+                    'programme_category must use an approved frozen value.'
+                );
+            }
             for (const field of [
                 'official_pass_percentage',
                 'recommended_readiness_percentage'
@@ -564,6 +590,15 @@
             );
             validateCode(row, 'programme_code', errors);
             validateCode(row, 'code', errors);
+            if (!PROGRAMME_SECTION_CODES.has(
+                row.values.code.toLowerCase()
+            )) {
+                addError(
+                    errors,
+                    row,
+                    'code must use an approved frozen programme section.'
+                );
+            }
             for (const field of [
                 'exam_question_count',
                 'recommended_practice_question_count'
@@ -606,6 +641,14 @@
                     errors,
                     row,
                     'title must contain 2-160 characters.'
+                );
+            }
+            if (values.category.trim().length < 2
+                || values.category.trim().length > 120) {
+                addError(
+                    errors,
+                    row,
+                    'category must contain 2-120 characters.'
                 );
             }
             for (const field of [
