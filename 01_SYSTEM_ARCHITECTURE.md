@@ -1,9 +1,9 @@
 # InsureGPTE System Architecture
 
 **Document:** 01_SYSTEM_ARCHITECTURE.md  
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Approved — Architecture Frozen  
-**Approval Date:** 2026-07-25
+**Approval Date:** 2026-08-10
 **Project Owner:** Sundararajan Desikan  
 **Platform:** InsureGPTE  
 **Primary Stack:** HTML, Tailwind CSS, JavaScript, Supabase, PostgreSQL, Vercel  
@@ -23,6 +23,8 @@ All implementation must remain consistent with:
 - `CODING_RULES.md`
 - `PROJECT_GOVERNANCE.md`
 - this document
+- `docs/ACADEMIC_HIERARCHY_FREEZE.md`
+- `docs/DEVELOPMENT_WORKFLOW.md`
 
 ---
 
@@ -1199,6 +1201,32 @@ Any architecture change must document:
   implemented on the dedicated branch. Trial Supabase deployment, controlled
   browser acceptance, provider-monitor integration, and the server-side email
   worker remain pending.
+
+---
+
+## 23.2 Approved Academic Hierarchy — Architecture Version 1.6
+
+- **Qualification levels:** `licentiate`, `associate`, `fellowship`,
+  `spl_diploma`, `surveyor`, `direct_broker`, `reinsurance_broker`, and
+  `composite_broker`, using the exact approved names in
+  `docs/ACADEMIC_HIERARCHY_FREEZE.md`.
+- **III programmes:** Licentiate, Associate, Fellowship, Specialised Diploma,
+  and Surveyor examination preparation.
+- **NIA programmes:** Direct Broker – General, Life and Health Training,
+  Reinsurance Broker Training, and Composite Broker Training. There is no
+  standalone Life Broker programme.
+- **Programme categories:** `professional_qualification`, `broker_exam`,
+  `surveyor_exam`, and `specialized_diploma_exam`.
+- **Programme sections:** `compulsory`, `compulsory_optional`,
+  `optional_credit`, `general_insurance`, `life_insurance`, `reinsurance`,
+  `broker`, `surveyor`, and `spl_diploma`.
+- **Subject categories:** General Insurance, Life Insurance,
+  Common (Life & Non-Life), and Regulation and Compliance. This is a closed
+  database-constrained list exposed as a required Admin dropdown.
+- **Migration safety:** legacy Optional Credit and Life Broker dependencies
+  must be audited before data is remapped or retired. No legacy academic data
+  may be deleted without reviewed mapping evidence.
+- **Approval decision:** frozen by the project owner on 2026-08-11.
 
 ---
 

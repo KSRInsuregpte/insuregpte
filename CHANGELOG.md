@@ -76,6 +76,30 @@ This project follows Semantic Versioning (SemVer).
 
 ### Changed
 
+- Froze Architecture Version 1.6 with eight qualification levels,
+  five III programmes, three NIA broker programmes, four programme categories,
+  nine programme-section codes, and four subject-category dropdown values
+- Consolidated the former standalone NIA Life Broker programme into Direct
+  Broker while preserving linked subjects and examination information
+- Added III Specialised Diploma and Surveyor programmes and database-enforced
+  hierarchy vocabulary checks
+- Restricted Admin, CSV upload, and database subject categories to the four
+  approved dropdown values
+- Clarified Direct Broker as
+  `Direct Broker – General, Life and Health Training` with the description
+  `General, Life and Health Training`
+- Filtered Admin programme-section selectors by the selected programme and
+  safely remapped legacy same-code sections instead of submitting a section
+  owned by another programme
+- Added an explicit Admin deployment warning and save guard when the preview
+  database still exposes the previous qualification, programme, or section
+  configuration
+- Added a guarded data repair for subjects and examination information linked
+  to a programme section owned by another programme
+- Added the reviewed, record-preserving mapping of 20 legacy III Optional
+  Credit subjects into Licentiate, Associate, and Fellowship destinations;
+  subject IDs, activation states, and dependent records remain unchanged
+
 - Database normalized into hierarchical academic structure
 - Learner safety notices now refresh across every authenticated catalogue,
   subject, cart, dashboard, and practice page instead of appearing only on the
