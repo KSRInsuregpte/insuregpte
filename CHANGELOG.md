@@ -87,6 +87,14 @@ This project follows Semantic Versioning (SemVer).
   remain selectable and reviewed custom values become future suggestions
 - Clarified Direct Broker as `Direct Broker Training` with the description
   `General, Life and Health Training`
+- Filtered Admin programme-section selectors by the selected programme and
+  safely remapped legacy same-code sections instead of submitting a section
+  owned by another programme
+- Added an explicit Admin deployment warning and save guard when the preview
+  database still exposes the previous qualification, programme, or section
+  configuration
+- Added a guarded data repair for subjects and examination information linked
+  to a programme section owned by another programme
 
 - Database normalized into hierarchical academic structure
 - Learner safety notices now refresh across every authenticated catalogue,

@@ -10,6 +10,10 @@ const migration = readFileSync(resolve(
   root,
   'supabase/migrations/20260810120000_freeze_academic_hierarchy.sql'
 ), 'utf8');
+const sectionRepairMigration = readFileSync(resolve(
+  root,
+  'supabase/migrations/20260811100000_repair_programme_section_assignments.sql'
+), 'utf8');
 const rollback = readFileSync(resolve(
   root,
   'supabase/rollbacks/20260810120000_freeze_academic_hierarchy.sql'
@@ -28,6 +32,14 @@ const freezeDocument = readFileSync(
   resolve(root, 'docs/ACADEMIC_HIERARCHY_FREEZE.md'),
   'utf8'
 );
+const deploymentDocument = readFileSync(
+  resolve(root, 'docs/ACADEMIC_HIERARCHY_DEPLOYMENT.md'),
+  'utf8'
+);
+const predeploymentAudit = readFileSync(resolve(
+  here,
+  'sql/academic-hierarchy-predeployment-audit.sql'
+), 'utf8');
 
 for (const marker of [
   'iii_spl_diploma',
@@ -47,6 +59,63 @@ for (const marker of [
 assert.ok(
   migration.includes('chk_subjects_valid_category'),
   'Migration must enforce a valid, extensible subject category constraint.'
+);
+
+for (const marker of [
+  'populateProgrammeSectionSelect',
+  'section.training_programme_id',
+  'preferredSection.code',
+  'academicHierarchyIsCurrent',
+  'requireCurrentAcademicHierarchy',
+  '20260811100000',
+  "byId('subject-programme').addEventListener('change'",
+  "byId('exam-programme').addEventListener('change'",
+]) {
+  assert.ok(
+    adminJavascript.includes(marker),
+    `Programme-dependent section selection is missing ${marker}.`
+  );
+}
+assert.match(
+  sectionRepairMigration,
+  /target_section\.training_programme_id\s*=\s*subject_record\.training_programme_id/i,
+  'The repair must remap subjects to a same-programme section.'
+);
+
+for (const marker of [
+  'deploys frontend files only',
+  '20260810120000_freeze_academic_hierarchy.sql',
+  '20260811100000_repair_programme_section_assignments.sql',
+  'academic-hierarchy-freeze-verification.sql',
+  'Life Broker Training',
+]) {
+  assert.ok(
+    deploymentDocument.includes(marker),
+    `Deployment guide is missing ${marker}.`
+  );
+}
+assert.ok(
+  adminHtml.includes('js/admin.js?v=20260811'),
+  'The Admin page must load the corrected hierarchy client version.'
+);
+const auditWithoutCommentsOrStrings = predeploymentAudit
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/--.*$/gm, ' ')
+  .replace(/'(?:''|[^'])*'/g, "''");
+assert.doesNotMatch(
+  auditWithoutCommentsOrStrings,
+  /\b(?:insert|update|delete|create|alter|drop|truncate|grant|revoke|call|copy|do)\b/i,
+  'The pre-deployment hierarchy audit must remain read-only.'
+);
+assert.ok(
+  deploymentDocument.includes('academic-hierarchy-predeployment-audit.sql')
+    && deploymentDocument.includes('Attach that CSV'),
+  'The deployment guide must require audit review before migration.'
+);
+assert.match(
+  sectionRepairMigration,
+  /current_section\.training_programme_id\s+IS DISTINCT FROM\s+subject_record\.training_programme_id/i,
+  'The repair must target only mismatched subject assignments.'
 );
 
 assert.match(

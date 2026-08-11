@@ -177,6 +177,74 @@
         'Common (Life & Non-Life)',
         'Regulation and Compliance'
     ]);
+    const APPROVED_QUALIFICATION_LEVELS = Object.freeze({
+        licentiate: 'Licentiate Exam Preparation',
+        associate: 'Associate Exam Preparation',
+        fellowship: 'Fellowship Exam Preparation',
+        spl_diploma: 'Spl. Dip Exam Preparation',
+        surveyor: 'Surveyor Exam Preparation',
+        direct_broker: 'NIA - Direct Broker Exam Preparation',
+        reinsurance_broker: 'NIA - Reinsurance Broker Exam Preparation',
+        composite_broker: 'NIA - Composite Broker Exam Preparation'
+    });
+    const APPROVED_PROGRAMMES = Object.freeze({
+        iii_licentiate: 'III - Licentiate Exam Preparation',
+        iii_associate: 'III - Associate Exam Preparation',
+        iii_fellowship: 'III - Fellowship Exam Preparation',
+        iii_spl_diploma: 'III - Spl. Dip Exam Preparation',
+        iii_surveyor: 'III Surveyor Exam Preparation',
+        nia_direct_general_health: 'Direct Broker Training',
+        nia_reinsurance_broker: 'Reinsurance Broker Training',
+        nia_composite_broker: 'Composite Broker Training'
+    });
+    const APPROVED_SECTION_NAMES = Object.freeze({
+        compulsory: 'Compulsory',
+        compulsory_optional: 'Compulsory Optional',
+        optional_credit: 'Optional Credit',
+        general_insurance: 'General Insurance',
+        life_insurance: 'Life Insurance',
+        reinsurance: 'Reinsurance',
+        broker: 'Broker',
+        surveyor: 'Surveyor',
+        spl_diploma: 'Spl_Diploma'
+    });
+
+    function recordsMatchApprovedConfiguration(records, approved) {
+        const expectedCodes = Object.keys(approved);
+        return records.length === expectedCodes.length
+            && records.every((record) =>
+                approved[record.code] === record.name
+            );
+    }
+
+    function academicHierarchyIsCurrent() {
+        const summary = state.summary || {};
+        const qualifications = summary.qualification_levels || [];
+        const programmes = summary.training_programmes || [];
+        const sections = summary.programme_sections || [];
+        return recordsMatchApprovedConfiguration(
+            qualifications,
+            APPROVED_QUALIFICATION_LEVELS
+        ) && recordsMatchApprovedConfiguration(
+            programmes,
+            APPROVED_PROGRAMMES
+        ) && sections.length > 0 && sections.every(
+            (section) => APPROVED_SECTION_NAMES[section.code]
+                === section.name
+        );
+    }
+
+    function requireCurrentAcademicHierarchy() {
+        if (academicHierarchyIsCurrent()) {
+            return true;
+        }
+        showMessage(
+            'The test database is using the previous academic hierarchy. '
+            + 'Deploy migrations 20260810120000 and 20260811100000, then '
+            + 'run the academic hierarchy verification before testing saves.'
+        );
+        return false;
+    }
 
     function populateSubjectCategoryOptions() {
         const categories = new Set(DEFAULT_SUBJECT_CATEGORIES);
@@ -194,11 +262,44 @@
             .join('');
     }
 
+    function populateProgrammeSectionSelect(
+        sectionSelectId,
+        programmeSelectId,
+        preferredSectionId = ''
+    ) {
+        const allSections = state.summary?.programme_sections || [];
+        const programmeId = String(byId(programmeSelectId).value || '');
+        const preferredId = String(preferredSectionId || '');
+        const preferredSection = allSections.find(
+            (section) => String(section.id) === preferredId
+        );
+        const sections = programmeId
+            ? allSections.filter(
+                (section) => String(section.training_programme_id)
+                    === programmeId
+            )
+            : [];
+        const selectedSection = sections.find(
+            (section) => String(section.id) === preferredId
+        ) || sections.find(
+            (section) => preferredSection
+                && String(section.code || '').toLowerCase()
+                    === String(preferredSection.code || '').toLowerCase()
+        );
+
+        populateSelect(byId(sectionSelectId), sections, {
+            placeholder: programmeId
+                ? 'Select programme section'
+                : 'Select a programme first',
+            selectedValue: selectedSection?.id || ''
+        });
+        byId(sectionSelectId).disabled = !programmeId;
+    }
+
     function populateReferenceSelects() {
         const summary = state.summary || {};
         const qualificationLevels = summary.qualification_levels || [];
         const programmes = summary.training_programmes || [];
-        const sections = summary.programme_sections || [];
         const authorities = summary.exam_authorities || [];
 
         populateSubjectCategoryOptions();
@@ -208,14 +309,17 @@
             qualificationLevels
         );
         populateSelect(byId('subject-programme'), programmes);
-        populateSelect(byId('subject-section'), sections);
+        populateProgrammeSectionSelect(
+            'subject-section',
+            'subject-programme'
+        );
         populateSelect(
             byId('exam-authority'),
             authorities,
             { placeholder: 'Select authority' }
         );
         populateSelect(byId('exam-programme'), programmes);
-        populateSelect(byId('exam-section'), sections);
+        populateProgrammeSectionSelect('exam-section', 'exam-programme');
         populateSelect(
             byId('exam-subject'),
             state.subjects,
@@ -294,8 +398,11 @@
             subject.qualification_level_id || '';
         byId('subject-programme').value =
             subject.training_programme_id || '';
-        byId('subject-section').value =
-            subject.programme_section_id || '';
+        populateProgrammeSectionSelect(
+            'subject-section',
+            'subject-programme',
+            subject.programme_section_id
+        );
         byId('subject-category').value = subject.category || '';
         byId('subject-syllabus').value =
             subject.syllabus_version || '';
@@ -320,6 +427,9 @@
     async function saveSubject(event) {
         event.preventDefault();
         clearMessage();
+        if (!requireCurrentAcademicHierarchy()) {
+            return;
+        }
         const button = byId('save-subject-button');
         const payload = {
             id: optionalNumber(byId('subject-id').value),
@@ -638,8 +748,11 @@
         byId('exam-subject').value = information.subject_id || '';
         byId('exam-programme').value =
             information.training_programme_id || '';
-        byId('exam-section').value =
-            information.programme_section_id || '';
+        populateProgrammeSectionSelect(
+            'exam-section',
+            'exam-programme',
+            information.programme_section_id
+        );
         byId('exam-session-code').value =
             information.session_code || '';
         byId('exam-geographic-scope').value =
@@ -682,6 +795,9 @@
     async function saveExamInformation(event) {
         event.preventDefault();
         clearMessage();
+        if (!requireCurrentAcademicHierarchy()) {
+            return;
+        }
         const button = byId('save-exam-information-button');
         const payload = {
             id: optionalNumber(byId('exam-information-id').value),
@@ -1506,6 +1622,13 @@
         });
         byId('logout-button').addEventListener('click', () => void logout());
         byId('subject-form').addEventListener('submit', saveSubject);
+        byId('subject-programme').addEventListener('change', () => {
+            populateProgrammeSectionSelect(
+                'subject-section',
+                'subject-programme',
+                byId('subject-section').value
+            );
+        });
         byId('new-subject-button').addEventListener(
             'click',
             resetSubjectForm
@@ -1637,6 +1760,13 @@
             'submit',
             saveExamInformation
         );
+        byId('exam-programme').addEventListener('change', () => {
+            populateProgrammeSectionSelect(
+                'exam-section',
+                'exam-programme',
+                byId('exam-section').value
+            );
+        });
         byId('cancel-exam-information-edit').addEventListener(
             'click',
             resetExamInformationForm
@@ -1712,6 +1842,9 @@
             resetExamInformationForm();
             resetBulkUpload();
             installListeners();
+            if (!academicHierarchyIsCurrent()) {
+                requireCurrentAcademicHierarchy();
+            }
             byId('admin-loading').classList.add('hidden');
             byId('admin-portal').classList.remove('hidden');
         } catch (error) {

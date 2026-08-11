@@ -9,6 +9,9 @@ programme sections, and subject categories
 Changes to this vocabulary require a reviewed database migration, rollback,
 verification SQL, frontend update, and documentation amendment.
 
+Test deployment and acceptance steps are defined in
+`docs/ACADEMIC_HIERARCHY_DEPLOYMENT.md`.
+
 ## Qualification levels
 
 1. `licentiate` — Licentiate Exam Preparation

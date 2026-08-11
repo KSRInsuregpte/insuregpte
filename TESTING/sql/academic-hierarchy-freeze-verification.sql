@@ -39,6 +39,19 @@ BEGIN
     END IF;
 
     IF EXISTS (
+        SELECT 1
+        FROM public.subjects AS subject_record
+        JOIN public.programme_sections AS section
+          ON section.id = subject_record.programme_section_id
+        WHERE subject_record.training_programme_id IS NOT NULL
+          AND section.training_programme_id
+              IS DISTINCT FROM subject_record.training_programme_id
+    ) THEN
+        RAISE EXCEPTION
+            'A subject uses a section from another programme.';
+    END IF;
+
+    IF EXISTS (
         SELECT 1 FROM public.subjects
         WHERE category IS NULL
            OR category <> pg_catalog.btrim(category)
