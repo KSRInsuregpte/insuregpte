@@ -54,7 +54,7 @@ subject_mismatch_snapshot AS (
         '04_subject_section_mismatches'::text AS audit_section,
         pg_catalog.jsonb_build_object(
             'count', pg_catalog.count(*),
-            'subjects', pg_catalog.coalesce(
+            'subjects', COALESCE(
                 pg_catalog.jsonb_agg(
                     pg_catalog.jsonb_build_object(
                         'subject_id', subject_record.id,
@@ -84,7 +84,7 @@ publication_mismatch_snapshot AS (
         '05_exam_information_section_mismatches'::text AS audit_section,
         pg_catalog.jsonb_build_object(
             'count', pg_catalog.count(*),
-            'records', pg_catalog.coalesce(
+            'records', COALESCE(
                 pg_catalog.jsonb_agg(
                     pg_catalog.jsonb_build_object(
                         'information_id', publication.id,

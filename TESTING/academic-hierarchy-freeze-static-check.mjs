@@ -107,6 +107,11 @@ assert.doesNotMatch(
   /\b(?:insert|update|delete|create|alter|drop|truncate|grant|revoke|call|copy|do)\b/i,
   'The pre-deployment hierarchy audit must remain read-only.'
 );
+assert.doesNotMatch(
+  predeploymentAudit,
+  /pg_catalog\.coalesce\s*\(/i,
+  'COALESCE is SQL syntax and must not be schema-qualified.'
+);
 assert.ok(
   deploymentDocument.includes('academic-hierarchy-predeployment-audit.sql')
     && deploymentDocument.includes('Attach that CSV'),
