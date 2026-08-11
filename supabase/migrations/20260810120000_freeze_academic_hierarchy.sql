@@ -1,7 +1,11 @@
 -- Freeze the approved InsureGPTE academic hierarchy vocabulary.
 -- This migration consolidates the former NIA Life Broker programme into
--- Direct Broker before removing it, so linked subjects and publications are
--- preserved.
+-- Direct Broker and maps the audited III Optional Credit subjects into their
+-- approved Licentiate, Associate, or Fellowship programmes before removing
+-- the legacy parents. Subject IDs, activation states, and dependent learning
+-- or commercial records are preserved.
+
+BEGIN;
 
 LOCK TABLE public.qualification_levels IN SHARE ROW EXCLUSIVE MODE;
 LOCK TABLE public.training_programmes IN SHARE ROW EXCLUSIVE MODE;
@@ -394,6 +398,179 @@ JOIN public.training_programmes AS programme
 WHERE section.training_programme_id = programme.id
   AND section.code = approved.section_code;
 
+DO $iii_optional_credit_consolidation$
+DECLARE
+    v_legacy_qualification_id integer;
+    v_legacy_programme_id integer;
+    v_licentiate_qualification_id integer;
+    v_associate_qualification_id integer;
+    v_fellowship_qualification_id integer;
+    v_licentiate_programme_id integer;
+    v_associate_programme_id integer;
+    v_fellowship_programme_id integer;
+    v_licentiate_section_id integer;
+    v_associate_section_id integer;
+    v_fellowship_section_id integer;
+BEGIN
+    SELECT id INTO v_legacy_qualification_id
+    FROM public.qualification_levels
+    WHERE code = 'iii_optional_credit';
+
+    SELECT id INTO v_legacy_programme_id
+    FROM public.training_programmes
+    WHERE code = 'iii_optional_credit';
+
+    IF v_legacy_qualification_id IS NULL
+       AND v_legacy_programme_id IS NULL THEN
+        RETURN;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.subjects
+        WHERE (
+                qualification_level_id = v_legacy_qualification_id
+                OR training_programme_id = v_legacy_programme_id
+              )
+          AND pg_catalog.upper(pg_catalog.btrim(code)) NOT IN (
+                'IC14',
+                'IC23', 'IC24', 'IC27', 'IC57', 'IC67', 'IC71',
+                'IC72', 'IC74', 'IC76', 'IC77', 'IC78',
+                'IC82', 'IC83', 'IC85', 'IC86', 'IC88', 'IC89',
+                'IC90', 'IC99'
+          )
+    ) THEN
+        RAISE EXCEPTION
+            'An unaudited subject remains under III Optional Credit.';
+    END IF;
+
+    IF v_legacy_programme_id IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM public.regulatory_academic_publications
+        WHERE training_programme_id = v_legacy_programme_id
+    ) THEN
+        RAISE EXCEPTION
+            'An unaudited publication remains under III Optional Credit.';
+    END IF;
+
+    SELECT id INTO v_licentiate_qualification_id
+    FROM public.qualification_levels WHERE code = 'licentiate';
+    SELECT id INTO v_associate_qualification_id
+    FROM public.qualification_levels WHERE code = 'associate';
+    SELECT id INTO v_fellowship_qualification_id
+    FROM public.qualification_levels WHERE code = 'fellowship';
+
+    SELECT id INTO v_licentiate_programme_id
+    FROM public.training_programmes WHERE code = 'iii_licentiate';
+    SELECT id INTO v_associate_programme_id
+    FROM public.training_programmes WHERE code = 'iii_associate';
+    SELECT id INTO v_fellowship_programme_id
+    FROM public.training_programmes WHERE code = 'iii_fellowship';
+
+    SELECT id INTO v_licentiate_section_id
+    FROM public.programme_sections
+    WHERE training_programme_id = v_licentiate_programme_id
+      AND code = 'compulsory';
+    SELECT id INTO v_associate_section_id
+    FROM public.programme_sections
+    WHERE training_programme_id = v_associate_programme_id
+      AND code = 'optional_credit';
+    SELECT id INTO v_fellowship_section_id
+    FROM public.programme_sections
+    WHERE training_programme_id = v_fellowship_programme_id
+      AND code = 'optional_credit';
+
+    IF v_licentiate_qualification_id IS NULL
+       OR v_associate_qualification_id IS NULL
+       OR v_fellowship_qualification_id IS NULL
+       OR v_licentiate_programme_id IS NULL
+       OR v_associate_programme_id IS NULL
+       OR v_fellowship_programme_id IS NULL
+       OR v_licentiate_section_id IS NULL
+       OR v_associate_section_id IS NULL
+       OR v_fellowship_section_id IS NULL THEN
+        RAISE EXCEPTION
+            'An approved III destination is missing; no legacy records were removed.';
+    END IF;
+
+    UPDATE public.subjects
+    SET qualification_level_id = v_licentiate_qualification_id,
+        training_programme_id = v_licentiate_programme_id,
+        programme_section_id = v_licentiate_section_id
+    WHERE (
+            qualification_level_id = v_legacy_qualification_id
+            OR training_programme_id = v_legacy_programme_id
+          )
+      AND pg_catalog.upper(pg_catalog.btrim(code)) = 'IC14';
+
+    UPDATE public.subjects
+    SET qualification_level_id = v_associate_qualification_id,
+        training_programme_id = v_associate_programme_id,
+        programme_section_id = v_associate_section_id
+    WHERE (
+            qualification_level_id = v_legacy_qualification_id
+            OR training_programme_id = v_legacy_programme_id
+          )
+      AND pg_catalog.upper(pg_catalog.btrim(code)) IN (
+            'IC23', 'IC24', 'IC27', 'IC57', 'IC67', 'IC71',
+            'IC72', 'IC74', 'IC76', 'IC77', 'IC78'
+      );
+
+    UPDATE public.subjects
+    SET qualification_level_id = v_fellowship_qualification_id,
+        training_programme_id = v_fellowship_programme_id,
+        programme_section_id = v_fellowship_section_id
+    WHERE (
+            qualification_level_id = v_legacy_qualification_id
+            OR training_programme_id = v_legacy_programme_id
+          )
+      AND pg_catalog.upper(pg_catalog.btrim(code)) IN (
+            'IC82', 'IC83', 'IC85', 'IC86', 'IC88', 'IC89',
+            'IC90', 'IC99'
+      );
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.subjects
+        WHERE qualification_level_id = v_legacy_qualification_id
+           OR training_programme_id = v_legacy_programme_id
+    ) THEN
+        RAISE EXCEPTION
+            'A III Optional Credit subject was not mapped; legacy parents were retained.';
+    END IF;
+
+    IF v_legacy_programme_id IS NOT NULL THEN
+        IF EXISTS (
+            SELECT 1
+            FROM public.subjects AS subject_record
+            JOIN public.programme_sections AS section
+              ON section.id = subject_record.programme_section_id
+            WHERE section.training_programme_id = v_legacy_programme_id
+        ) OR EXISTS (
+            SELECT 1
+            FROM public.regulatory_academic_publications AS publication
+            JOIN public.programme_sections AS section
+              ON section.id = publication.programme_section_id
+            WHERE section.training_programme_id = v_legacy_programme_id
+        ) THEN
+            RAISE EXCEPTION
+                'A III Optional Credit section remains in use; legacy parents were retained.';
+        END IF;
+
+        DELETE FROM public.programme_sections
+        WHERE training_programme_id = v_legacy_programme_id;
+
+        DELETE FROM public.training_programmes
+        WHERE id = v_legacy_programme_id;
+    END IF;
+
+    IF v_legacy_qualification_id IS NOT NULL THEN
+        DELETE FROM public.qualification_levels
+        WHERE id = v_legacy_qualification_id;
+    END IF;
+END;
+$iii_optional_credit_consolidation$;
+
 UPDATE public.subjects
 SET category = CASE pg_catalog.lower(pg_catalog.btrim(category))
         WHEN 'general insurance' THEN 'General Insurance'
@@ -532,3 +709,5 @@ ALTER TABLE public.subjects
             'Regulation and Compliance'
         )
     );
+
+COMMIT;

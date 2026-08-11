@@ -65,6 +65,66 @@ BEGIN
         RAISE EXCEPTION 'An invalid subject category remains.';
     END IF;
 
+    IF EXISTS (
+        WITH expected_mapping (
+            subject_code,
+            qualification_code,
+            programme_code,
+            section_code
+        ) AS (
+            VALUES
+                ('IC14', 'licentiate', 'iii_licentiate', 'compulsory'),
+                ('IC23', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC24', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC27', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC57', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC67', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC71', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC72', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC74', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC76', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC77', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC78', 'associate', 'iii_associate', 'optional_credit'),
+                ('IC82', 'fellowship', 'iii_fellowship', 'optional_credit'),
+                ('IC83', 'fellowship', 'iii_fellowship', 'optional_credit'),
+                ('IC85', 'fellowship', 'iii_fellowship', 'optional_credit'),
+                ('IC86', 'fellowship', 'iii_fellowship', 'optional_credit'),
+                ('IC88', 'fellowship', 'iii_fellowship', 'optional_credit'),
+                ('IC89', 'fellowship', 'iii_fellowship', 'optional_credit'),
+                ('IC90', 'fellowship', 'iii_fellowship', 'optional_credit'),
+                ('IC99', 'fellowship', 'iii_fellowship', 'optional_credit')
+        )
+        SELECT 1
+        FROM expected_mapping AS expected
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM public.subjects AS subject_record
+            JOIN public.qualification_levels AS qualification
+              ON qualification.id = subject_record.qualification_level_id
+            JOIN public.training_programmes AS programme
+              ON programme.id = subject_record.training_programme_id
+            JOIN public.programme_sections AS section
+              ON section.id = subject_record.programme_section_id
+            WHERE pg_catalog.upper(pg_catalog.btrim(subject_record.code))
+                    = expected.subject_code
+              AND qualification.code = expected.qualification_code
+              AND programme.code = expected.programme_code
+              AND section.code = expected.section_code
+              AND section.training_programme_id = programme.id
+        )
+    ) THEN
+        RAISE EXCEPTION
+            'A legacy III Optional Credit subject has an incorrect destination.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM public.subjects
+        WHERE pg_catalog.upper(pg_catalog.btrim(code)) IN ('IC23', 'IC82')
+          AND is_active
+    ) THEN
+        RAISE EXCEPTION 'Withdrawn IC23 or IC82 became active.';
+    END IF;
+
     IF NOT EXISTS (
         SELECT 1 FROM public.training_programmes
         WHERE code = 'nia_direct_general_health'

@@ -1,6 +1,8 @@
 -- Repair legacy programme-section references that point to another programme.
 -- Run after 20260810120000_freeze_academic_hierarchy.sql.
 
+BEGIN;
+
 DO $guard$
 BEGIN
     IF pg_catalog.to_regclass('public.subjects') IS NULL
@@ -76,3 +78,5 @@ END;
 $verify$;
 
 NOTIFY pgrst, 'reload schema';
+
+COMMIT;

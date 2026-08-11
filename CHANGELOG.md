@@ -96,6 +96,9 @@ This project follows Semantic Versioning (SemVer).
   configuration
 - Added a guarded data repair for subjects and examination information linked
   to a programme section owned by another programme
+- Added the reviewed, record-preserving mapping of 20 legacy III Optional
+  Credit subjects into Licentiate, Associate, and Fellowship destinations;
+  subject IDs, activation states, and dependent records remain unchanged
 
 - Database normalized into hierarchical academic structure
 - Learner safety notices now refresh across every authenticated catalogue,

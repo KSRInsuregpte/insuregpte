@@ -24,6 +24,15 @@ for `TESTING/sql/academic-hierarchy-legacy-dependency-audit.sql`. Run it by the
 same copy, paste, **Run**, export, and attach process. It is also read-only.
 Do not run either migration until both requested audits have been reviewed.
 
+The 2026-08-11 dependency audit was reviewed and confirmed 20 legacy III
+Optional Credit subjects, no linked examination-information records, no Life
+Broker subject usage, and two legacy category values. The approved migration
+preserves all subject IDs and activation states while mapping IC14 to
+Licentiate/Compulsory, IC23–IC78 papers from the audited list to
+Associate/Optional Credit, and IC82–IC99 papers from the audited list to
+Fellowship/Optional Credit. `Common` and `Foundation` normalize to
+`Common (Life & Non-Life)`.
+
 ## Required deployment order after audit approval
 
 1. Confirm the connected test database is the intended Supabase project:
@@ -34,7 +43,9 @@ Do not run either migration until both requested audits have been reviewed.
    `supabase/migrations/20260811100000_repair_programme_section_assignments.sql`.
 4. Run `TESTING/sql/academic-hierarchy-freeze-verification.sql`.
 5. Treat any exception as a failed deployment. Do not continue to browser
-   acceptance testing until the verification completes successfully.
+   acceptance testing until the verification completes successfully. Both
+   migrations use explicit transactions, so an exception rolls back that
+   migration instead of retaining a partial hierarchy change.
 6. Reload the Vercel preview with a hard refresh so
    `js/admin.js?v=20260811b` is loaded.
 

@@ -62,8 +62,37 @@ for (const marker of [
 }
 assert.ok(
   migration.includes('chk_subjects_valid_category'),
-  'Migration must enforce a valid, extensible subject category constraint.'
+  'Migration must enforce the frozen subject-category constraint.'
 );
+
+for (const marker of [
+  '$iii_optional_credit_consolidation$',
+  'An unaudited subject remains under III Optional Credit.',
+  "'IC14'",
+  "'IC23', 'IC24', 'IC27', 'IC57'",
+  "'IC82', 'IC83', 'IC85', 'IC86'",
+  'v_licentiate_section_id',
+  'v_associate_section_id',
+  'v_fellowship_section_id',
+]) {
+  assert.ok(
+    migration.includes(marker),
+    `Legacy Optional Credit mapping is missing ${marker}.`
+  );
+}
+assert.ok(
+  verification.includes(
+    'A legacy III Optional Credit subject has an incorrect destination.'
+  ),
+  'Verification must validate every audited Optional Credit destination.'
+);
+for (const [label, sql] of [
+  ['hierarchy freeze', migration],
+  ['section repair', sectionRepairMigration],
+]) {
+  assert.match(sql, /\bBEGIN\s*;/i, `${label} migration must be transactional.`);
+  assert.match(sql, /\bCOMMIT\s*;/i, `${label} migration must commit explicitly.`);
+}
 
 for (const marker of [
   'populateProgrammeSectionSelect',
