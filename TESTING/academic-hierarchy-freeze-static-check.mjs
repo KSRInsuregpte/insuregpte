@@ -40,6 +40,10 @@ const predeploymentAudit = readFileSync(resolve(
   here,
   'sql/academic-hierarchy-predeployment-audit.sql'
 ), 'utf8');
+const legacyDependencyAudit = readFileSync(resolve(
+  here,
+  'sql/academic-hierarchy-legacy-dependency-audit.sql'
+), 'utf8');
 
 for (const marker of [
   'iii_spl_diploma',
@@ -112,6 +116,30 @@ assert.doesNotMatch(
   /pg_catalog\.coalesce\s*\(/i,
   'COALESCE is SQL syntax and must not be schema-qualified.'
 );
+const legacyAuditWithoutCommentsOrStrings = legacyDependencyAudit
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/--.*$/gm, ' ')
+  .replace(/'(?:''|[^'])*'/g, "''");
+assert.doesNotMatch(
+  legacyAuditWithoutCommentsOrStrings,
+  /\b(?:insert|update|delete|create|alter|drop|truncate|grant|revoke|call|copy|do)\b/i,
+  'The legacy dependency audit must remain read-only.'
+);
+assert.doesNotMatch(
+  legacyDependencyAudit,
+  /pg_catalog\.coalesce\s*\(/i,
+  'The legacy audit must not schema-qualify COALESCE.'
+);
+for (const legacyCode of [
+  'specialised_training',
+  'iii_optional_credit',
+  'nia_life_broker',
+]) {
+  assert.ok(
+    legacyDependencyAudit.includes(legacyCode),
+    `The dependency audit must cover ${legacyCode}.`
+  );
+}
 assert.ok(
   deploymentDocument.includes('academic-hierarchy-predeployment-audit.sql')
     && deploymentDocument.includes('Attach that CSV'),

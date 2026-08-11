@@ -19,6 +19,11 @@ to the developer for review:
 8. Attach that CSV to the Codex task. Stop here until the developer confirms
    that the result is safe for migration.
 
+If the first audit identifies legacy hierarchy records, the developer may ask
+for `TESTING/sql/academic-hierarchy-legacy-dependency-audit.sql`. Run it by the
+same copy, paste, **Run**, export, and attach process. It is also read-only.
+Do not run either migration until both requested audits have been reviewed.
+
 ## Required deployment order after audit approval
 
 1. Confirm the connected test database is the intended Supabase project:
