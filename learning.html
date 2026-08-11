@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsureGPTE | Learning Module</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/session-control.js?v=20260811"></script>
+    <script src="js/security-notices.js?v=20260811"></script>
+    <script defer src="js/learning.js?v=20260811"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+    <nav class="border-b border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-5">
+                <a id="subject-link" href="dashboard.html" class="font-semibold text-slate-600 hover:text-blue-800">← My Learning</a>
+                <span class="font-bold text-blue-950">InsureGPTE Learning</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="dashboard.html" class="font-semibold text-blue-700 hover:text-blue-900">Dashboard</a>
+                <button id="logout-button" type="button" class="font-semibold text-red-600 hover:text-red-800">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="mx-auto max-w-7xl p-4 py-6 md:p-6">
+        <section id="security-notices" class="hidden mb-5 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950" aria-live="polite">
+            <h2 class="text-lg font-bold">Account Notice</h2>
+            <div id="security-notices-list" class="mt-3 space-y-3"></div>
+        </section>
+
+        <div id="message-box" role="alert" class="hidden mb-5 rounded-xl p-4"></div>
+
+        <section class="rounded-3xl bg-blue-950 p-6 text-white shadow-lg md:p-8">
+            <p class="text-sm font-bold uppercase tracking-[0.2em] text-blue-200">Structured learning path</p>
+            <h1 id="subject-title" class="mt-2 text-3xl font-extrabold">Loading learning module…</h1>
+            <p id="subject-description" class="mt-3 max-w-3xl leading-7 text-blue-100"></p>
+            <div class="mt-6 grid gap-3 sm:grid-cols-4">
+                <div class="rounded-2xl bg-white/10 p-4"><p class="text-xs uppercase text-blue-200">Topics</p><p id="stat-topics" class="mt-1 text-2xl font-bold">—</p></div>
+                <div class="rounded-2xl bg-white/10 p-4"><p class="text-xs uppercase text-blue-200">Completed</p><p id="stat-completed" class="mt-1 text-2xl font-bold">—</p></div>
+                <div class="rounded-2xl bg-white/10 p-4"><p class="text-xs uppercase text-blue-200">Progress</p><p id="stat-progress" class="mt-1 text-2xl font-bold">—</p></div>
+                <div class="rounded-2xl bg-white/10 p-4"><p class="text-xs uppercase text-blue-200">Study time</p><p id="stat-time" class="mt-1 text-2xl font-bold">—</p></div>
+            </div>
+        </section>
+
+        <section id="learning-loading" class="mt-6 rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+            Loading modules, chapters, and topics…
+        </section>
+
+        <div id="learning-workspace" class="mt-6 hidden gap-6 lg:grid lg:grid-cols-[22rem_minmax(0,1fr)]">
+            <aside class="self-start rounded-2xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-5">
+                <div class="border-b p-5">
+                    <h2 class="text-xl font-bold text-blue-950">Course contents</h2>
+                    <p class="mt-1 text-sm text-slate-500">Select a topic to continue learning.</p>
+                </div>
+                <div id="hierarchy-list" class="max-h-[70vh] overflow-y-auto p-3"></div>
+            </aside>
+
+            <div class="min-w-0 space-y-6">
+                <section id="topic-empty" class="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+                    Select a topic from the course contents.
+                </section>
+
+                <div id="topic-content" class="hidden space-y-6">
+                    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <p id="topic-breadcrumb" class="text-sm font-semibold text-blue-700"></p>
+                        <div class="mt-2 flex flex-wrap items-start justify-between gap-4">
+                            <div>
+                                <h2 id="topic-title" class="text-2xl font-bold text-blue-950"></h2>
+                                <p id="topic-description" class="mt-3 leading-7 text-slate-600"></p>
+                            </div>
+                            <span id="topic-status" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700"></span>
+                        </div>
+                        <div class="mt-5 grid gap-4 md:grid-cols-2">
+                            <div class="rounded-xl bg-blue-50 p-4"><h3 class="font-bold text-blue-950">Learning objective</h3><p id="topic-objective" class="mt-2 whitespace-pre-wrap text-sm leading-6 text-blue-900"></p></div>
+                            <div class="rounded-xl bg-emerald-50 p-4"><h3 class="font-bold text-emerald-950">Practical relevance</h3><p id="topic-relevance" class="mt-2 whitespace-pre-wrap text-sm leading-6 text-emerald-900"></p></div>
+                        </div>
+                    </section>
+
+                    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-b p-5">
+                            <div><h2 class="text-xl font-bold text-blue-950">Learning resources</h2><p class="mt-1 text-sm text-slate-500">Read notes and open approved learning references.</p></div>
+                            <button id="flashcards-button" type="button" class="rounded-xl bg-violet-700 px-4 py-2 font-bold text-white hover:bg-violet-800">Review Flashcards</button>
+                        </div>
+                        <div id="resource-list" class="space-y-4 p-5"></div>
+                    </section>
+
+                    <section id="flashcards-panel" class="hidden rounded-2xl border border-violet-200 bg-violet-50 p-5">
+                        <div class="flex items-center justify-between gap-3"><h2 class="text-xl font-bold text-violet-950">Flashcards</h2><button id="close-flashcards" type="button" class="font-semibold text-violet-700">Close</button></div>
+                        <div id="flashcard-list" class="mt-4 grid gap-4 md:grid-cols-2"></div>
+                    </section>
+
+                    <section class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                        <div><h2 class="font-bold text-emerald-950">Finished this topic?</h2><p class="mt-1 text-sm text-emerald-800">Marking it complete records 100% progress and keeps your learning history.</p></div>
+                        <button id="complete-topic-button" type="button" class="rounded-xl bg-emerald-700 px-5 py-3 font-bold text-white hover:bg-emerald-800">Mark Topic Complete</button>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

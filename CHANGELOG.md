@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 2026-08-11 — Learning Module test release
+
+- Added the 12 approved authenticated Learning and hierarchy RPCs over the
+  existing Version 1.0 tables, with premium-resource redaction, entitlement
+  enforcement, owned progress, resume state, recent activity, and statistics.
+- Repaired the legacy topic-progress function so anonymous or cross-user writes
+  are rejected while preserving its deployed signature.
+- Removed direct browser privileges from Learning tables and retained audited
+  administrator maintenance through secured RPCs.
+- Added `learning.html`, protected session integration, ordered course contents,
+  resource reading, flashcards, topic completion, and responsive empty/error
+  states on the dedicated test branch.
+- Added read-only live audit, rollback, post-deployment verification, static
+  regression checks, and a controlled trial guide. Trial deployment and browser
+  acceptance remain pending.
+
 All notable changes to the InsureGPTE project will be documented in this file.
 
 This project follows Semantic Versioning (SemVer).
