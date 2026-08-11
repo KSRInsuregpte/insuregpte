@@ -1204,6 +1204,32 @@ Any architecture change must document:
 
 ---
 
+## 23.2 Approved Academic Hierarchy — Architecture Version 1.6
+
+- **Qualification levels:** `licentiate`, `associate`, `fellowship`,
+  `spl_diploma`, `surveyor`, `direct_broker`, `reinsurance_broker`, and
+  `composite_broker`, using the exact approved names in
+  `docs/ACADEMIC_HIERARCHY_FREEZE.md`.
+- **III programmes:** Licentiate, Associate, Fellowship, Specialised Diploma,
+  and Surveyor examination preparation.
+- **NIA programmes:** Direct Broker – General, Life and Health Training,
+  Reinsurance Broker Training, and Composite Broker Training. There is no
+  standalone Life Broker programme.
+- **Programme categories:** `professional_qualification`, `broker_exam`,
+  `surveyor_exam`, and `specialized_diploma_exam`.
+- **Programme sections:** `compulsory`, `compulsory_optional`,
+  `optional_credit`, `general_insurance`, `life_insurance`, `reinsurance`,
+  `broker`, `surveyor`, and `spl_diploma`.
+- **Subject categories:** General Insurance, Life Insurance,
+  Common (Life & Non-Life), and Regulation and Compliance. This is a closed
+  database-constrained list exposed as a required Admin dropdown.
+- **Migration safety:** legacy Optional Credit and Life Broker dependencies
+  must be audited before data is remapped or retired. No legacy academic data
+  may be deleted without reviewed mapping evidence.
+- **Approval decision:** frozen by the project owner on 2026-08-11.
+
+---
+
 ## 24. Next Document
 
 After approval, proceed to:

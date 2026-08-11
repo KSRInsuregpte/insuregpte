@@ -1,6 +1,6 @@
 # InsureGPTE Academic Hierarchy Freeze
 
-**Version:** 1.0
+**Architecture Version:** 1.6
 **Status:** Approved and frozen
 **Approval date:** 2026-08-10
 **Scope:** Qualification levels, training programmes, programme categories,
@@ -35,7 +35,7 @@ Test deployment and acceptance steps are defined in
 
 ### National Insurance Academy (`nia`)
 
-1. `nia_direct_general_health` — Direct Broker Training
+1. `nia_direct_general_health` — Direct Broker – General, Life and Health Training
    - Description: General, Life and Health Training
 2. `nia_reinsurance_broker` — Reinsurance Broker Training
 3. `nia_composite_broker` — Composite Broker Training
@@ -66,10 +66,9 @@ Reinsurance Broker pathway.
 Section codes are globally controlled but records remain scoped to a training
 programme through `(training_programme_id, code)`.
 
-## Subject-category suggestions
+## Subject categories
 
-`subjects.category` remains editable text. The Admin interface provides these
-initial suggestions:
+`subjects.category` is restricted to exactly these values:
 
 1. General Insurance
 2. Life Insurance
@@ -79,10 +78,8 @@ initial suggestions:
 Legacy `Common`, `Common Subject`, and `Foundation` values normalize to
 `Common (Life & Non-Life)` during deployment.
 
-Administrators may enter a new category containing 2–120 characters. After the
-category is saved on a subject, it is included automatically in the category
-suggestions loaded from the subject catalogue. The database prevents blank,
-untrimmed, or overlong categories but does not impose a closed enumeration.
+The Admin interface uses a required dropdown. Custom category values are not
+accepted by the Admin form, CSV bulk upload, or database constraint.
 
 ## Approved hierarchy relationships
 

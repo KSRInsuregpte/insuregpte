@@ -372,7 +372,7 @@ Existing controls:
 - active flag;
 - display order.
 
-The approved Version 1.0 codes and names are frozen in
+The approved Architecture Version 1.6 codes and names are frozen in
 `docs/ACADEMIC_HIERARCHY_FREEZE.md`.
 
 Recommended index:
@@ -472,9 +472,10 @@ ON public.programme_sections(training_programme_id, is_active, display_order);
 5. A programme section must belong to the stated programme.
 6. `is_demo_available = false` must prevent demo questions even when a positive limit exists.
 7. `syllabus_version` should be required where content changes by exam cycle.
-8. `category` remains text and provides four initial Admin suggestions.
-9. Administrators may add a trimmed custom category of 2–120 characters; saved
-   subject categories become future suggestions.
+8. `category` is restricted to `General Insurance`, `Life Insurance`,
+   `Common (Life & Non-Life)`, or `Regulation and Compliance`.
+9. The Admin form uses a required dropdown and bulk upload rejects custom
+   category values.
 
 ### Design Concern
 

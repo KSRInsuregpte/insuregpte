@@ -120,10 +120,46 @@ section_usage_snapshot AS (
         'iii_optional_credit',
         'nia_life_broker'
     )
+),
+unapproved_category_snapshot AS (
+    SELECT
+        '04_unapproved_subject_categories'::text AS audit_section,
+        pg_catalog.jsonb_build_object(
+            'count', pg_catalog.count(*),
+            'records', COALESCE(
+                pg_catalog.jsonb_agg(
+                    pg_catalog.jsonb_build_object(
+                        'category', category_record.category,
+                        'subject_count', category_record.subject_count,
+                        'subject_codes', category_record.subject_codes
+                    ) ORDER BY category_record.category
+                ),
+                '[]'::jsonb
+            )
+        ) AS details
+    FROM (
+        SELECT
+            subject_record.category,
+            pg_catalog.count(*) AS subject_count,
+            pg_catalog.jsonb_agg(
+                subject_record.code ORDER BY subject_record.code
+            ) AS subject_codes
+        FROM public.subjects AS subject_record
+        WHERE subject_record.category IS NULL
+           OR pg_catalog.btrim(subject_record.category) NOT IN (
+                'General Insurance',
+                'Life Insurance',
+                'Common (Life & Non-Life)',
+                'Regulation and Compliance'
+           )
+        GROUP BY subject_record.category
+    ) AS category_record
 )
 SELECT * FROM subject_snapshot
 UNION ALL
 SELECT * FROM publication_snapshot
 UNION ALL
 SELECT * FROM section_usage_snapshot
+UNION ALL
+SELECT * FROM unapproved_category_snapshot
 ORDER BY audit_section;

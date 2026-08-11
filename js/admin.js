@@ -171,12 +171,6 @@
             `${counts.current_exam_information || 0} current`;
     }
 
-    const DEFAULT_SUBJECT_CATEGORIES = Object.freeze([
-        'General Insurance',
-        'Life Insurance',
-        'Common (Life & Non-Life)',
-        'Regulation and Compliance'
-    ]);
     const APPROVED_QUALIFICATION_LEVELS = Object.freeze({
         licentiate: 'Licentiate Exam Preparation',
         associate: 'Associate Exam Preparation',
@@ -193,7 +187,8 @@
         iii_fellowship: 'III - Fellowship Exam Preparation',
         iii_spl_diploma: 'III - Spl. Dip Exam Preparation',
         iii_surveyor: 'III Surveyor Exam Preparation',
-        nia_direct_general_health: 'Direct Broker Training',
+        nia_direct_general_health:
+            'Direct Broker – General, Life and Health Training',
         nia_reinsurance_broker: 'Reinsurance Broker Training',
         nia_composite_broker: 'Composite Broker Training'
     });
@@ -246,22 +241,6 @@
         return false;
     }
 
-    function populateSubjectCategoryOptions() {
-        const categories = new Set(DEFAULT_SUBJECT_CATEGORIES);
-        state.subjects.forEach((subject) => {
-            const category = String(subject.category || '').trim();
-            if (category) {
-                categories.add(category);
-            }
-        });
-        byId('subject-category-options').innerHTML = [...categories]
-            .sort((left, right) => left.localeCompare(right))
-            .map((category) =>
-                `<option value="${escapeHtml(category)}"></option>`
-            )
-            .join('');
-    }
-
     function populateProgrammeSectionSelect(
         sectionSelectId,
         programmeSelectId,
@@ -302,7 +281,6 @@
         const programmes = summary.training_programmes || [];
         const authorities = summary.exam_authorities || [];
 
-        populateSubjectCategoryOptions();
 
         populateSelect(
             byId('subject-qualification'),

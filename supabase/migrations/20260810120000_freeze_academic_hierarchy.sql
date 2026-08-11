@@ -122,7 +122,7 @@ SET name = CASE code
         WHEN 'iii_associate' THEN 'III - Associate Exam Preparation'
         WHEN 'iii_fellowship' THEN 'III - Fellowship Exam Preparation'
         WHEN 'nia_direct_general_health' THEN
-            'Direct Broker Training'
+            'Direct Broker – General, Life and Health Training'
         WHEN 'nia_reinsurance_broker' THEN 'Reinsurance Broker Training'
         WHEN 'nia_composite_broker' THEN 'Composite Broker Training'
         ELSE name
@@ -453,8 +453,13 @@ BEGIN
         SELECT 1
         FROM public.subjects
         WHERE category IS NULL
-           OR pg_catalog.char_length(pg_catalog.btrim(category))
-              NOT BETWEEN 2 AND 120
+           OR category <> pg_catalog.btrim(category)
+           OR category NOT IN (
+                'General Insurance',
+                'Life Insurance',
+                'Common (Life & Non-Life)',
+                'Regulation and Compliance'
+           )
     ) THEN
         RAISE EXCEPTION 'An unapproved or blank subject category remains.';
     END IF;
@@ -520,5 +525,10 @@ ALTER TABLE public.subjects
     ADD CONSTRAINT chk_subjects_valid_category CHECK (
         category IS NOT NULL
         AND category = pg_catalog.btrim(category)
-        AND pg_catalog.char_length(category) BETWEEN 2 AND 120
+        AND category IN (
+            'General Insurance',
+            'Life Insurance',
+            'Common (Life & Non-Life)',
+            'Regulation and Compliance'
+        )
     );

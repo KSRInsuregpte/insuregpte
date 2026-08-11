@@ -55,7 +55,12 @@ BEGIN
         SELECT 1 FROM public.subjects
         WHERE category IS NULL
            OR category <> pg_catalog.btrim(category)
-           OR pg_catalog.char_length(category) NOT BETWEEN 2 AND 120
+           OR category NOT IN (
+                'General Insurance',
+                'Life Insurance',
+                'Common (Life & Non-Life)',
+                'Regulation and Compliance'
+           )
     ) THEN
         RAISE EXCEPTION 'An invalid subject category remains.';
     END IF;
@@ -63,7 +68,7 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM public.training_programmes
         WHERE code = 'nia_direct_general_health'
-          AND name = 'Direct Broker Training'
+          AND name = 'Direct Broker – General, Life and Health Training'
           AND description = 'General, Life and Health Training'
     ) THEN
         RAISE EXCEPTION 'Direct Broker naming or description is incorrect.';

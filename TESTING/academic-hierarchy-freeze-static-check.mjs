@@ -99,7 +99,7 @@ for (const marker of [
   );
 }
 assert.ok(
-  adminHtml.includes('js/admin.js?v=20260811'),
+  adminHtml.includes('js/admin.js?v=20260811b'),
   'The Admin page must load the corrected hierarchy client version.'
 );
 const auditWithoutCommentsOrStrings = predeploymentAudit
@@ -185,22 +185,16 @@ for (const category of [
 }
 assert.match(
   adminHtml,
-  /input\s+id="subject-category"\s+list="subject-category-options"\s+required/i
+  /select\s+id="subject-category"\s+required/i
 );
 assert.ok(
-  adminHtml.includes('id="subject-category-options"'),
-  'Admin subject category suggestions require a datalist.'
+  !adminHtml.includes('subject-category-options'),
+  'Admin subject category must not allow custom datalist values.'
 );
-for (const marker of [
-  'DEFAULT_SUBJECT_CATEGORIES',
-  'populateSubjectCategoryOptions',
-  'categories.add(category)',
-]) {
-  assert.ok(
-    adminJavascript.includes(marker),
-    `Admin category suggestions are missing ${marker}.`
-  );
-}
+assert.ok(
+  !adminJavascript.includes('populateSubjectCategoryOptions'),
+  'Admin must not add saved custom categories to the frozen dropdown.'
+);
 
 const browserContext = { window: {} };
 vm.runInNewContext(bulkJavascript, browserContext);
@@ -228,19 +222,47 @@ const customCategoryResult = bulkUpload.validateCsv(
   customCategoryCsv
 );
 assert.ok(
-  !customCategoryResult.errors.some((error) => error.message.includes(
+  customCategoryResult.errors.some((error) => error.message.includes(
     'category must'
   )),
-  'Bulk upload must accept a valid reviewed custom category.'
+  'Bulk upload must reject a custom category.'
 );
 
+for (const category of [
+  'General Insurance',
+  'Life Insurance',
+  'Common (Life & Non-Life)',
+  'Regulation and Compliance',
+]) {
+  values.category = category;
+  const approvedCategoryCsv = [
+    headers.join(','),
+    headers.map((header) => values[header]).join(','),
+  ].join('\r\n');
+  const approvedResult = bulkUpload.validateCsv(
+    'subjects',
+    approvedCategoryCsv
+  );
+  assert.ok(
+    !approvedResult.errors.some((error) => error.message.includes(
+      'category must'
+    )),
+    `Bulk upload must accept ${category}.`
+  );
+}
+
 for (const marker of [
-  'Direct Broker Training',
+  'Direct Broker – General, Life and Health Training',
   'General, Life and Health Training',
 ]) {
   assert.ok(migration.includes(marker), `Migration is missing ${marker}.`);
   assert.ok(freezeDocument.includes(marker),
     `Frozen documentation is missing ${marker}.`);
 }
+
+assert.ok(
+  freezeDocument.includes('**Architecture Version:** 1.6'),
+  'Frozen documentation must identify Architecture Version 1.6.'
+);
 
 console.log('Academic hierarchy freeze static checks passed.');

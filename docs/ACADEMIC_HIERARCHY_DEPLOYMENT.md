@@ -36,7 +36,7 @@ Do not run either migration until both requested audits have been reviewed.
 5. Treat any exception as a failed deployment. Do not continue to browser
    acceptance testing until the verification completes successfully.
 6. Reload the Vercel preview with a hard refresh so
-   `js/admin.js?v=20260811` is loaded.
+   `js/admin.js?v=20260811b` is loaded.
 
 ## Expected Admin values
 
@@ -53,8 +53,9 @@ The Qualification Level dropdown must contain exactly:
 
 The Programme dropdown must contain exactly five III programmes and three NIA
 programmes. `Life Broker Training` and `III Optional Credit Subjects` must not
-appear as programmes. Direct Broker must appear as `Direct Broker Training` and
-its stored description must be `General, Life and Health Training`.
+appear as programmes. Direct Broker must appear as
+`Direct Broker – General, Life and Health Training` and its stored description
+must be `General, Life and Health Training`.
 
 After a Programme is selected, the Programme Section dropdown must show only
 sections belonging to that programme. Approved section labels are Compulsory,
@@ -62,9 +63,9 @@ Compulsory Optional, Optional Credit, General Insurance, Life Insurance,
 Reinsurance, Broker, Surveyor, and Spl_Diploma, subject to their approved
 programme relationships.
 
-The Subject Category field must provide the four default suggestions and allow
-a reviewed custom value containing 2–120 characters. A saved custom category
-must appear in later suggestions.
+The Subject Category field must be a required dropdown containing exactly
+General Insurance, Life Insurance, Common (Life & Non-Life), and Regulation
+and Compliance. Custom values must be rejected.
 
 ## Acceptance test
 
@@ -74,8 +75,8 @@ must appear in later suggestions.
 3. Confirm only the Associate programme's sections appear.
 4. Select the intended section and save without changing activation status.
 5. Confirm the success message and corresponding audit-history entry.
-6. Enter a reviewed custom Subject Category, save, reopen the subject, and
-   confirm it appears in the suggestion list.
+6. Confirm the Subject Category dropdown contains exactly the four approved
+   values and that a value outside that list cannot be entered or saved.
 
 ## Rollback
 

@@ -21,6 +21,12 @@
         'surveyor',
         'spl_diploma'
     ]);
+    const SUBJECT_CATEGORIES = new Set([
+        'General Insurance',
+        'Life Insurance',
+        'Common (Life & Non-Life)',
+        'Regulation and Compliance'
+    ]);
     const DIFFICULTY_VALUES = new Set([
         'easy',
         'moderate',
@@ -643,12 +649,11 @@
                     'title must contain 2-160 characters.'
                 );
             }
-            if (values.category.trim().length < 2
-                || values.category.trim().length > 120) {
+            if (!SUBJECT_CATEGORIES.has(values.category.trim())) {
                 addError(
                     errors,
                     row,
-                    'category must contain 2-120 characters.'
+                    'category must use an approved frozen value.'
                 );
             }
             for (const field of [
