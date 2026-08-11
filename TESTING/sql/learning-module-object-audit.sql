@@ -202,7 +202,12 @@ planned_function_status as (
                 pg_catalog.has_function_privilege(
                   'authenticated', procedures.oid, 'EXECUTE'
                 ),
-              'definition', pg_catalog.pg_get_functiondef(procedures.oid)
+              'definition',
+                case
+                  when procedures.prokind = 'f'
+                    then pg_catalog.pg_get_functiondef(procedures.oid)
+                  else null
+                end
             )
             order by pg_catalog.pg_get_function_identity_arguments(procedures.oid)
           ) filter (where procedures.oid is not null),
@@ -215,6 +220,7 @@ planned_function_status as (
   left join pg_catalog.pg_proc as procedures
     on procedures.pronamespace = namespaces.oid
    and procedures.proname = planned.function_name
+   and procedures.prokind = 'f'
   group by planned.function_name
 ),
 related_function_inventory as (
@@ -232,16 +238,27 @@ related_function_inventory as (
         pg_catalog.has_function_privilege(
           'authenticated', procedures.oid, 'EXECUTE'
         ),
-      'definition', pg_catalog.pg_get_functiondef(procedures.oid)
+      'definition',
+        case
+          when procedures.prokind = 'f'
+            then pg_catalog.pg_get_functiondef(procedures.oid)
+          else null
+        end
     ) as details
   from pg_catalog.pg_proc as procedures
   join pg_catalog.pg_namespace as namespaces
     on namespaces.oid = procedures.pronamespace
   where namespaces.nspname = 'public'
+    and procedures.prokind = 'f'
     and (
       procedures.proname ~* '(learn|progress|module|chapter|topic|flashcard|resource)'
-      or pg_catalog.pg_get_functiondef(procedures.oid)
-        ~* '(subject_modules|subject_chapters|subject_topics|learning_resources|flashcards|user_topic_progress|user_learning_activity)'
+      or (
+        case
+          when procedures.prokind = 'f'
+            then pg_catalog.pg_get_functiondef(procedures.oid)
+          else null
+        end
+      ) ~* '(subject_modules|subject_chapters|subject_topics|learning_resources|flashcards|user_topic_progress|user_learning_activity)'
     )
 )
 select audit_section, object_name, details
