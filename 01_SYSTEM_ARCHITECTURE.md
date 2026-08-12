@@ -1228,6 +1228,33 @@ Any architecture change must document:
   may be deleted without reviewed mapping evidence.
 - **Approval decision:** frozen by the project owner on 2026-08-11.
 
+## 23.3 Learning Module controlled release
+
+- **Requested change:** proceed with the learner-facing Learning Module after
+  freezing the academic hierarchy.
+- **Database impact:** reuse the existing modules, chapters, topics, resources,
+  flashcards, progress, activity, and entitlement tables; create no duplicate
+  learning table and retain every existing learner/content row.
+- **RPC impact:** implement the approved Pack 1 hierarchy and Pack 2 Learning
+  functions, preserve the legacy topic-progress signature, repair its anonymous
+  and cross-user execution risk, and remove direct browser table privileges.
+- **Access impact:** active learners may open active non-premium resources;
+  premium payloads and flashcards require a current subject entitlement.
+- **Progress impact:** activity is append-only, identity comes from
+  `auth.uid()`, learning time and completion cannot decrease, and completed
+  topics do not regress.
+- **Frontend impact:** add the protected `learning.html` page with ordered
+  course contents, resource reading, flashcards, resume state, statistics, and
+  topic completion; connect it from the subject and dashboard pages.
+- **Release impact:** implement only on `test/learning-module`, deploy the
+  versioned SQL to trial, verify database authorization and two-user isolation,
+  complete browser acceptance, and merge afterward.
+- **Approval decision:** approved when the project owner instructed development
+  to proceed on 2026-08-11.
+- **Implementation status:** live-object audit reviewed; repository migration,
+  rollback, verification, frontend, documentation, and automated static checks
+  implemented. Trial SQL execution and browser acceptance remain pending.
+
 ---
 
 ## 24. Next Document

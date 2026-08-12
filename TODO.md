@@ -56,7 +56,7 @@
 - [x] Make quiz finalization idempotent and time-limit safe
 - [ ] Complete remaining RPCs
 - [ ] Dashboard APIs
-- [ ] Learning APIs
+- [ ] Learning APIs (repository implementation complete; trial SQL and browser acceptance pending)
 - [ ] Analytics APIs
 - [ ] Recommendation APIs
 - [x] Add a privacy-safe live admin-role, management-object, and commerce audit

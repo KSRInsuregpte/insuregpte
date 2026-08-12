@@ -184,3 +184,25 @@ In Vercel Preview:
 7. Confirm entitlement CSV rejects `purchase` and `subscription`.
 8. Confirm exam schedules, centre lists, amendments, and official notices use
    the existing examination-information list.
+
+## Learning Module
+
+After reviewing the read-only live audit, deploy in the trial project:
+
+```text
+supabase/migrations/20260811150000_build_learning_module.sql
+```
+
+Then run:
+
+```text
+TESTING/sql/learning-module-verification.sql
+```
+
+The result must list 13 secured functions. Every row must show
+`security_definer = true`, `authenticated_execute = true`, and
+`anonymous_execute = false`.
+
+Complete the entitled, non-entitled, second-user isolation, inactive-user,
+premium-lock, flashcard, completion, refresh, mobile-layout, and regression
+checks in `docs/LEARNING_MODULE.md` before merging the test branch.
