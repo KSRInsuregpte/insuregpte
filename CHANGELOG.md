@@ -22,6 +22,9 @@
   both Learning progress write paths after browser acceptance identified the
   PostgreSQL `42883` runtime error. The correction changes only function
   definitions and does not update learner data.
+- Confirmed topic completion persists across refresh, logout, and login; added
+  automatic scrolling and focus when flashcards open, plus accessible reusable
+  Show/Hide controls for each learning resource.
 
 All notable changes to the InsureGPTE project will be documented in this file.
 

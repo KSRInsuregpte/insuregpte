@@ -200,6 +200,32 @@ for (const required of [
     );
 }
 
+for (const interaction of [
+    "button.textContent = opening",
+    "? 'Hide Resource'",
+    ": 'Show Resource'",
+    "button.setAttribute('aria-expanded', String(opening))",
+    "panel.scrollIntoView({ behavior: 'smooth', block: 'start' })",
+    "panel.focus({ preventScroll: true })",
+    'global.requestAnimationFrame'
+]) {
+    assert.ok(
+        learningJavascript.includes(interaction),
+        `Learning interaction is missing ${interaction}.`
+    );
+}
+
+for (const accessibilityRequirement of [
+    'id="flashcards-panel" tabindex="-1"',
+    'aria-labelledby="flashcards-heading"',
+    'id="flashcards-heading"'
+]) {
+    assert.ok(
+        learningHtml.includes(accessibilityRequirement),
+        `Learning page is missing ${accessibilityRequirement}.`
+    );
+}
+
 for (const source of [learningJavascript, dashboardJavascript, subjectJavascript]) {
     for (const table of [
         'subject_modules',
