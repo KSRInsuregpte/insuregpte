@@ -16,6 +16,13 @@
   regression checks, and a controlled trial guide. Trial deployment and browser
   acceptance remain pending.
 
+### 2026-08-12 trial correction
+
+- Corrected the invalid `pg_catalog.greatest(numeric,numeric)` qualification in
+  both Learning progress write paths after browser acceptance identified the
+  PostgreSQL `42883` runtime error. The correction changes only function
+  definitions and does not update learner data.
+
 All notable changes to the InsureGPTE project will be documented in this file.
 
 This project follows Semantic Versioning (SemVer).

@@ -13,6 +13,21 @@ const rollback = readFileSync(
     resolve(root, 'supabase', 'rollbacks', '20260811150000_build_learning_module.sql'),
     'utf8'
 );
+const progressRepair = readFileSync(
+    resolve(root, 'supabase', 'migrations',
+        '20260812100000_repair_learning_progress_greatest.sql'),
+    'utf8'
+);
+const progressRepairRollback = readFileSync(
+    resolve(root, 'supabase', 'rollbacks',
+        '20260812100000_repair_learning_progress_greatest.sql'),
+    'utf8'
+);
+const progressRepairVerification = readFileSync(
+    resolve(here, 'sql',
+        'learning-progress-greatest-repair-verification.sql'),
+    'utf8'
+);
 const verification = readFileSync(
     resolve(here, 'sql', 'learning-module-verification.sql'),
     'utf8'
@@ -103,6 +118,42 @@ assert.match(
     /GRANT EXECUTE ON FUNCTION public\.upsert_user_topic_progress[\s\S]*TO anon, authenticated/i,
     'Rollback must restore the audited legacy execution grants.'
 );
+
+for (const expected of [
+    'record_learning_activity(integer,text,bigint,integer,numeric)',
+    'upsert_user_topic_progress(uuid,integer,text,numeric,integer)',
+    "'pg_catalog.greatest('",
+    "'GREATEST('",
+    'pg_catalog.pg_get_functiondef',
+    'BEGIN;',
+    'COMMIT;'
+]) {
+    assert.ok(
+        progressRepair.includes(expected),
+        `Progress repair is missing ${expected}.`
+    );
+}
+assert.doesNotMatch(
+    progressRepair,
+    /\b(INSERT|UPDATE|DELETE|TRUNCATE|DROP\s+TABLE)\b/i,
+    'Progress repair must not change learner or content rows.'
+);
+assert.ok(
+    progressRepairRollback.includes("'GREATEST('")
+        && progressRepairRollback.includes("'pg_catalog.greatest('"),
+    'Progress repair rollback must restore the prior expression.'
+);
+for (const expected of [
+    'corrected_greatest',
+    'invalid_qualification_removed',
+    'authenticated_execute',
+    'anonymous_execute'
+]) {
+    assert.ok(
+        progressRepairVerification.includes(expected),
+        `Progress repair verification is missing ${expected}.`
+    );
+}
 
 for (const expected of [
     'js/session-control.js',

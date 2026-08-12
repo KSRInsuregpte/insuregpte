@@ -49,11 +49,14 @@ duration before inserting the append-only activity record.
 1. Run `TESTING/sql/learning-module-object-audit.sql` and review the export.
 2. Run `supabase/migrations/20260811150000_build_learning_module.sql` in the
    trial Supabase SQL Editor.
-3. Run `TESTING/sql/learning-module-verification.sql`.
-4. Deploy the `test/learning-module` frontend preview.
-5. Test with an active entitled learner and an active learner without the
+3. Run the trial correction
+   `supabase/migrations/20260812100000_repair_learning_progress_greatest.sql`.
+4. Run `TESTING/sql/learning-module-verification.sql` and
+   `TESTING/sql/learning-progress-greatest-repair-verification.sql`.
+5. Deploy the `test/learning-module` frontend preview.
+6. Test with an active entitled learner and an active learner without the
    entitlement.
-6. Merge only after database and browser acceptance results are reviewed.
+7. Merge only after database and browser acceptance results are reviewed.
 
 ## Browser acceptance
 
