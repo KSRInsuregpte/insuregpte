@@ -29,6 +29,18 @@ assert.match(migration, /^COMMIT;/m);
 assert.match(migration, /The approved Topic 1 pilot content is incomplete/i);
 assert.doesNotMatch(
     migration,
+    /ON COMMIT DROP/i,
+    'Supabase may commit each editor statement, so seed tables must survive statement commits.'
+);
+assert.equal(
+    (migration.match(/ON COMMIT PRESERVE ROWS/g) ?? []).length,
+    2,
+    'Both IC01 seed tables must survive Supabase statement commits.'
+);
+assert.match(migration, /DROP TABLE IF EXISTS pg_temp\.ic01_resource_seed;/i);
+assert.match(migration, /DROP TABLE IF EXISTS pg_temp\.ic01_flashcard_seed;/i);
+assert.doesNotMatch(
+    migration,
     /(?:INSERT INTO|UPDATE|DELETE FROM)\s+public\.(?:user_topic_progress|user_learning_activity|user_entitlements|quiz_attempts)/i,
     'The content migration must not alter learner or practice records.'
 );

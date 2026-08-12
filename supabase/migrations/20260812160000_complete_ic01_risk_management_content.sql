@@ -122,6 +122,8 @@ BEGIN
 END;
 $validate$;
 
+DROP TABLE IF EXISTS pg_temp.ic01_resource_seed;
+
 CREATE TEMPORARY TABLE ic01_resource_seed (
     topic_code text NOT NULL,
     resource_type_code text NOT NULL,
@@ -131,7 +133,7 @@ CREATE TEMPORARY TABLE ic01_resource_seed (
     content text NOT NULL,
     estimated_read_minutes integer NOT NULL,
     display_order integer NOT NULL
-) ON COMMIT DROP;
+) ON COMMIT PRESERVE ROWS;
 
 INSERT INTO ic01_resource_seed VALUES
 ('IC01-C01-T02', 'NOTE', 'LR-IC01-C01-T02-001',
@@ -591,6 +593,8 @@ JOIN public.learning_resource_types AS resource_type
   ON pg_catalog.upper(resource_type.code) = seed.resource_type_code
 WHERE pg_catalog.upper(resource_record.code) = seed.code;
 
+DROP TABLE IF EXISTS pg_temp.ic01_flashcard_seed;
+
 CREATE TEMPORARY TABLE ic01_flashcard_seed (
     topic_code text NOT NULL,
     code text PRIMARY KEY,
@@ -599,7 +603,7 @@ CREATE TEMPORARY TABLE ic01_flashcard_seed (
     explanation text NOT NULL,
     display_order integer NOT NULL,
     difficulty_level text NOT NULL
-) ON COMMIT DROP;
+) ON COMMIT PRESERVE ROWS;
 
 INSERT INTO ic01_flashcard_seed VALUES
 ('IC01-C01-T02', 'FC-IC01-C01-T02-001', 'How does pure risk differ from speculative risk?',
@@ -769,5 +773,8 @@ BEGIN
     END IF;
 END;
 $verify$;
+
+DROP TABLE IF EXISTS pg_temp.ic01_flashcard_seed;
+DROP TABLE IF EXISTS pg_temp.ic01_resource_seed;
 
 COMMIT;
