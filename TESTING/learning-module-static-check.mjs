@@ -202,8 +202,8 @@ for (const required of [
 
 for (const interaction of [
     "button.textContent = opening",
-    "? 'Hide Resource'",
-    ": 'Show Resource'",
+    "? '▼ Hide Resource'",
+    ": '▶ Show Resource'",
     "button.setAttribute('aria-expanded', String(opening))",
     "panel.scrollIntoView({ behavior: 'smooth', block: 'start' })",
     "panel.focus({ preventScroll: true })",
@@ -214,6 +214,11 @@ for (const interaction of [
         `Learning interaction is missing ${interaction}.`
     );
 }
+
+assert.ok(
+    learningHtml.includes('js/learning.js?v=20260812-2'),
+    'Learning page must use the current cache-busting JavaScript version.'
+);
 
 for (const accessibilityRequirement of [
     'id="flashcards-panel" tabindex="-1"',

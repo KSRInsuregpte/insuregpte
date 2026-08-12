@@ -188,7 +188,7 @@
                     <button type="button" data-resource-toggle="${resource.resource_id}"
                         aria-expanded="false" aria-controls="resource-${resource.resource_id}"
                         class="mt-4 rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
-                        Show Resource
+                        ▶ Show Resource
                     </button>
                     <div id="resource-${resource.resource_id}" class="hidden mt-4 rounded-lg bg-slate-50 p-4">
                         ${resource.content ? `<div class="whitespace-pre-wrap text-sm leading-7 text-slate-700">${escapeHtml(resource.content)}</div>` : ''}
@@ -214,8 +214,8 @@
                 panel?.classList.toggle('hidden', !opening);
                 button.setAttribute('aria-expanded', String(opening));
                 button.textContent = opening
-                    ? 'Hide Resource'
-                    : 'Show Resource';
+                    ? '▼ Hide Resource'
+                    : '▶ Show Resource';
 
                 if (opening && !activityRecorded) {
                     activityRecorded = true;

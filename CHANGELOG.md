@@ -25,6 +25,9 @@
 - Confirmed topic completion persists across refresh, logout, and login; added
   automatic scrolling and focus when flashcards open, plus accessible reusable
   Show/Hide controls for each learning resource.
+- Advanced the Learning JavaScript asset version after trial testing confirmed
+  a browser had retained the pre-interaction script, and added visible disclosure
+  arrows to the Show/Hide Resource controls.
 
 All notable changes to the InsureGPTE project will be documented in this file.
 
