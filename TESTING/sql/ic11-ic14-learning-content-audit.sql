@@ -144,7 +144,7 @@ audit_rows as (
         from public.learning_resources as resource_record
         where resource_record.topic_id = topic_record.id
           and resource_record.is_active = true
-          and pg_catalog.nullif(pg_catalog.btrim(resource_record.content), '') is null
+          and nullif(pg_catalog.btrim(resource_record.content), ''::text) is null
       )
     )
   from target_topics as topic_record
