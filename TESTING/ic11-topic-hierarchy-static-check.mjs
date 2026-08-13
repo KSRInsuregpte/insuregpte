@@ -55,8 +55,9 @@ for (const forbidden of [
 for (const required of [
     'WITH topic_seed',
     'ON CONFLICT (subject_id, code) DO UPDATE',
-    'Expected exactly 43 active planned IC11 topics',
-    'One or more IC11 chapters has an incomplete topic hierarchy'
+    "pg_catalog.upper(subject_record.code) = 'IC11'",
+    'module_record.is_active = true',
+    'chapter_record.is_active = true'
 ]) {
     assert.ok(migration.includes(required), `Missing IC11 migration safeguard: ${required}`);
 }
