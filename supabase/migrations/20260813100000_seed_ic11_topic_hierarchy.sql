@@ -5,26 +5,59 @@
 
 BEGIN;
 
-DROP TABLE IF EXISTS public.migration_ic11_topic_seed;
+DO $validate$
+DECLARE
+    v_subject_id bigint;
+BEGIN
+    SELECT subject_record.id
+    INTO v_subject_id
+    FROM public.subjects AS subject_record
+    WHERE pg_catalog.upper(subject_record.code) = 'IC11'
+      AND subject_record.is_active = true;
 
-CREATE TABLE public.migration_ic11_topic_seed (
-    module_code text NOT NULL,
-    chapter_code text NOT NULL,
-    topic_number integer NOT NULL,
-    code text PRIMARY KEY,
-    title text NOT NULL,
-    description text NOT NULL,
-    learning_objective text NOT NULL,
-    practical_relevance text NOT NULL,
-    estimated_study_minutes integer NOT NULL,
-    difficulty_level text NOT NULL,
-    display_order integer NOT NULL
-);
+    IF v_subject_id IS NULL THEN
+        RAISE EXCEPTION 'The active IC11 subject was not found.';
+    END IF;
 
-ALTER TABLE public.migration_ic11_topic_seed ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON TABLE public.migration_ic11_topic_seed FROM anon, authenticated;
+    IF (
+        SELECT pg_catalog.count(*)
+        FROM public.subject_modules AS module_record
+        WHERE module_record.subject_id = v_subject_id
+          AND module_record.is_active = true
+          AND pg_catalog.upper(module_record.code) IN (
+              'IC11-M01', 'IC11-M02', 'IC11-M03', 'IC11-M04', 'IC11-M05'
+          )
+    ) <> 5 THEN
+        RAISE EXCEPTION 'All five approved active IC11 modules are required.';
+    END IF;
 
-INSERT INTO public.migration_ic11_topic_seed VALUES
+    IF (
+        SELECT pg_catalog.count(*)
+        FROM public.subject_chapters AS chapter_record
+        WHERE chapter_record.subject_id = v_subject_id
+          AND chapter_record.is_active = true
+          AND pg_catalog.upper(chapter_record.code) BETWEEN 'IC11-C01' AND 'IC11-C09'
+    ) <> 9 THEN
+        RAISE EXCEPTION 'All nine approved active IC11 chapters are required.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.subject_topics AS topic_record
+        WHERE pg_catalog.upper(topic_record.code) LIKE 'IC11-C__-T__'
+          AND topic_record.subject_id <> v_subject_id
+    ) THEN
+        RAISE EXCEPTION 'A planned IC11 topic code is already assigned to another subject.';
+    END IF;
+END;
+$validate$;
+
+WITH topic_seed (
+    module_code, chapter_code, topic_number, code, title, description,
+    learning_objective, practical_relevance, estimated_study_minutes,
+    difficulty_level, display_order
+) AS (
+VALUES
 ('IC11-M01', 'IC11-C01', 1, 'IC11-C01-T01', 'Evolution and Legal Framework of General Insurance',
  'Development of general insurance in India and the principal laws that shape non-life insurance business.',
  'Trace the development of general insurance and identify the purpose of its principal legislation.',
@@ -204,76 +237,8 @@ INSERT INTO public.migration_ic11_topic_seed VALUES
 ('IC11-M05', 'IC11-C09', 5, 'IC11-C09-T05', 'Financial Statements and Management Returns',
  'Insurance accounts, underwriting results, balance-sheet items, regulatory statements and management information.',
  'Identify the principal financial and management reports used to monitor a general insurer.',
- 'Supports interpretation of performance, reserve adequacy, solvency and operational trends.', 45, 'advanced', 5);
-
-DO $validate$
-DECLARE
-    v_subject_id bigint;
-BEGIN
-    SELECT subject_record.id
-    INTO v_subject_id
-    FROM public.subjects AS subject_record
-    WHERE pg_catalog.upper(subject_record.code) = 'IC11'
-      AND subject_record.is_active = true;
-
-    IF v_subject_id IS NULL THEN
-        RAISE EXCEPTION 'The active IC11 subject was not found.';
-    END IF;
-
-    IF (
-        SELECT pg_catalog.count(*)
-        FROM public.subject_modules AS module_record
-        WHERE module_record.subject_id = v_subject_id
-          AND module_record.is_active = true
-          AND pg_catalog.upper(module_record.code) IN (
-              'IC11-M01', 'IC11-M02', 'IC11-M03', 'IC11-M04', 'IC11-M05'
-          )
-    ) <> 5 THEN
-        RAISE EXCEPTION 'All five approved active IC11 modules are required.';
-    END IF;
-
-    IF (
-        SELECT pg_catalog.count(*)
-        FROM public.subject_chapters AS chapter_record
-        WHERE chapter_record.subject_id = v_subject_id
-          AND chapter_record.is_active = true
-          AND pg_catalog.upper(chapter_record.code) BETWEEN 'IC11-C01' AND 'IC11-C09'
-    ) <> 9 THEN
-        RAISE EXCEPTION 'All nine approved active IC11 chapters are required.';
-    END IF;
-
-    IF EXISTS (
-        SELECT 1
-        FROM public.migration_ic11_topic_seed AS seed
-        LEFT JOIN public.subject_modules AS module_record
-          ON module_record.subject_id = v_subject_id
-         AND pg_catalog.upper(module_record.code) = seed.module_code
-        LEFT JOIN public.subject_chapters AS chapter_record
-          ON chapter_record.subject_id = v_subject_id
-         AND chapter_record.module_id = module_record.id
-         AND pg_catalog.upper(chapter_record.code) = seed.chapter_code
-        WHERE module_record.id IS NULL OR chapter_record.id IS NULL
-    ) THEN
-        RAISE EXCEPTION 'An IC11 topic seed row does not match the frozen module/chapter hierarchy.';
-    END IF;
-
-    IF EXISTS (
-        SELECT 1
-        FROM public.subject_topics AS topic_record
-        JOIN public.migration_ic11_topic_seed AS seed
-          ON pg_catalog.upper(topic_record.code) = seed.code
-        WHERE topic_record.subject_id <> v_subject_id
-           OR pg_catalog.upper((
-                SELECT chapter_record.code
-                FROM public.subject_chapters AS chapter_record
-                WHERE chapter_record.id = topic_record.chapter_id
-              )) <> seed.chapter_code
-    ) THEN
-        RAISE EXCEPTION 'A planned IC11 topic code is already assigned outside its intended chapter.';
-    END IF;
-END;
-$validate$;
-
+ 'Supports interpretation of performance, reserve adequacy, solvency and operational trends.', 45, 'advanced', 5)
+)
 INSERT INTO public.subject_topics (
     subject_id, module_id, chapter_id, topic_number, code, title,
     description, learning_objective, practical_relevance,
@@ -295,48 +260,33 @@ SELECT
     seed.display_order,
     true,
     true
-FROM public.migration_ic11_topic_seed AS seed
+FROM topic_seed AS seed
 JOIN public.subjects AS subject_record
   ON pg_catalog.upper(subject_record.code) = 'IC11'
+ AND subject_record.is_active = true
 JOIN public.subject_modules AS module_record
   ON module_record.subject_id = subject_record.id
  AND pg_catalog.upper(module_record.code) = seed.module_code
+ AND module_record.is_active = true
 JOIN public.subject_chapters AS chapter_record
   ON chapter_record.subject_id = subject_record.id
  AND chapter_record.module_id = module_record.id
  AND pg_catalog.upper(chapter_record.code) = seed.chapter_code
-WHERE NOT EXISTS (
-    SELECT 1
-    FROM public.subject_topics AS existing
-    WHERE pg_catalog.upper(existing.code) = seed.code
-);
-
-UPDATE public.subject_topics AS topic_record
-SET module_id = module_record.id,
-    chapter_id = chapter_record.id,
-    topic_number = seed.topic_number,
-    title = seed.title,
-    description = seed.description,
-    learning_objective = seed.learning_objective,
-    practical_relevance = seed.practical_relevance,
-    estimated_study_minutes = seed.estimated_study_minutes,
-    difficulty_level = seed.difficulty_level,
-    display_order = seed.display_order,
+ AND chapter_record.is_active = true
+ON CONFLICT (subject_id, code) DO UPDATE
+SET module_id = EXCLUDED.module_id,
+    chapter_id = EXCLUDED.chapter_id,
+    topic_number = EXCLUDED.topic_number,
+    title = EXCLUDED.title,
+    description = EXCLUDED.description,
+    learning_objective = EXCLUDED.learning_objective,
+    practical_relevance = EXCLUDED.practical_relevance,
+    estimated_study_minutes = EXCLUDED.estimated_study_minutes,
+    difficulty_level = EXCLUDED.difficulty_level,
+    display_order = EXCLUDED.display_order,
     is_exam_relevant = true,
     is_active = true,
-    updated_at = pg_catalog.clock_timestamp()
-FROM public.migration_ic11_topic_seed AS seed
-JOIN public.subjects AS subject_record
-  ON pg_catalog.upper(subject_record.code) = 'IC11'
-JOIN public.subject_modules AS module_record
-  ON module_record.subject_id = subject_record.id
- AND pg_catalog.upper(module_record.code) = seed.module_code
-JOIN public.subject_chapters AS chapter_record
-  ON chapter_record.subject_id = subject_record.id
- AND chapter_record.module_id = module_record.id
- AND pg_catalog.upper(chapter_record.code) = seed.chapter_code
-WHERE topic_record.subject_id = subject_record.id
-  AND pg_catalog.upper(topic_record.code) = seed.code;
+    updated_at = pg_catalog.clock_timestamp();
 
 DO $verify$
 DECLARE
@@ -350,29 +300,34 @@ BEGIN
     IF (
         SELECT pg_catalog.count(*)
         FROM public.subject_topics AS topic_record
-        JOIN public.migration_ic11_topic_seed AS seed
-          ON seed.code = pg_catalog.upper(topic_record.code)
         WHERE topic_record.subject_id = v_subject_id
           AND topic_record.is_active = true
+          AND pg_catalog.upper(topic_record.code) LIKE 'IC11-C__-T__'
     ) <> 43 THEN
         RAISE EXCEPTION 'Expected exactly 43 active planned IC11 topics.';
     END IF;
 
     IF EXISTS (
-        SELECT seed.chapter_code
-        FROM public.migration_ic11_topic_seed AS seed
+        SELECT expected.chapter_code
+        FROM (VALUES
+            ('IC11-C01', 4), ('IC11-C02', 4), ('IC11-C03', 4),
+            ('IC11-C04', 5), ('IC11-C05', 5), ('IC11-C06', 4),
+            ('IC11-C07', 6), ('IC11-C08', 6), ('IC11-C09', 5)
+        ) AS expected(chapter_code, expected_count)
+        LEFT JOIN public.subject_chapters AS chapter_record
+          ON chapter_record.subject_id = v_subject_id
+         AND pg_catalog.upper(chapter_record.code) = expected.chapter_code
         LEFT JOIN public.subject_topics AS topic_record
-          ON pg_catalog.upper(topic_record.code) = seed.code
+          ON topic_record.chapter_id = chapter_record.id
          AND topic_record.subject_id = v_subject_id
          AND topic_record.is_active = true
-        GROUP BY seed.chapter_code
-        HAVING pg_catalog.count(topic_record.id) <> pg_catalog.count(seed.code)
+         AND pg_catalog.upper(topic_record.code) LIKE expected.chapter_code || '-T__'
+        GROUP BY expected.chapter_code, expected.expected_count
+        HAVING pg_catalog.count(topic_record.id) <> expected.expected_count
     ) THEN
         RAISE EXCEPTION 'One or more IC11 chapters has an incomplete topic hierarchy.';
     END IF;
 END;
 $verify$;
-
-DROP TABLE IF EXISTS public.migration_ic11_topic_seed;
 
 COMMIT;

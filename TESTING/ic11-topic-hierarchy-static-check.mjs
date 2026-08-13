@@ -53,14 +53,23 @@ for (const forbidden of [
 }
 
 for (const required of [
-    'CREATE TABLE public.migration_ic11_topic_seed',
-    'ENABLE ROW LEVEL SECURITY',
-    'REVOKE ALL ON TABLE public.migration_ic11_topic_seed FROM anon, authenticated',
-    'WHERE NOT EXISTS',
+    'WITH topic_seed',
+    'ON CONFLICT (subject_id, code) DO UPDATE',
     'Expected exactly 43 active planned IC11 topics',
-    'DROP TABLE IF EXISTS public.migration_ic11_topic_seed'
+    'One or more IC11 chapters has an incomplete topic hierarchy'
 ]) {
     assert.ok(migration.includes(required), `Missing IC11 migration safeguard: ${required}`);
+}
+
+for (const forbiddenStagingOperation of [
+    'migration_ic11_topic_seed',
+    'CREATE TABLE',
+    'DROP TABLE'
+]) {
+    assert.ok(
+        !migration.includes(forbiddenStagingOperation),
+        `The IC11 hierarchy must not use session-dependent staging: ${forbiddenStagingOperation}`
+    );
 }
 
 for (const guardTarget of [
