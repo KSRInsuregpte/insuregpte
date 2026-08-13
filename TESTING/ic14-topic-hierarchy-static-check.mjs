@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+const here=dirname(fileURLToPath(import.meta.url));
+const migration=readFileSync(resolve(here,'..','supabase','migrations','20260813130000_seed_ic14_topic_hierarchy.sql'),'utf8');
+const rollback=readFileSync(resolve(here,'..','supabase','rollbacks','20260813130000_seed_ic14_topic_hierarchy.sql'),'utf8');
+const rows=migration.match(/^\('IC14-M\d{2}','IC14-C\d{2}',\d+,'IC14-C\d{2}-T\d{2}'/gm)??[];
+assert.equal(rows.length,37,'IC14 must define exactly 37 topics.');
+assert.equal(new Set(rows).size,37,'IC14 topic rows must be unique.');
+for(const required of ['ON COMMIT PRESERVE ROWS','Expected exactly 37 active IC14 topics','Addendum Requirements','Addendum Limits','Addendum Threshold','Foreign Investment and Ownership Controls']) assert.ok(migration.includes(required),`Missing IC14 control: ${required}`);
+for(const forbidden of ['insert into public.learning_resources','insert into public.flashcards','insert into public.user_','update public.user_','delete from public.user_']) assert.ok(!migration.toLowerCase().includes(forbidden),`Forbidden hierarchy write: ${forbidden}`);
+for(const guarded of ['learning_resources','flashcards','user_topic_progress','user_learning_activity']) assert.ok(rollback.includes(guarded),`Rollback must guard ${guarded}.`);
+console.log('IC14 topic hierarchy static checks passed: 37 topics with addendum-controlled scope.');
