@@ -3,9 +3,9 @@
 
 BEGIN;
 
-DROP TABLE IF EXISTS pg_temp.ic14_topic_seed;
+DROP TABLE IF EXISTS public.migration_ic14_topic_seed;
 
-CREATE TEMPORARY TABLE ic14_topic_seed (
+CREATE TABLE public.migration_ic14_topic_seed (
   module_code text NOT NULL,
   chapter_code text NOT NULL,
   topic_number integer NOT NULL,
@@ -14,9 +14,12 @@ CREATE TEMPORARY TABLE ic14_topic_seed (
   focus text NOT NULL,
   estimated_study_minutes integer NOT NULL,
   difficulty_level text NOT NULL
-) ON COMMIT PRESERVE ROWS;
+);
 
-INSERT INTO ic14_topic_seed VALUES
+ALTER TABLE public.migration_ic14_topic_seed ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.migration_ic14_topic_seed FROM anon, authenticated;
+
+INSERT INTO public.migration_ic14_topic_seed VALUES
 ('IC14-M01','IC14-C01',1,'IC14-C01-T01','Development of Insurance Legislation in India','early legislation; life and general insurance development; comprehensive regulation',35,'foundation'),
 ('IC14-M01','IC14-C01',2,'IC14-C01-T02','Nationalisation of Life and General Insurance','LIC framework; general insurance nationalisation; GIC and public-sector structure',35,'foundation'),
 ('IC14-M01','IC14-C01',3,'IC14-C01-T03','Insurance Sector Reforms and Liberalisation','Malhotra Committee; private participation; regulatory reform; market opening',40,'intermediate'),
@@ -74,7 +77,7 @@ BEGIN
   IF (SELECT pg_catalog.count(*) FROM public.subject_chapters WHERE subject_id=v_subject_id AND is_active=true) <> 9
     THEN RAISE EXCEPTION 'Exactly nine active IC14 chapters are required.'; END IF;
   IF EXISTS (
-    SELECT 1 FROM ic14_topic_seed seed
+    SELECT 1 FROM public.migration_ic14_topic_seed seed
     LEFT JOIN public.subject_modules module_record ON module_record.subject_id=v_subject_id AND pg_catalog.upper(module_record.code)=seed.module_code
     LEFT JOIN public.subject_chapters chapter_record ON chapter_record.subject_id=v_subject_id AND chapter_record.module_id=module_record.id AND pg_catalog.upper(chapter_record.code)=seed.chapter_code
     WHERE module_record.id IS NULL OR chapter_record.id IS NULL
@@ -93,7 +96,7 @@ SELECT subject_record.id,module_record.id,chapter_record.id,seed.topic_number,
   'Explain, compare and apply the principal requirements and concepts concerning ' || seed.title || '.',
   'Supports compliant insurance decisions, accurate examination answers and recognition of matters requiring current official verification.',
   seed.estimated_study_minutes,seed.difficulty_level,seed.topic_number,true,true
-FROM ic14_topic_seed seed
+FROM public.migration_ic14_topic_seed seed
 JOIN public.subjects subject_record ON pg_catalog.upper(subject_record.code)='IC14'
 JOIN public.subject_modules module_record ON module_record.subject_id=subject_record.id AND pg_catalog.upper(module_record.code)=seed.module_code
 JOIN public.subject_chapters chapter_record ON chapter_record.subject_id=subject_record.id AND chapter_record.module_id=module_record.id AND pg_catalog.upper(chapter_record.code)=seed.chapter_code
@@ -106,7 +109,7 @@ SET module_id=module_record.id,chapter_id=chapter_record.id,topic_number=seed.to
  practical_relevance='Supports compliant insurance decisions, accurate examination answers and recognition of matters requiring current official verification.',
  estimated_study_minutes=seed.estimated_study_minutes,difficulty_level=seed.difficulty_level,
  display_order=seed.topic_number,is_exam_relevant=true,is_active=true,updated_at=pg_catalog.clock_timestamp()
-FROM ic14_topic_seed seed
+FROM public.migration_ic14_topic_seed seed
 JOIN public.subjects subject_record ON pg_catalog.upper(subject_record.code)='IC14'
 JOIN public.subject_modules module_record ON module_record.subject_id=subject_record.id AND pg_catalog.upper(module_record.code)=seed.module_code
 JOIN public.subject_chapters chapter_record ON chapter_record.subject_id=subject_record.id AND chapter_record.module_id=module_record.id AND pg_catalog.upper(chapter_record.code)=seed.chapter_code
@@ -116,10 +119,10 @@ DO $verify$
 DECLARE v_subject_id bigint;
 BEGIN
   SELECT id INTO v_subject_id FROM public.subjects WHERE pg_catalog.upper(code)='IC14';
-  IF (SELECT pg_catalog.count(*) FROM public.subject_topics topic_record JOIN ic14_topic_seed seed ON seed.code=pg_catalog.upper(topic_record.code) WHERE topic_record.subject_id=v_subject_id AND topic_record.is_active=true) <> 37
+  IF (SELECT pg_catalog.count(*) FROM public.subject_topics topic_record JOIN public.migration_ic14_topic_seed seed ON seed.code=pg_catalog.upper(topic_record.code) WHERE topic_record.subject_id=v_subject_id AND topic_record.is_active=true) <> 37
     THEN RAISE EXCEPTION 'Expected exactly 37 active IC14 topics.'; END IF;
 END;
 $verify$;
 
-DROP TABLE IF EXISTS pg_temp.ic14_topic_seed;
+DROP TABLE IF EXISTS public.migration_ic14_topic_seed;
 COMMIT;

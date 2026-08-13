@@ -19,7 +19,10 @@ assert.equal(seedCodes.length, 39, 'The remaining IC11 migration must seed exact
 assert.equal(new Set(seedCodes).size, 39, 'Remaining IC11 topic codes must be unique.');
 
 for (const required of [
-    'ON COMMIT PRESERVE ROWS', "'NOTE'", "'REVISION_NOTE'", 'CROSS JOIN LATERAL',
+    'CREATE TABLE public.migration_ic11_remaining_content_seed',
+    'ENABLE ROW LEVEL SECURITY',
+    'REVOKE ALL ON TABLE public.migration_ic11_remaining_content_seed FROM anon, authenticated',
+    "'NOTE'", "'REVISION_NOTE'", 'CROSS JOIN LATERAL',
     'Expected exactly 78 active IC11 Chapter 2-9 resources',
     'Expected exactly 117 active IC11 Chapter 2-9 flashcards',
     'Every remaining IC11 topic must have two resources and three flashcards'

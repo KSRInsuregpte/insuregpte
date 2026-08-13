@@ -8,7 +8,7 @@ const rollback=readFileSync(resolve(here,'..','supabase','rollbacks','2026081313
 const rows=migration.match(/^\('IC14-M\d{2}','IC14-C\d{2}',\d+,'IC14-C\d{2}-T\d{2}'/gm)??[];
 assert.equal(rows.length,37,'IC14 must define exactly 37 topics.');
 assert.equal(new Set(rows).size,37,'IC14 topic rows must be unique.');
-for(const required of ['ON COMMIT PRESERVE ROWS','Expected exactly 37 active IC14 topics','Addendum Requirements','Addendum Limits','Addendum Threshold','Foreign Investment and Ownership Controls']) assert.ok(migration.includes(required),`Missing IC14 control: ${required}`);
+for(const required of ['CREATE TABLE public.migration_ic14_topic_seed','ENABLE ROW LEVEL SECURITY','REVOKE ALL ON TABLE public.migration_ic14_topic_seed FROM anon, authenticated','Expected exactly 37 active IC14 topics','Addendum Requirements','Addendum Limits','Addendum Threshold','Foreign Investment and Ownership Controls']) assert.ok(migration.includes(required),`Missing IC14 control: ${required}`);
 for(const forbidden of ['insert into public.learning_resources','insert into public.flashcards','insert into public.user_','update public.user_','delete from public.user_']) assert.ok(!migration.toLowerCase().includes(forbidden),`Forbidden hierarchy write: ${forbidden}`);
 for(const guarded of ['learning_resources','flashcards','user_topic_progress','user_learning_activity']) assert.ok(rollback.includes(guarded),`Rollback must guard ${guarded}.`);
 console.log('IC14 topic hierarchy static checks passed: 37 topics with addendum-controlled scope.');

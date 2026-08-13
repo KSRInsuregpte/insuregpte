@@ -5,9 +5,9 @@
 
 BEGIN;
 
-DROP TABLE IF EXISTS pg_temp.ic11_topic_seed;
+DROP TABLE IF EXISTS public.migration_ic11_topic_seed;
 
-CREATE TEMPORARY TABLE ic11_topic_seed (
+CREATE TABLE public.migration_ic11_topic_seed (
     module_code text NOT NULL,
     chapter_code text NOT NULL,
     topic_number integer NOT NULL,
@@ -19,9 +19,12 @@ CREATE TEMPORARY TABLE ic11_topic_seed (
     estimated_study_minutes integer NOT NULL,
     difficulty_level text NOT NULL,
     display_order integer NOT NULL
-) ON COMMIT PRESERVE ROWS;
+);
 
-INSERT INTO ic11_topic_seed VALUES
+ALTER TABLE public.migration_ic11_topic_seed ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.migration_ic11_topic_seed FROM anon, authenticated;
+
+INSERT INTO public.migration_ic11_topic_seed VALUES
 ('IC11-M01', 'IC11-C01', 1, 'IC11-C01-T01', 'Evolution and Legal Framework of General Insurance',
  'Development of general insurance in India and the principal laws that shape non-life insurance business.',
  'Trace the development of general insurance and identify the purpose of its principal legislation.',
@@ -241,7 +244,7 @@ BEGIN
 
     IF EXISTS (
         SELECT 1
-        FROM ic11_topic_seed AS seed
+        FROM public.migration_ic11_topic_seed AS seed
         LEFT JOIN public.subject_modules AS module_record
           ON module_record.subject_id = v_subject_id
          AND pg_catalog.upper(module_record.code) = seed.module_code
@@ -257,7 +260,7 @@ BEGIN
     IF EXISTS (
         SELECT 1
         FROM public.subject_topics AS topic_record
-        JOIN ic11_topic_seed AS seed
+        JOIN public.migration_ic11_topic_seed AS seed
           ON pg_catalog.upper(topic_record.code) = seed.code
         WHERE topic_record.subject_id <> v_subject_id
            OR pg_catalog.upper((
@@ -292,7 +295,7 @@ SELECT
     seed.display_order,
     true,
     true
-FROM ic11_topic_seed AS seed
+FROM public.migration_ic11_topic_seed AS seed
 JOIN public.subjects AS subject_record
   ON pg_catalog.upper(subject_record.code) = 'IC11'
 JOIN public.subject_modules AS module_record
@@ -322,7 +325,7 @@ SET module_id = module_record.id,
     is_exam_relevant = true,
     is_active = true,
     updated_at = pg_catalog.clock_timestamp()
-FROM ic11_topic_seed AS seed
+FROM public.migration_ic11_topic_seed AS seed
 JOIN public.subjects AS subject_record
   ON pg_catalog.upper(subject_record.code) = 'IC11'
 JOIN public.subject_modules AS module_record
@@ -347,7 +350,7 @@ BEGIN
     IF (
         SELECT pg_catalog.count(*)
         FROM public.subject_topics AS topic_record
-        JOIN ic11_topic_seed AS seed
+        JOIN public.migration_ic11_topic_seed AS seed
           ON seed.code = pg_catalog.upper(topic_record.code)
         WHERE topic_record.subject_id = v_subject_id
           AND topic_record.is_active = true
@@ -357,7 +360,7 @@ BEGIN
 
     IF EXISTS (
         SELECT seed.chapter_code
-        FROM ic11_topic_seed AS seed
+        FROM public.migration_ic11_topic_seed AS seed
         LEFT JOIN public.subject_topics AS topic_record
           ON pg_catalog.upper(topic_record.code) = seed.code
          AND topic_record.subject_id = v_subject_id
@@ -370,6 +373,6 @@ BEGIN
 END;
 $verify$;
 
-DROP TABLE IF EXISTS pg_temp.ic11_topic_seed;
+DROP TABLE IF EXISTS public.migration_ic11_topic_seed;
 
 COMMIT;

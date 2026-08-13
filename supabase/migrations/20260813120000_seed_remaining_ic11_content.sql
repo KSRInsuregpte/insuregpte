@@ -5,16 +5,19 @@
 
 BEGIN;
 
-DROP TABLE IF EXISTS pg_temp.ic11_remaining_content_seed;
+DROP TABLE IF EXISTS public.migration_ic11_remaining_content_seed;
 
-CREATE TEMPORARY TABLE ic11_remaining_content_seed (
+CREATE TABLE public.migration_ic11_remaining_content_seed (
     topic_code text PRIMARY KEY,
     learning_focus text NOT NULL,
     study_method text NOT NULL,
     exam_focus text NOT NULL
-) ON COMMIT PRESERVE ROWS;
+);
 
-INSERT INTO ic11_remaining_content_seed VALUES
+ALTER TABLE public.migration_ic11_remaining_content_seed ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.migration_ic11_remaining_content_seed FROM anon, authenticated;
+
+INSERT INTO public.migration_ic11_remaining_content_seed VALUES
 ('IC11-C02-T01', 'market evolution; public and private insurers; specialised participants; regulatory structure; market segmentation', 'Build a timeline, then group institutions by the insurance function they perform.', 'Explain the market structure and distinguish insurer, regulator and specialised institution.'),
 ('IC11-C02-T02', 'general insurers; standalone health insurers; reinsurers; agriculture insurance; export credit; government insurance arrangements', 'Compare each institution by ownership, customer, risk class and source of capacity.', 'Match an institution to its principal purpose and identify when specialist capacity is needed.'),
 ('IC11-C02-T03', 'agents; corporate agents; brokers; third-party administrators; surveyors; loss assessors', 'Use a responsibility matrix covering solicitation, advice, servicing, administration and loss assessment.', 'Distinguish intermediary roles and avoid assigning a regulated function to the wrong participant.'),
@@ -78,7 +81,7 @@ BEGIN
     IF (
         SELECT pg_catalog.count(*)
         FROM public.subject_topics AS topic_record
-        JOIN ic11_remaining_content_seed AS seed
+        JOIN public.migration_ic11_remaining_content_seed AS seed
           ON seed.topic_code = pg_catalog.upper(topic_record.code)
         WHERE topic_record.subject_id = v_subject_id
           AND topic_record.is_active = true
@@ -145,7 +148,7 @@ SELECT
     true,
     false,
     true
-FROM ic11_remaining_content_seed AS seed
+FROM public.migration_ic11_remaining_content_seed AS seed
 JOIN public.subject_topics AS topic_record
   ON pg_catalog.upper(topic_record.code) = seed.topic_code
 JOIN public.subjects AS subject_record
@@ -189,7 +192,7 @@ FROM (
       resource_type.id AS resource_type_id,
       CASE WHEN resource_type.code = 'NOTE' THEN 18 ELSE 6 END AS estimated_read_minutes,
       CASE WHEN resource_type.code = 'NOTE' THEN 1 ELSE 2 END AS display_order
-    FROM ic11_remaining_content_seed AS seed
+    FROM public.migration_ic11_remaining_content_seed AS seed
     JOIN public.subject_topics AS topic_record
       ON pg_catalog.upper(topic_record.code) = seed.topic_code
     JOIN public.subjects AS subject_record
@@ -217,7 +220,7 @@ SELECT
     CASE WHEN card.card_number = 1 THEN 'foundation' ELSE topic_record.difficulty_level END,
     true,
     true
-FROM ic11_remaining_content_seed AS seed
+FROM public.migration_ic11_remaining_content_seed AS seed
 JOIN public.subject_topics AS topic_record
   ON pg_catalog.upper(topic_record.code) = seed.topic_code
 JOIN public.subjects AS subject_record
@@ -255,7 +258,7 @@ FROM (
       card.explanation,
       card.card_number,
       CASE WHEN card.card_number = 1 THEN 'foundation' ELSE topic_record.difficulty_level END AS difficulty_level
-    FROM ic11_remaining_content_seed AS seed
+    FROM public.migration_ic11_remaining_content_seed AS seed
     JOIN public.subject_topics AS topic_record
       ON pg_catalog.upper(topic_record.code) = seed.topic_code
     JOIN public.subjects AS subject_record
@@ -303,7 +306,7 @@ BEGIN
 
     IF EXISTS (
         SELECT 1 FROM public.subject_topics AS topic_record
-        JOIN ic11_remaining_content_seed AS seed ON seed.topic_code = pg_catalog.upper(topic_record.code)
+        JOIN public.migration_ic11_remaining_content_seed AS seed ON seed.topic_code = pg_catalog.upper(topic_record.code)
         WHERE (
           SELECT pg_catalog.count(*) FROM public.learning_resources AS resource_record
           WHERE resource_record.topic_id = topic_record.id AND resource_record.is_active = true
@@ -317,6 +320,6 @@ BEGIN
 END;
 $verify$;
 
-DROP TABLE IF EXISTS pg_temp.ic11_remaining_content_seed;
+DROP TABLE IF EXISTS public.migration_ic11_remaining_content_seed;
 
 COMMIT;

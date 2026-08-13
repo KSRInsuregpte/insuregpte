@@ -32,7 +32,9 @@ for (const topic of ['T01', 'T02', 'T03', 'T04']) {
     assert.ok(migration.includes(`'IC11-C01-${topic}'`), `Missing IC11 Chapter 1 ${topic}.`);
 }
 for (const required of [
-    "'NOTE'", "'REVISION_NOTE'", 'ON COMMIT PRESERVE ROWS',
+    "'NOTE'", "'REVISION_NOTE'", 'ENABLE ROW LEVEL SECURITY',
+    'REVOKE ALL ON TABLE public.migration_ic11_c01_resource_seed FROM anon, authenticated',
+    'REVOKE ALL ON TABLE public.migration_ic11_c01_flashcard_seed FROM anon, authenticated',
     'WHERE NOT EXISTS', 'Expected exactly 8 active IC11 Chapter 1 resources',
     'Expected exactly 12 active IC11 Chapter 1 flashcards'
 ]) {

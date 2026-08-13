@@ -53,10 +53,12 @@ for (const forbidden of [
 }
 
 for (const required of [
-    'ON COMMIT PRESERVE ROWS',
+    'CREATE TABLE public.migration_ic11_topic_seed',
+    'ENABLE ROW LEVEL SECURITY',
+    'REVOKE ALL ON TABLE public.migration_ic11_topic_seed FROM anon, authenticated',
     'WHERE NOT EXISTS',
     'Expected exactly 43 active planned IC11 topics',
-    'DROP TABLE IF EXISTS pg_temp.ic11_topic_seed'
+    'DROP TABLE IF EXISTS public.migration_ic11_topic_seed'
 ]) {
     assert.ok(migration.includes(required), `Missing IC11 migration safeguard: ${required}`);
 }

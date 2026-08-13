@@ -51,9 +51,9 @@ BEGIN
 END;
 $validate$;
 
-DROP TABLE IF EXISTS pg_temp.ic11_c01_resource_seed;
+DROP TABLE IF EXISTS public.migration_ic11_c01_resource_seed;
 
-CREATE TEMPORARY TABLE ic11_c01_resource_seed (
+CREATE TABLE public.migration_ic11_c01_resource_seed (
     topic_code text NOT NULL,
     resource_type_code text NOT NULL,
     code text PRIMARY KEY,
@@ -62,9 +62,12 @@ CREATE TEMPORARY TABLE ic11_c01_resource_seed (
     content text NOT NULL,
     estimated_read_minutes integer NOT NULL,
     display_order integer NOT NULL
-) ON COMMIT PRESERVE ROWS;
+);
 
-INSERT INTO ic11_c01_resource_seed VALUES
+ALTER TABLE public.migration_ic11_c01_resource_seed ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.migration_ic11_c01_resource_seed FROM anon, authenticated;
+
+INSERT INTO public.migration_ic11_c01_resource_seed VALUES
 ('IC11-C01-T01', 'NOTE', 'LR-IC11-C01-T01-001',
  'Evolution and Legal Framework of General Insurance',
  'An original overview of the development of Indian general insurance and its layered legal framework.',
@@ -316,7 +319,7 @@ SELECT
     resource_type.id, seed.code, seed.title, seed.short_description, seed.content,
     NULL, NULL, 'InsureGPTE Editorial Team', 1, seed.estimated_read_minutes,
     seed.display_order, true, false, true
-FROM ic11_c01_resource_seed AS seed
+FROM public.migration_ic11_c01_resource_seed AS seed
 JOIN public.subjects AS subject_record
   ON pg_catalog.upper(subject_record.code) = 'IC11'
 JOIN public.subject_modules AS module_record
@@ -353,14 +356,14 @@ SET resource_type_id = resource_type.id,
     is_premium = false,
     is_active = true,
     updated_at = pg_catalog.clock_timestamp()
-FROM ic11_c01_resource_seed AS seed
+FROM public.migration_ic11_c01_resource_seed AS seed
 JOIN public.learning_resource_types AS resource_type
   ON pg_catalog.upper(resource_type.code) = seed.resource_type_code
 WHERE pg_catalog.upper(resource_record.code) = seed.code;
 
-DROP TABLE IF EXISTS pg_temp.ic11_c01_flashcard_seed;
+DROP TABLE IF EXISTS public.migration_ic11_c01_flashcard_seed;
 
-CREATE TEMPORARY TABLE ic11_c01_flashcard_seed (
+CREATE TABLE public.migration_ic11_c01_flashcard_seed (
     topic_code text NOT NULL,
     code text PRIMARY KEY,
     question text NOT NULL,
@@ -368,9 +371,12 @@ CREATE TEMPORARY TABLE ic11_c01_flashcard_seed (
     explanation text NOT NULL,
     display_order integer NOT NULL,
     difficulty_level text NOT NULL
-) ON COMMIT PRESERVE ROWS;
+);
 
-INSERT INTO ic11_c01_flashcard_seed VALUES
+ALTER TABLE public.migration_ic11_c01_flashcard_seed ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.migration_ic11_c01_flashcard_seed FROM anon, authenticated;
+
+INSERT INTO public.migration_ic11_c01_flashcard_seed VALUES
 ('IC11-C01-T01', 'FC-IC11-C01-T01-001', 'Why does insurance require special regulation?',
  'Premium is received before the uncertain future cost of claims is known, so supervision protects financial soundness, fair treatment and confidence in the promise to pay.',
  'The time gap and information imbalance distinguish insurance from an ordinary immediate exchange.', 1, 'foundation'),
@@ -419,7 +425,7 @@ SELECT
     subject_record.id, module_record.id, chapter_record.id, topic_record.id,
     seed.code, seed.question, seed.answer, seed.explanation,
     seed.display_order, seed.difficulty_level, true, true
-FROM ic11_c01_flashcard_seed AS seed
+FROM public.migration_ic11_c01_flashcard_seed AS seed
 JOIN public.subjects AS subject_record
   ON pg_catalog.upper(subject_record.code) = 'IC11'
 JOIN public.subject_modules AS module_record
@@ -448,7 +454,7 @@ SET question = seed.question,
     is_exam_relevant = true,
     is_active = true,
     updated_at = pg_catalog.clock_timestamp()
-FROM ic11_c01_flashcard_seed AS seed
+FROM public.migration_ic11_c01_flashcard_seed AS seed
 WHERE pg_catalog.upper(flashcard_record.code) = seed.code;
 
 DO $verify$
@@ -479,7 +485,7 @@ BEGIN
 END;
 $verify$;
 
-DROP TABLE IF EXISTS pg_temp.ic11_c01_flashcard_seed;
-DROP TABLE IF EXISTS pg_temp.ic11_c01_resource_seed;
+DROP TABLE IF EXISTS public.migration_ic11_c01_flashcard_seed;
+DROP TABLE IF EXISTS public.migration_ic11_c01_resource_seed;
 
 COMMIT;
