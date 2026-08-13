@@ -52,7 +52,23 @@ with audit_rows as (
   union all
 
   select
-    '04_rule'::text,
+    '04_constraint'::text,
+    constraint_record.conname::text,
+    pg_catalog.jsonb_build_object(
+      'constraint_type', constraint_record.contype,
+      'definition', pg_catalog.pg_get_constraintdef(constraint_record.oid, true),
+      'referenced_relation', case
+        when constraint_record.confrelid = 0 then null
+        else constraint_record.confrelid::pg_catalog.regclass::text
+      end
+    )
+  from pg_catalog.pg_constraint as constraint_record
+  where constraint_record.conrelid = 'public.subject_topics'::pg_catalog.regclass
+
+  union all
+
+  select
+    '05_rule'::text,
     rewrite_record.rulename::text,
     pg_catalog.jsonb_build_object(
       'definition', pg_catalog.pg_get_ruledef(rewrite_record.oid, true)
