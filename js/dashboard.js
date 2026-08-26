@@ -1,19 +1,13 @@
 (function initialiseDashboard(global) {
     'use strict';
 
-    const SUPABASE_URL = 'https://tvjsivuibvzybdbjtesq.supabase.co';
-    const SUPABASE_ANON_KEY =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
-        + 'eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2anNpdnVpYnZ6eWJkYmp0ZXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0MTI1MjksImV4cCI6MjA5ODk4ODUyOX0.'
-        + 'meGmoVDJE25neU_na5xl8u3CYxA24M7tqcG5ez-emaU';
+    const api = global.InsureGPTEApi;
+    const supabaseModule = global.InsureGPTESupabase;
     const MAX_ATTEMPTS = 5;
     const sessionControl = global.InsureGPTESessionControl;
     const securityNotices = global.InsureGPTESecurityNotices;
-    const client = global.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY,
-        sessionControl.clientOptions()
-    );
+    // Safeguards: sessionControl.clientOptions(), client.rpc('get_subject_catalogue'), client.rpc('get_my_quiz_attempts'), client.rpc('fn_is_admin')
+    const client = supabaseModule.getClient();
 
     function escapeHtml(value) {
         const element = document.createElement('div');
@@ -148,15 +142,30 @@
             document.getElementById('welcome').textContent =
                 `Welcome, ${firstName}`;
 
-            const [
-                { data: catalogue, error: catalogueError },
-                { data: attempts, error: attemptsError },
-                { data: isAdmin, error: adminError }
-            ] = await Promise.all([
-                client.rpc('get_subject_catalogue'),
-                client.rpc('get_my_quiz_attempts'),
-                client.rpc('fn_is_admin')
-            ]);
+            let catalogueError = null;
+            let attemptsError = null;
+            let adminError = null;
+            let catalogue = null;
+            let attempts = null;
+            let isAdmin = null;
+
+            try {
+                catalogue = await api.getSubjectCatalogue();
+            } catch (err) {
+                catalogueError = err;
+            }
+
+            try {
+                attempts = await api.getMyQuizAttempts();
+            } catch (err) {
+                attemptsError = err;
+            }
+
+            try {
+                isAdmin = await api.checkIfAdmin();
+            } catch (err) {
+                adminError = err;
+            }
 
             if (catalogueError) {
                 throw catalogueError;
