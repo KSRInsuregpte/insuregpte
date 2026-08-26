@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## 2026-08-11 — Learning Module test release
+
+- Added the 12 approved authenticated Learning and hierarchy RPCs over the
+  existing Version 1.0 tables, with premium-resource redaction, entitlement
+  enforcement, owned progress, resume state, recent activity, and statistics.
+- Repaired the legacy topic-progress function so anonymous or cross-user writes
+  are rejected while preserving its deployed signature.
+- Removed direct browser privileges from Learning tables and retained audited
+  administrator maintenance through secured RPCs.
+- Added `learning.html`, protected session integration, ordered course contents,
+  resource reading, flashcards, topic completion, and responsive empty/error
+  states on the dedicated test branch.
+- Added read-only live audit, rollback, post-deployment verification, static
+  regression checks, and a controlled trial guide. Trial deployment and browser
+  acceptance remain pending.
+
+### 2026-08-12 trial correction
+
+- Corrected the invalid `pg_catalog.greatest(numeric,numeric)` qualification in
+  both Learning progress write paths after browser acceptance identified the
+  PostgreSQL `42883` runtime error. The correction changes only function
+  definitions and does not update learner data.
+- Confirmed topic completion persists across refresh, logout, and login; added
+  automatic scrolling and focus when flashcards open, plus accessible reusable
+  Show/Hide controls for each learning resource.
+- Advanced the Learning JavaScript asset version after trial testing confirmed
+  a browser had retained the pre-interaction script, and added visible disclosure
+  arrows to the Show/Hide Resource controls.
+
 All notable changes to the InsureGPTE project will be documented in this file.
 
 This project follows Semantic Versioning (SemVer).
@@ -75,6 +104,30 @@ This project follows Semantic Versioning (SemVer).
 - CODING_RULES.md
 
 ### Changed
+
+- Froze Architecture Version 1.6 with eight qualification levels,
+  five III programmes, three NIA broker programmes, four programme categories,
+  nine programme-section codes, and four subject-category dropdown values
+- Consolidated the former standalone NIA Life Broker programme into Direct
+  Broker while preserving linked subjects and examination information
+- Added III Specialised Diploma and Surveyor programmes and database-enforced
+  hierarchy vocabulary checks
+- Restricted Admin, CSV upload, and database subject categories to the four
+  approved dropdown values
+- Clarified Direct Broker as
+  `Direct Broker – General, Life and Health Training` with the description
+  `General, Life and Health Training`
+- Filtered Admin programme-section selectors by the selected programme and
+  safely remapped legacy same-code sections instead of submitting a section
+  owned by another programme
+- Added an explicit Admin deployment warning and save guard when the preview
+  database still exposes the previous qualification, programme, or section
+  configuration
+- Added a guarded data repair for subjects and examination information linked
+  to a programme section owned by another programme
+- Added the reviewed, record-preserving mapping of 20 legacy III Optional
+  Credit subjects into Licentiate, Associate, and Fellowship destinations;
+  subject IDs, activation states, and dependent records remain unchanged
 
 - Database normalized into hierarchical academic structure
 - Learner safety notices now refresh across every authenticated catalogue,

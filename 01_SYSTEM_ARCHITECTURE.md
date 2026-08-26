@@ -1,9 +1,9 @@
 # InsureGPTE System Architecture
 
 **Document:** 01_SYSTEM_ARCHITECTURE.md  
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Approved — Architecture Frozen  
-**Approval Date:** 2026-07-25
+**Approval Date:** 2026-08-10
 **Project Owner:** Sundararajan Desikan  
 **Platform:** InsureGPTE  
 **Primary Stack:** HTML, Tailwind CSS, JavaScript, Supabase, PostgreSQL, Vercel  
@@ -23,6 +23,8 @@ All implementation must remain consistent with:
 - `CODING_RULES.md`
 - `PROJECT_GOVERNANCE.md`
 - this document
+- `docs/ACADEMIC_HIERARCHY_FREEZE.md`
+- `docs/DEVELOPMENT_WORKFLOW.md`
 
 ---
 
@@ -1199,6 +1201,59 @@ Any architecture change must document:
   implemented on the dedicated branch. Trial Supabase deployment, controlled
   browser acceptance, provider-monitor integration, and the server-side email
   worker remain pending.
+
+---
+
+## 23.2 Approved Academic Hierarchy — Architecture Version 1.6
+
+- **Qualification levels:** `licentiate`, `associate`, `fellowship`,
+  `spl_diploma`, `surveyor`, `direct_broker`, `reinsurance_broker`, and
+  `composite_broker`, using the exact approved names in
+  `docs/ACADEMIC_HIERARCHY_FREEZE.md`.
+- **III programmes:** Licentiate, Associate, Fellowship, Specialised Diploma,
+  and Surveyor examination preparation.
+- **NIA programmes:** Direct Broker – General, Life and Health Training,
+  Reinsurance Broker Training, and Composite Broker Training. There is no
+  standalone Life Broker programme.
+- **Programme categories:** `professional_qualification`, `broker_exam`,
+  `surveyor_exam`, and `specialized_diploma_exam`.
+- **Programme sections:** `compulsory`, `compulsory_optional`,
+  `optional_credit`, `general_insurance`, `life_insurance`, `reinsurance`,
+  `broker`, `surveyor`, and `spl_diploma`.
+- **Subject categories:** General Insurance, Life Insurance,
+  Common (Life & Non-Life), and Regulation and Compliance. This is a closed
+  database-constrained list exposed as a required Admin dropdown.
+- **Migration safety:** legacy Optional Credit and Life Broker dependencies
+  must be audited before data is remapped or retired. No legacy academic data
+  may be deleted without reviewed mapping evidence.
+- **Approval decision:** frozen by the project owner on 2026-08-11.
+
+## 23.3 Learning Module controlled release
+
+- **Requested change:** proceed with the learner-facing Learning Module after
+  freezing the academic hierarchy.
+- **Database impact:** reuse the existing modules, chapters, topics, resources,
+  flashcards, progress, activity, and entitlement tables; create no duplicate
+  learning table and retain every existing learner/content row.
+- **RPC impact:** implement the approved Pack 1 hierarchy and Pack 2 Learning
+  functions, preserve the legacy topic-progress signature, repair its anonymous
+  and cross-user execution risk, and remove direct browser table privileges.
+- **Access impact:** active learners may open active non-premium resources;
+  premium payloads and flashcards require a current subject entitlement.
+- **Progress impact:** activity is append-only, identity comes from
+  `auth.uid()`, learning time and completion cannot decrease, and completed
+  topics do not regress.
+- **Frontend impact:** add the protected `learning.html` page with ordered
+  course contents, resource reading, flashcards, resume state, statistics, and
+  topic completion; connect it from the subject and dashboard pages.
+- **Release impact:** implement only on `test/learning-module`, deploy the
+  versioned SQL to trial, verify database authorization and two-user isolation,
+  complete browser acceptance, and merge afterward.
+- **Approval decision:** approved when the project owner instructed development
+  to proceed on 2026-08-11.
+- **Implementation status:** live-object audit reviewed; repository migration,
+  rollback, verification, frontend, documentation, and automated static checks
+  implemented. Trial SQL execution and browser acceptance remain pending.
 
 ---
 

@@ -14,6 +14,7 @@ const htmlFiles = [
     'test.html',
     'catalogue.html',
     'subject.html',
+    'learning.html',
     'cart.html',
     'admin-dashboard.html'
 ];
@@ -26,6 +27,7 @@ const javascriptFiles = [
     'js/dashboard.js',
     'js/catalogue.js',
     'js/subject.js',
+    'js/learning.js',
     'js/cart.js',
     'js/admin.js'
 ];
@@ -60,6 +62,15 @@ const requiredSnippets = {
         'js/session-control.js',
         'js/subject.js',
         'Learning content rollout'
+    ],
+    'learning.html': [
+        'js/session-control.js',
+        'js/security-notices.js',
+        'js/learning.js',
+        'id="hierarchy-list"',
+        'id="resource-list"',
+        'id="flashcard-list"',
+        'id="complete-topic-button"'
     ],
     'cart.html': [
         'js/session-control.js',
@@ -120,7 +131,21 @@ const requiredJavascriptSnippets = {
         'sessionControl.clientOptions()',
         "'get_subject_catalogue'",
         "client.rpc('add_subject_to_cart'",
-        '&mode=demo'
+        '&mode=demo',
+        'learning.html?subject_id='
+    ],
+    'js/learning.js': [
+        'sessionControl.clientOptions()',
+        'sessionControl.acquirePageControl',
+        'sessionControl.activateProtectedPage',
+        'sessionControl.logoutEverywhere',
+        "callRpc('get_subject_hierarchy'",
+        "callRpc('get_topic_details'",
+        "callRpc('get_learning_resources'",
+        "callRpc('get_flashcards'",
+        "callRpc('record_learning_activity'",
+        "callRpc('get_resume_learning'",
+        "callRpc('get_learning_statistics'"
     ],
     'js/cart.js': [
         'sessionControl.clientOptions()',

@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/session-control.js?v=20260803"></script>
     <script defer src="js/admin-bulk-upload.js?v=20260731"></script>
-    <script defer src="js/admin.js?v=20260803"></script>
+    <script defer src="js/admin.js?v=20260811b"></script>
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900">
     <div id="admin-loading" class="flex min-h-screen items-center justify-center p-6">
@@ -162,7 +162,13 @@
                                 <select id="subject-section" class="mt-1 w-full rounded-xl border p-3"></select>
                             </label>
                             <label class="font-semibold">Category
-                                <input id="subject-category" maxlength="120" class="mt-1 w-full rounded-xl border p-3">
+                                <select id="subject-category" required class="mt-1 w-full rounded-xl border p-3">
+                                    <option value="">Select category</option>
+                                    <option value="General Insurance">General Insurance</option>
+                                    <option value="Life Insurance">Life Insurance</option>
+                                    <option value="Common (Life &amp; Non-Life)">Common (Life &amp; Non-Life)</option>
+                                    <option value="Regulation and Compliance">Regulation and Compliance</option>
+                                </select>
                             </label>
                             <label class="font-semibold">Syllabus version
                                 <input id="subject-syllabus" maxlength="120" class="mt-1 w-full rounded-xl border p-3">

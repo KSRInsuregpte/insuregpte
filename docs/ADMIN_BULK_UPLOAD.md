@@ -89,6 +89,12 @@ Stable codes identify hierarchy records. A repeated stable code updates its
 existing record; a new code creates a record. Programme sections use the
 combination of `programme_code` and section `code`.
 
+Architecture Version 1.6 is frozen in `docs/ACADEMIC_HIERARCHY_FREEZE.md`.
+Programme categories and programme-section codes must use the exact approved
+values in that document. Subject categories must use one of the four approved
+values; custom values are rejected. The standalone NIA Life Broker programme
+is retired; Life is part of Direct Broker.
+
 The existing subject contract still uses optional hierarchy IDs. Leave `id`
 blank to create a new subject and provide an existing numeric `id` to update a
 subject. A new subject must use `is_active=false`.

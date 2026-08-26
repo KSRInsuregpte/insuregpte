@@ -28,16 +28,16 @@
   email OTP, mobile OTP, and server-side completeness enforcement in the
   repository
 - [ ] Audit and quarantine the suspicious unverified registration
-- [ ] Configure the Before User Created hook in Supabase Auth
-- [ ] Configure Cloudflare Turnstile in Cloudflare, the frontend, and Supabase
-- [ ] Configure the email confirmation template for six-digit OTP entry
+- [x] Configure the Before User Created hook in Supabase Auth
+- [x] Configure Cloudflare Turnstile in Cloudflare, the frontend, and Supabase
+- [x] Configure the email confirmation template for six-digit OTP entry
 - [x] Validate the standard Supabase/Twilio mobile OTP integration in a
   controlled trial
 - [x] Temporarily activate protected accounts after email OTP only
-- [ ] Configure the 12-character minimum Auth password policy
-- [ ] Deploy and runtime-verify protected registration end to end
-- [ ] Deploy and runtime-verify first-active-page enforcement
-- [ ] Deploy and verify hardened `submit_quiz_answer`
+- [x] Configure the 12-character minimum Auth password policy
+- [x] Deploy and runtime-verify protected registration end to end
+- [x] Deploy and runtime-verify first-active-page enforcement
+- [x] Deploy and verify hardened `submit_quiz_answer`
 - [x] Keep the final quiz result visible and preserve login until the learner
   explicitly returns to subject selection or logs out
 - [x] Harden `start_quiz_attempt` entitlement, active-question, and concurrency rules in the repository
@@ -53,10 +53,10 @@
 - [x] Run the catalogue/admin compatibility repair after the catalogue, demo,
   regulatory metadata, and admin migrations are deployed in timestamp order
 - [ ] Select a production payment provider and approve signed-webhook fulfilment design
-- [ ] Make quiz finalization idempotent and time-limit safe
+- [x] Make quiz finalization idempotent and time-limit safe
 - [ ] Complete remaining RPCs
 - [ ] Dashboard APIs
-- [ ] Learning APIs
+- [ ] Learning APIs (repository implementation complete; trial SQL and browser acceptance pending)
 - [ ] Analytics APIs
 - [ ] Recommendation APIs
 - [x] Add a privacy-safe live admin-role, management-object, and commerce audit
@@ -68,9 +68,9 @@
 - [x] Add guarded, atomic administrator CSV formats and bulk upload for
   existing-user status, the academic hierarchy, subjects, learning content,
   question-bank content, official exam information, and non-payment grants
-- [ ] Deploy and runtime-verify administrator bulk upload in trial before
+- [x] Deploy and runtime-verify administrator bulk upload in trial before
   production use
-- [ ] Deploy and verify the administrator audit entity-type compatibility
+- [x] Deploy and verify the administrator audit entity-type compatibility
   repair before retrying the controlled bulk import
 - [x] Add a privacy-safe live safety-system object audit covering existing
   Auth audit, session lease, administrator audit, notification, incident,
@@ -90,6 +90,8 @@
   outbox; keep SMTP and service-role secrets outside the browser
 - [ ] Connect approved Vercel/Supabase/security provider monitors to the
   service-role-only event-ingestion RPC
+- [x] Freeze qualification levels, programmes, programme categories,
+  programme sections, and subject categories
 
 ---
 

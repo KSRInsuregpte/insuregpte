@@ -40,6 +40,7 @@
 
     function render(subject) {
         const currentUrl = `subject.html?subject_id=${encodeURIComponent(subject.subject_id)}`;
+        const learningUrl = `learning.html?subject_id=${encodeURIComponent(subject.subject_id)}`;
         const demoUrl = `test.html?subject_id=${encodeURIComponent(subject.subject_id)}`
             + `&subject_code=${encodeURIComponent(subject.subject_code)}&mode=demo`;
         const practiceUrl = `test.html?subject_id=${encodeURIComponent(subject.subject_id)}`
@@ -97,6 +98,11 @@
                 ? 'Your entitlement is active. The subject is available on your practice dashboard.'
                 : 'Practice access becomes active only after verified payment or an approved complimentary grant.';
         document.getElementById('subject-actions').innerHTML = `
+            ${subject.has_learning_content ? `
+                <a href="${signedIn ? learningUrl : authDestination(learningUrl)}" class="rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-700">
+                    Open Learning
+                </a>
+            ` : ''}
             ${demoReady ? `
                 <a href="${signedIn ? demoUrl : authDestination(demoUrl)}" class="rounded-xl bg-red-600 px-5 py-3 font-bold text-white hover:bg-red-700">
                     Free Advanced Demo

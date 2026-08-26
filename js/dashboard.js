@@ -85,7 +85,7 @@
                     <td class="border-b px-5 py-5 text-center font-bold">${MAX_ATTEMPTS}</td>
                     <td class="border-b px-5 py-5">
                         <div class="flex flex-wrap justify-center gap-2">
-                            <a href="subject.html?subject_id=${encodeURIComponent(subject.subject_id)}" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-700">
+                            <a href="${subject.has_learning_content ? 'learning.html' : 'subject.html'}?subject_id=${encodeURIComponent(subject.subject_id)}" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-700">
                                 Learning
                             </a>
                             ${limitReached
