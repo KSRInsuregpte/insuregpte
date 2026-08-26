@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## 2026-08-11 — Learning Module test release
+
+- Added the 12 approved authenticated Learning and hierarchy RPCs over the
+  existing Version 1.0 tables, with premium-resource redaction, entitlement
+  enforcement, owned progress, resume state, recent activity, and statistics.
+- Repaired the legacy topic-progress function so anonymous or cross-user writes
+  are rejected while preserving its deployed signature.
+- Removed direct browser privileges from Learning tables and retained audited
+  administrator maintenance through secured RPCs.
+- Added `learning.html`, protected session integration, ordered course contents,
+  resource reading, flashcards, topic completion, and responsive empty/error
+  states on the dedicated test branch.
+- Added read-only live audit, rollback, post-deployment verification, static
+  regression checks, and a controlled trial guide. Trial deployment and browser
+  acceptance remain pending.
+
+### 2026-08-12 trial correction
+
+- Corrected the invalid `pg_catalog.greatest(numeric,numeric)` qualification in
+  both Learning progress write paths after browser acceptance identified the
+  PostgreSQL `42883` runtime error. The correction changes only function
+  definitions and does not update learner data.
+- Confirmed topic completion persists across refresh, logout, and login; added
+  automatic scrolling and focus when flashcards open, plus accessible reusable
+  Show/Hide controls for each learning resource.
+- Advanced the Learning JavaScript asset version after trial testing confirmed
+  a browser had retained the pre-interaction script, and added visible disclosure
+  arrows to the Show/Hide Resource controls.
+
 All notable changes to the InsureGPTE project will be documented in this file.
 
 This project follows Semantic Versioning (SemVer).

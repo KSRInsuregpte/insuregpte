@@ -137,3 +137,34 @@ profile, question, Auth, and regulatory tables identified by the live audit.
 The bulk release creates no data table. `admin_save_exam_information(jsonb)`
 also accepts `official_notice` and verifies that programme and section
 references belong to their stated authority and programme.
+
+## Learning Module controlled release
+
+All Learning functions are granted only to `authenticated`, require
+`auth.uid()`, and reject inactive profiles. Browser roles have no direct table
+privileges on the learning hierarchy, resource, flashcard, progress, or
+activity tables.
+
+- `get_subject_hierarchy(p_subject_id)` returns the ordered module, chapter,
+  and topic path with owned progress and content counts.
+- `get_modules_by_subject(p_subject_id)`,
+  `get_chapters_by_module(p_module_id)`, and
+  `get_topics_by_chapter(p_chapter_id)` provide independently reusable hierarchy
+  reads.
+- `get_topic_details(p_topic_id)` returns the active topic and its breadcrumb,
+  learning objective, practical relevance, owned progress, and access state.
+- `get_learning_resources(p_topic_id)` returns active resources. Premium
+  content, URL, and attachment fields are `NULL` without a current entitlement.
+- `get_flashcards(p_topic_id)` returns active cards only to a currently entitled
+  learner.
+- `record_learning_activity(...)` validates ownership, hierarchy, access,
+  reference type, duration, and progress before atomically appending activity
+  and updating topic progress.
+- `get_resume_learning(p_subject_id)`, `get_recent_activity(p_limit)`,
+  `get_topic_completion(p_topic_id)`, and
+  `get_learning_statistics(p_subject_id)` return only the current learner's
+  resumable state and aggregates.
+
+The legacy `upsert_user_topic_progress` signature remains compatible but now
+requires `p_user_id = auth.uid()` and is no longer executable anonymously. See
+`docs/LEARNING_MODULE.md` for the activity-reference contract and trial plan.
