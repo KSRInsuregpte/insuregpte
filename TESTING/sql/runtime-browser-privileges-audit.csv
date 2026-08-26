@@ -1,0 +1,17 @@
+table_name,exists,anon_select,authenticated_select,anon_insert,authenticated_insert,anon_update,authenticated_update,anon_delete,authenticated_delete
+cart_items,true,true,true,true,true,true,true,true,true
+carts,true,true,true,true,true,true,true,true,true
+flashcards,true,false,false,false,false,false,false,false,false
+learning_activity,false,null,null,null,null,null,null,null,null
+learning_resources,true,false,false,false,false,false,false,false,false
+profiles,true,false,true,false,false,false,false,false,false
+questions,true,false,false,false,false,false,false,false,false
+quiz_attempt_questions,true,true,true,true,true,true,true,true,true
+quiz_attempts,true,true,true,true,true,true,true,true,true
+regulatory_academic_publications,true,false,false,false,false,false,false,false,false
+subject_chapters,true,false,false,false,false,false,false,false,false
+subject_modules,true,false,false,false,false,false,false,false,false
+subject_topics,true,false,false,false,false,false,false,false,false
+subjects,true,false,false,false,false,false,false,false,false
+user_entitlements,true,true,true,true,true,true,true,true,true
+user_topic_progress,true,false,false,false,false,false,false,false,false
