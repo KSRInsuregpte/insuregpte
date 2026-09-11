@@ -143,6 +143,15 @@ let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,curren
 const selectedAnswers={},answerResults={},reviewQuestions=new Set();
 
 function selectedSubject(){const p=new URLSearchParams(location.search),id=p.get('subject_id'),code=p.get('subject_code'),mode=p.get('mode')==='demo'?'demo':'practice',n=Number(id);return id&&code&&Number.isInteger(n)&&n>0?{id:n,code,mode}:null}
+function applyInitialMode(){
+  const s=selectedSubject();
+  if(!s)return;
+  const demo=s.mode==='demo';
+  document.getElementById('subject-heading').innerText=`${s.code} · ${demo?'Free Advanced Demo':'Practice Quiz'}`;
+  document.getElementById('start-heading').innerText=`Ready to begin ${s.code} ${demo?'demo':'practice'}?`;
+  document.getElementById('start-description').innerText=`You will receive ${demo?'10 advanced questions':'50 random questions'}. Each correct answer carries 1 mark. An attempt is counted when you click the button below.`;
+  document.getElementById('start-panel').style.visibility='visible';
+}
 async function redirectForInactiveSession(error){
   return sessionControl.handleInactiveSessionError(error);
 }
@@ -386,7 +395,7 @@ async function confirmExit(){
 function escapeHtml(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}
 function appendCalc(v){document.getElementById('calculator-display').value+=v}function clearCalc(){document.getElementById('calculator-display').value=''}function backCalc(){const d=document.getElementById('calculator-display');d.value=d.value.slice(0,-1)}function equals(){const d=document.getElementById('calculator-display'),x=d.value.trim();if(!x)return;if(!/^[0-9+\-*/.()\s]+$/.test(x)){d.value='Error';return}try{const r=Function('"use strict";return('+x+')')();d.value=Number.isFinite(r)?String(r):'Error'}catch(e){d.value='Error'}}
 
-document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('back-button').onclick=requestDashboardExit;document.getElementById('dashboard-exit-button').onclick=requestDashboardExit;document.getElementById('logout-button').onclick=logout;document.getElementById('continue-quiz-button').onclick=()=>closeExitConfirmation();document.getElementById('confirm-exit-button').onclick=confirmExit;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers();updateExitActions()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});initialisePage();
+document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('back-button').onclick=requestDashboardExit;document.getElementById('dashboard-exit-button').onclick=requestDashboardExit;document.getElementById('logout-button').onclick=logout;document.getElementById('continue-quiz-button').onclick=()=>closeExitConfirmation();document.getElementById('confirm-exit-button').onclick=confirmExit;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers();updateExitActions()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});applyInitialMode();initialisePage();
 </script>
 </body>
 </html>
