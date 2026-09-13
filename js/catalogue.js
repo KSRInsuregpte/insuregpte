@@ -76,6 +76,17 @@
         }
     }
 
+    function planStartingPrice() {
+        const plan = state.pricingPlans[0];
+        if (!plan) {
+            return 'Pricing unavailable';
+        }
+        return `From ${money({
+            price: plan.price,
+            currency_code: plan.currency_code
+        })}`;
+    }
+
     function authDestination(next) {
         return `index.html?next=${encodeURIComponent(next)}`;
     }
@@ -128,14 +139,14 @@
             purchaseButton = `
                 <label class="col-span-full text-sm font-semibold text-slate-700 sm:col-span-2">
                     Access period
-                    <select data-duration-subject="${escapeHtml(subject.subject_id)}" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal">
+                    <select data-duration-subject="${escapeHtml(subject.subject_id)}" class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal">
                         ${state.pricingPlans.map((plan) => `<option value="${escapeHtml(plan.duration_days)}">${escapeHtml(plan.duration_days)} days — ${escapeHtml(money({ price: plan.price, currency_code: plan.currency_code }))}</option>`).join('')}
                     </select>
                 </label>
                 <button
                     type="button"
                     data-add-cart="${escapeHtml(subject.subject_id)}"
-                    class="rounded-lg bg-sky-600 px-4 py-2 font-bold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-6"
+                    class="h-10 rounded-lg bg-sky-600 px-4 py-2 font-bold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-6"
                 >
                     Add to Cart
                 </button>
@@ -163,7 +174,7 @@
                     ${subject.has_learning_content ? '<span class="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800">Learning content available</span>' : '<span class="rounded-full bg-amber-100 px-3 py-1 text-amber-800">Learning content being prepared</span>'}
                     ${entitled ? '<span class="rounded-full bg-blue-100 px-3 py-1 text-blue-800">Access active</span>' : ''}
                 </div>
-                <p class="mt-5 font-bold text-slate-800">${escapeHtml(money(subject))}</p>
+                <p class="mt-5 font-bold text-slate-800">${escapeHtml(entitled ? money(subject) : planStartingPrice())}</p>
                 <div class="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <a href="${learningUrl}" class="rounded-lg bg-emerald-600 px-4 py-2 text-center font-bold text-white hover:bg-emerald-700">
                         Learning
