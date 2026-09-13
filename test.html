@@ -41,9 +41,9 @@
     aria-hidden="true"
   >
     <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-      <h2 id="exit-confirmation-title" class="text-2xl font-bold text-slate-900">Finish this attempt?</h2>
+      <h2 id="exit-confirmation-title" class="text-2xl font-bold text-slate-900">Finish this test?</h2>
       <p id="exit-confirmation-message" class="mt-3 text-slate-700">
-        This will finish the attempt. Submitted answers will be scored and unanswered questions will receive zero.
+        Your submitted answers will be scored. Any unanswered questions will receive zero marks.
       </p>
       <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <button id="continue-quiz-button" type="button" class="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-700 hover:bg-slate-50">Continue Quiz</button>
@@ -304,8 +304,18 @@ function setExitActionsBusy(busy){
 function showExitConfirmation(action,trigger){
   pendingExitAction=action;
   lastExitTrigger=trigger||document.activeElement;
-  document.getElementById('exit-confirmation-title').innerText=action==='logout'?'Finish attempt and logout?':'Finish attempt and return?';
-  document.getElementById('confirm-exit-button').innerText=action==='logout'?'Finish Attempt & Logout':'Finish Attempt & Return';
+  const title=document.getElementById('exit-confirmation-title');
+  const message=document.getElementById('exit-confirmation-message');
+  const confirmButton=document.getElementById('confirm-exit-button');
+  if(action==='finish'){
+    title.innerText=currentTestMode==='demo'?'Finish this demo?':'Finish this practice test?';
+    message.innerText='Your submitted answers will be scored. Any unanswered questions will receive zero marks.';
+    confirmButton.innerText=currentTestMode==='demo'?'Finish Demo and View Score':'Finish Test and View Score';
+  }else{
+    title.innerText=action==='logout'?'Finish attempt and logout?':'Finish attempt and return?';
+    message.innerText='Your submitted answers will be scored. Any unanswered questions will receive zero marks.';
+    confirmButton.innerText=action==='logout'?'Finish Attempt & Logout':'Finish Attempt & Return';
+  }
   const confirmation=document.getElementById('exit-confirmation');
   confirmation.classList.remove('hidden');
   confirmation.classList.add('flex');
@@ -413,8 +423,9 @@ async function confirmExit(){
   const action=pendingExitAction;
   if(!action)return;
   closeExitConfirmation(false);
-  const finalised=await finaliseAttempt(null,false);
+  const finalised=await finaliseAttempt(null,action==='finish');
   if(!finalised)return;
+  if(action==='finish')return;
   if(action==='logout'){
     const loggedOut=await logoutWithoutFinalising();
     if(!loggedOut)showFinal();
@@ -425,7 +436,7 @@ async function confirmExit(){
 function escapeHtml(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}
 function appendCalc(v){document.getElementById('calculator-display').value+=v}function clearCalc(){document.getElementById('calculator-display').value=''}function backCalc(){const d=document.getElementById('calculator-display');d.value=d.value.slice(0,-1)}function equals(){const d=document.getElementById('calculator-display'),x=d.value.trim();if(!x)return;if(!/^[0-9+\-*/.()\s]+$/.test(x)){d.value='Error';return}try{const r=Function('"use strict";return('+x+')')();d.value=Number.isFinite(r)?String(r):'Error'}catch(e){d.value='Error'}}
 
-document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('back-button').onclick=requestDashboardExit;document.getElementById('dashboard-exit-button').onclick=requestDashboardExit;document.getElementById('logout-button').onclick=logout;document.getElementById('continue-quiz-button').onclick=()=>closeExitConfirmation();document.getElementById('confirm-exit-button').onclick=confirmExit;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers();updateExitActions()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});applyInitialMode();initialisePage();
+document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('back-button').onclick=requestDashboardExit;document.getElementById('dashboard-exit-button').onclick=requestDashboardExit;document.getElementById('logout-button').onclick=logout;document.getElementById('continue-quiz-button').onclick=()=>closeExitConfirmation();document.getElementById('confirm-exit-button').onclick=confirmExit;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=()=>showExitConfirmation('finish',document.activeElement);window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers();updateExitActions()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});applyInitialMode();initialisePage();
 </script>
 </body>
 </html>
