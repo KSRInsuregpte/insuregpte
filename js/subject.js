@@ -14,6 +14,7 @@
         sessionControl.clientOptions()
     );
     let signedIn = false;
+    let pricingPlans = [];
 
     function escapeHtml(value) {
         const element = document.createElement('div');
@@ -25,6 +26,18 @@
         const box = document.getElementById('message-box');
         box.textContent = message;
         box.className = 'mb-6 rounded-xl bg-red-100 p-4 text-red-900';
+    }
+
+    function money(plan) {
+        try {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: plan.currency_code || 'INR',
+                maximumFractionDigits: 2
+            }).format(Number(plan.price || 0));
+        } catch (error) {
+            return `${plan.currency_code || 'INR'} ${Number(plan.price || 0).toFixed(2)}`;
+        }
     }
 
     function authDestination(next) {
@@ -69,7 +82,13 @@
             `;
         } else {
             primaryAction = `
-                <button id="add-cart-button" type="button" class="rounded-xl bg-white px-5 py-3 font-bold text-blue-950 hover:bg-blue-50">
+                <label class="text-left text-xs font-bold text-white">
+                    Access period
+                    <select id="subject-duration" class="mt-1 rounded-lg border border-white/40 bg-white px-3 py-2 font-normal text-blue-950">
+                        ${pricingPlans.map((plan) => `<option value="${escapeHtml(plan.duration_days)}">${escapeHtml(plan.duration_days)} days — ${escapeHtml(money(plan))}</option>`).join('')}
+                    </select>
+                </label>
+                <button id="add-cart-button" type="button" class="self-end rounded-xl bg-white px-5 py-3 font-bold text-blue-950 hover:bg-blue-50">
                     Add to Cart
                 </button>
             `;
@@ -126,10 +145,14 @@
                 }
 
                 const button = event.currentTarget;
+                const durationDays = Number(
+                    document.getElementById('subject-duration')?.value
+                );
                 button.disabled = true;
                 button.textContent = 'Adding…';
                 const { error } = await client.rpc('add_subject_to_cart', {
-                    p_subject_id: Number(subject.subject_id)
+                    p_subject_id: Number(subject.subject_id),
+                    p_duration_days: durationDays
                 });
 
                 if (error) {
@@ -193,6 +216,13 @@
             if (!subject) {
                 throw new Error('The selected subject is not available.');
             }
+            const { data: plans, error: pricingError } = await client.rpc(
+                'get_subject_pricing_plans'
+            );
+            if (pricingError) {
+                throw pricingError;
+            }
+            pricingPlans = plans || [];
             render(subject);
         } catch (error) {
             console.error('Subject loading error:', error);
