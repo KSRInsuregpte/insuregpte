@@ -34,12 +34,13 @@ These phases remain on the test branch after the initial live release and must b
 
 ### 1. Active Mock-Test Integrity
 
-- Apply server-side question and option shuffling to active practice tests.
-- Verify five attempts per subject.
-- Verify 50 questions per attempt.
+- Apply server-side question and answer-option shuffling to active practice tests.
+- Regression-test the existing five-attempt limit per subject.
+- Regression-test the existing 50-question selection per attempt.
+- Regression-test the existing scoring and attempt tracking after shuffling.
 - Verify IC01, IC11, and IC14 independently.
 - Confirm option shuffling remains stable when an attempt is reloaded.
-- Confirm scoring remains correct after option shuffling.
+- Confirm scoring remains correct after question and option shuffling.
 - Confirm practice access remains entitlement-gated.
 - Confirm demos and practice attempts remain counted independently.
 
