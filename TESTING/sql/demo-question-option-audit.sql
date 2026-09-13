@@ -34,6 +34,22 @@ FROM demo_questions
 GROUP BY subject_code
 ORDER BY subject_code;
 
+WITH demo_questions AS (
+    SELECT
+        q.id,
+        s.code AS subject_code,
+        q.correct_option,
+        q.option_a,
+        q.option_b,
+        q.option_c,
+        q.option_d,
+        q.question_text
+    FROM public.questions AS q
+    JOIN public.subjects AS s ON s.id = q.subject_id
+    WHERE s.code IN ('IC01', 'IC11', 'IC14')
+      AND q.is_active = true
+      AND q.difficulty_level = 'advanced'
+)
 SELECT
     id,
     subject_code,
