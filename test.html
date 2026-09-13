@@ -194,7 +194,7 @@ async function initialisePage(){
 }
 
 async function callRpcWithTimeout(functionName,parameters){let timeoutId;const timeout=new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error(`${functionName} did not respond within ${RPC_TIMEOUT_MS/1000} seconds.`)),RPC_TIMEOUT_MS)});try{return await Promise.race([client.rpc(functionName,parameters),timeout])}finally{clearTimeout(timeoutId)}}
-function quizStartError(error,stage){const detail=String(error?.message||'');const safePatterns=[/did not respond within/i,/not active/i,/does not contain enough/i,/maximum permitted/i,/not currently available/i,/configuration is invalid/i,/did not return the required/i,/start time is invalid/i,/purchase or obtain access/i,/free demo is not available/i,/active advanced questions/i];return safePatterns.some(pattern=>pattern.test(detail))?detail:`${stage} failed. Please try again.`}
+function quizStartError(error,stage){const detail=String(error?.message||'');const safePatterns=[/did not respond within/i,/not active/i,/does not contain enough/i,/maximum permitted/i,/not currently available/i,/configuration is invalid/i,/did not return the required/i,/start time is invalid/i,/purchase or obtain access/i,/free demo is not available/i,/active advanced questions/i,/completed recently/i,/try again after/i];return safePatterns.some(pattern=>pattern.test(detail))?detail:`${stage} failed. Please try again.`}
 
 async function startQuiz(){
   const button=document.getElementById('start-button');
