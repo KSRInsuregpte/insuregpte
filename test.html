@@ -139,7 +139,7 @@
 
 let totalQuestions=50,sessionLimitSeconds=7200;
 const PROGRESS_CIRCUMFERENCE=301.59,RPC_TIMEOUT_MS=20000;
-let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,currentTestMode='practice',questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false,pendingExitAction=null,lastExitTrigger=null;
+let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,currentTestMode='practice',questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false,pendingExitAction=null,lastExitTrigger=null,cooldownInterval=null;
 const selectedAnswers={},answerResults={},reviewQuestions=new Set();
 
 function selectedSubject(){const p=new URLSearchParams(location.search),id=p.get('subject_id'),code=p.get('subject_code'),mode=p.get('mode')==='demo'?'demo':'practice',n=Number(id);return id&&code&&Number.isInteger(n)&&n>0?{id:n,code,mode}:null}
@@ -252,7 +252,9 @@ async function startQuiz(){
   }catch(error){
     console.error(`${stage} error:`,error);
     if(await redirectForInactiveSession(error))return;
-    msg(quizStartError(error,stage),'error');
+    const startError=quizStartError(error,stage);
+    if(/completed recently.*after/i.test(startError))showCooldownMessage(startError);
+    else msg(startError,'error');
     button.disabled=false;
     button.innerText='Start This Attempt';
   }
@@ -370,7 +372,25 @@ function clearTimers(){if(sessionTimerInterval)clearInterval(sessionTimerInterva
 function formatMMSS(t){const m=Math.floor(t/60),s=t%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function formatHHMMSS(t){const h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=t%60;return[h,m,s].map(v=>String(v).padStart(2,'0')).join(':')}
 function key(){return`insuregpte-review-${currentAttemptId}`}function saveReview(){if(currentAttemptId)localStorage.setItem(key(),JSON.stringify([...reviewQuestions]))}function restoreReview(){try{JSON.parse(localStorage.getItem(key())||'[]').forEach(id=>reviewQuestions.add(Number(id)))}catch(e){console.error(e)}}function clearReview(){if(currentAttemptId)localStorage.removeItem(key());reviewQuestions.clear()}
-function msg(m,t){const b=document.getElementById('message-box');b.innerText=m;b.className=t==='error'?'mb-4 rounded-xl bg-red-100 p-4 text-red-800':'mb-4 rounded-xl bg-blue-100 p-4 text-blue-800';b.classList.remove('hidden')}function hideMsg(){document.getElementById('message-box').classList.add('hidden')}
+function msg(m,t){const b=document.getElementById('message-box');b.innerText=m;b.className=t==='error'?'mb-4 rounded-xl bg-red-100 p-4 text-red-800':'mb-4 rounded-xl bg-blue-100 p-4 text-blue-800';b.classList.remove('hidden')}
+function showCooldownMessage(message){
+  const match=String(message).match(/after\s+(\d{2}):(\d{2}):(\d{2})/i);
+  if(!match){msg(message,'error');return}
+  const now=new Date(),retryAt=new Date(now);
+  retryAt.setHours(Number(match[1]),Number(match[2]),Number(match[3]),0);
+  if(retryAt<=now)retryAt.setDate(retryAt.getDate()+1);
+  if(cooldownInterval)clearInterval(cooldownInterval);
+  const update=()=>{
+    const remaining=Math.max(0,Math.ceil((retryAt.getTime()-Date.now())/1000));
+    const minutes=String(Math.floor(remaining/60)).padStart(2,'0');
+    const seconds=String(remaining%60).padStart(2,'0');
+    if(remaining===0){clearInterval(cooldownInterval);msg('The demo is available again. You can start a new attempt.','success');return}
+    msg(`This demo was completed recently. Please try again in ${minutes}:${seconds}.`,'error');
+  };
+  update();
+  cooldownInterval=setInterval(update,1000);
+}
+function hideMsg(){if(cooldownInterval)clearInterval(cooldownInterval);document.getElementById('message-box').classList.add('hidden')}
 async function logoutWithoutFinalising(){
   setExitActionsBusy(true);
   const result=await sessionControl.logoutEverywhere(client);
