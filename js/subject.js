@@ -82,7 +82,7 @@
             `;
         } else {
             primaryAction = `
-                <label class="text-left text-xs font-bold text-white">
+                <label class="inline-flex min-w-[9.5rem] flex-col gap-1 text-left text-xs font-bold text-white">
                     Access period
                     <select id="subject-duration" class="mt-1 rounded-lg border border-white/40 bg-white px-3 py-2 font-normal text-blue-950">
                         ${pricingPlans.map((plan) => `<option value="${escapeHtml(plan.duration_days)}">${escapeHtml(plan.duration_days)} days — ${escapeHtml(money(plan))}</option>`).join('')}
