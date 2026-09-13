@@ -66,6 +66,9 @@
                     <p class="mt-1 text-sm text-slate-500">
                         Added ${new Date(item.added_at).toLocaleDateString('en-IN')}
                     </p>
+                    <p class="mt-1 text-sm font-semibold text-slate-700">
+                        Access period: ${escapeHtml(item.duration_days || '—')} days
+                    </p>
                 </div>
                 <div class="flex items-center gap-4">
                     <strong>${escapeHtml(money(item.unit_price, item.currency_code))}</strong>
@@ -152,7 +155,7 @@
 
             securityNotices.start({ client, sessionControl });
 
-            const { data, error } = await client.rpc('get_my_cart');
+            const { data, error } = await client.rpc('get_my_cart_with_plans');
             if (error) {
                 throw error;
             }

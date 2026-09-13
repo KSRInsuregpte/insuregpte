@@ -18,6 +18,7 @@
         signedIn: false,
         pageControl: null,
         subjects: [],
+        pricingPlans: [],
         category: 'all',
         search: ''
     };
@@ -125,10 +126,16 @@
             `;
         } else {
             purchaseButton = `
+                <label class="col-span-full text-sm font-semibold text-slate-700 sm:col-span-2">
+                    Access period
+                    <select data-duration-subject="${escapeHtml(subject.subject_id)}" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal">
+                        ${state.pricingPlans.map((plan) => `<option value="${escapeHtml(plan.duration_days)}">${escapeHtml(plan.duration_days)} days — ${escapeHtml(money({ price: plan.price, currency_code: plan.currency_code }))}</option>`).join('')}
+                    </select>
+                </label>
                 <button
                     type="button"
                     data-add-cart="${escapeHtml(subject.subject_id)}"
-                    class="rounded-lg bg-sky-600 px-4 py-2 font-bold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="rounded-lg bg-sky-600 px-4 py-2 font-bold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-6"
                 >
                     Add to Cart
                 </button>
@@ -284,6 +291,10 @@
 
     async function addToCart(button) {
         const subjectId = Number(button.dataset.addCart);
+        const durationSelect = document.querySelector(
+            `[data-duration-subject="${subjectId}"]`
+        );
+        const durationDays = Number(durationSelect?.value);
 
         if (!state.signedIn) {
             global.location.href = authDestination('catalogue.html');
@@ -295,7 +306,8 @@
 
         try {
             const { error } = await client.rpc('add_subject_to_cart', {
-                p_subject_id: subjectId
+                p_subject_id: subjectId,
+                p_duration_days: durationDays
             });
 
             if (error) {
@@ -309,7 +321,7 @@
                 subject.is_in_cart = true;
             }
 
-            showMessage('The subject was added to your cart.', 'success');
+            showMessage(`The subject was added to your cart for ${durationDays} days.`, 'success');
             renderGroups();
             updateCartCount();
         } catch (error) {
@@ -338,6 +350,13 @@
         if (!user) {
             return;
         }
+
+        const { data: pricingPlans, error: pricingError } =
+            await client.rpc('get_subject_pricing_plans');
+        if (pricingError) {
+            throw pricingError;
+        }
+        state.pricingPlans = pricingPlans || [];
 
         state.pageControl = sessionControl.acquirePageControl({
             blockOnCancel: false
