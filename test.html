@@ -351,6 +351,13 @@ async function finaliseAttempt(message,showResult=true){
   }catch(e){
     console.error(e);
     if(await redirectForInactiveSession(e))return false;
+    if(/invalid or already completed|already completed|quiz attempt is invalid/i.test(String(e?.message||''))){
+      attemptInProgress=false;
+      clearTimers();
+      clearReview();
+      if(showResult)showFinal();
+      return true;
+    }
     msg(e.message||'Unable to finish the attempt.','error');
     return false;
   }finally{
