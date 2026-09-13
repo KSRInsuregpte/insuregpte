@@ -98,7 +98,7 @@
                 ? 'Your entitlement is active. The subject is available on your practice dashboard.'
                 : 'Practice access becomes active only after verified payment or an approved complimentary grant.';
         document.getElementById('subject-actions').innerHTML = `
-            ${subject.has_learning_content ? `
+            ${signedIn ? `
                 <a href="${signedIn ? learningUrl : authDestination(learningUrl)}" class="rounded-xl bg-emerald-600 px-5 py-3 font-bold text-white hover:bg-emerald-700">
                     Open Learning
                 </a>
