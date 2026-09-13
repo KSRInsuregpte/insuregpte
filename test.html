@@ -270,6 +270,7 @@ function updateScore(){document.getElementById('answered-count').innerText=`${an
 function showFinal(){
   clearTimers();
   attemptInProgress=false;
+  hideMsg();
   updateExitActions();
   document.getElementById('quiz-layout').classList.add('hidden');
   document.getElementById('quiz-layout').classList.remove('grid');
