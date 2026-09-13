@@ -350,7 +350,7 @@
             }
             showMessage(
                 error.code === 'PT403'
-                    ? 'Active subject access is required to review flashcards.'
+                    ? 'This learning content is not available for the selected topic.'
                     : 'Flashcards could not be loaded.'
             );
         } finally {
