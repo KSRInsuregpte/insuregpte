@@ -44,6 +44,12 @@ These phases remain on the test branch after the initial live release and must b
 - Confirm practice access remains entitlement-gated.
 - Confirm demos and practice attempts remain counted independently.
 
+Verification note: `TESTING/sql/server-side-option-shuffle-verification.sql`
+checks the deployed RPC definition and answer protection. It does not by
+itself execute a live 50-question practice attempt. The remaining action is
+to run an active-practice verification using an entitled test user, then
+complete the browser checks for IC01, IC11, and IC14.
+
 ### 2. Question Quality Audit
 
 - Confirm exactly one correct answer per question.
