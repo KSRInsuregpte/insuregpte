@@ -25,6 +25,7 @@
 - Root cause found for administrator IC01 demo failure: the legacy unique constraint omitted `test_mode` and conflicted with practice attempt numbering.
 - Migration `20260917110000_separate_demo_and_practice_attempts.sql` was applied successfully and pushed to origin.
 - Demo and practice attempt numbering is now independent.
+- Frontend verification confirms registered users without active purchases can start free demos, while paid practice remains blocked.
 - Remaining pre-live work: verified payment entitlement creation, payment safeguards, and final regression checks.
 
 ## Pre-Live Release Requirements
@@ -36,7 +37,7 @@
 5. Implement verified-payment entitlement creation.
 6. Ensure payment, webhook, refund, and reconciliation paths cannot be triggered by browser-supplied prices.
 7. [x] Confirm normal users cannot access administrator pricing controls.
-8. Run the complete SQL and browser regression suite.
+8. Run the complete SQL and browser regression suite, including the verified free-demo and paid-practice entitlement boundary.
 9. Push the tested branch and verify the Vercel preview before merging to `main`.
 
 ## Final Quality Phases
