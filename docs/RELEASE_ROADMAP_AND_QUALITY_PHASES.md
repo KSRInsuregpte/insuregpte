@@ -16,15 +16,26 @@
 - Learning entry is free for active registered users.
 - The legacy `subjects.price` fallback for active subjects is INR 349, while duration plans remain authoritative.
 
+## Progress Update - 2026-09-17
+
+- Administrator duration pricing editor is deployed and tested.
+- Price updates are server-authorized and recorded with old/new values in audit history.
+- Catalogue and cart reflect the saved duration-plan prices.
+- IC01, IC11, and IC14 demo flows were tested; IC01 active practice loaded 50 questions.
+- Root cause found for administrator IC01 demo failure: the legacy unique constraint omitted `test_mode` and conflicted with practice attempt numbering.
+- Migration `20260917110000_separate_demo_and_practice_attempts.sql` was applied successfully and pushed to origin.
+- Demo and practice attempt numbering is now independent.
+- Remaining pre-live work: verified payment entitlement creation, payment safeguards, and final regression checks.
+
 ## Pre-Live Release Requirements
 
-1. Add an administrator-only editor for the four duration-plan prices.
-2. Protect price changes with server-side administrator verification.
-3. Record every price change in the administrator audit history.
-4. Confirm catalogue, subject detail, and cart all display the current server-side plan prices.
+1. [x] Add an administrator-only editor for the four duration-plan prices.
+2. [x] Protect price changes with server-side administrator verification.
+3. [x] Record every price change in the administrator audit history.
+4. [x] Confirm catalogue, subject detail, and cart all display the current server-side plan prices.
 5. Implement verified-payment entitlement creation.
 6. Ensure payment, webhook, refund, and reconciliation paths cannot be triggered by browser-supplied prices.
-7. Confirm normal users cannot access administrator pricing controls.
+7. [x] Confirm normal users cannot access administrator pricing controls.
 8. Run the complete SQL and browser regression suite.
 9. Push the tested branch and verify the Vercel preview before merging to `main`.
 
@@ -34,7 +45,7 @@ These phases remain on the test branch after the initial live release and must b
 
 ### 1. Active Mock-Test Integrity
 
-- Apply server-side question and answer-option shuffling to active practice tests.
+- [x] Apply server-side question and answer-option shuffling to active practice tests.
 - Regression-test the existing five-attempt limit per subject.
 - Regression-test the existing 50-question selection per attempt.
 - Regression-test the existing scoring and attempt tracking after shuffling.
@@ -42,7 +53,7 @@ These phases remain on the test branch after the initial live release and must b
 - Confirm option shuffling remains stable when an attempt is reloaded.
 - Confirm scoring remains correct after question and option shuffling.
 - Confirm practice access remains entitlement-gated.
-- Confirm demos and practice attempts remain counted independently.
+- [x] Confirm demos and practice attempts remain counted independently.
 
 Verification note: `TESTING/sql/server-side-option-shuffle-verification.sql`
 checks the deployed RPC definition and answer protection. It does not by
