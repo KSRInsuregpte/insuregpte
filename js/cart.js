@@ -97,6 +97,42 @@
                     void removeItem(button);
                 });
             });
+        document.getElementById('checkout-button').disabled = false;
+    }
+
+    async function checkout() {
+        const button = document.getElementById('checkout-button');
+        button.disabled = true;
+        button.textContent = 'Preparing checkout…';
+        try {
+            const { data: { session } } = await client.auth.getSession();
+            if (!session?.access_token) throw new Error('Your session has expired.');
+            const response = await fetch('/api/payment/create-order', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            const order = await response.json();
+            if (!response.ok) throw new Error(order.error || 'Unable to start checkout.');
+            const razorpay = new global.Razorpay({
+                key: order.keyId,
+                amount: order.amount,
+                currency: order.currency,
+                name: 'InsureGPTE',
+                description: 'Subject access purchase',
+                order_id: order.providerOrderId,
+                handler: () => {
+                    showMessage('Payment submitted. Access will appear after provider verification.', 'success');
+                    button.textContent = 'Payment verification pending';
+                },
+                modal: { ondismiss: () => { button.disabled = false; button.textContent = 'Secure Checkout'; } }
+            });
+            razorpay.open();
+        } catch (error) {
+            console.error('Checkout error:', error);
+            showMessage(error.message || 'Unable to start checkout.');
+            button.disabled = false;
+            button.textContent = 'Secure Checkout';
+        }
     }
 
     async function removeItem(button) {
@@ -162,6 +198,7 @@
 
             items = data || [];
             render();
+            document.getElementById('checkout-button').addEventListener('click', () => void checkout());
         } catch (error) {
             console.error('Cart loading error:', error);
             if (await sessionControl.handleInactiveSessionError(error)) {
