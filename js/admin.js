@@ -18,6 +18,7 @@
         securityEvents: [],
         enforcementCases: [],
         notificationOutbox: [],
+        pricingPlans: [],
         bulkUpload: null
     };
     const adminActionDialogState = {
@@ -873,6 +874,55 @@
         renderAuditEvents();
     }
 
+    function renderPricingPlans() {
+        const form = byId('pricing-plan-form');
+        if (!form) return;
+        form.innerHTML = state.pricingPlans.map((plan) => `
+            <label class="block font-semibold">${escapeHtml(plan.duration_days)} days
+                <div class="mt-1 flex gap-2">
+                    <input type="hidden" data-plan-id value="${escapeHtml(plan.plan_id)}">
+                    <input type="hidden" data-plan-duration value="${escapeHtml(plan.duration_days)}">
+                    <input data-plan-price data-plan-currency="${escapeHtml(plan.currency_code)}" type="number" min="0" step="0.01" required value="${escapeHtml(plan.price)}" class="w-full rounded-xl border p-3">
+                    <button type="button" data-save-plan class="rounded-xl bg-blue-800 px-4 py-2 font-bold text-white">Save</button>
+                </div>
+            </label>
+        `).join('');
+    }
+
+    async function loadPricingPlans() {
+        const { data, error } = await client.rpc('get_subject_pricing_plans');
+        if (error) throw error;
+        state.pricingPlans = data || [];
+        renderPricingPlans();
+    }
+
+    async function savePricingPlan(button) {
+        const row = button.closest('label');
+        const planId = row.querySelector('[data-plan-id]').value;
+        const durationDays = row.querySelector('[data-plan-duration]').value;
+        const price = row.querySelector('[data-plan-price]').value;
+        setBusy(button, true, 'Saving…');
+        try {
+            const { error } = await client.rpc('admin_save_pricing_plan', {
+                p_plan: {
+                    id: planId,
+                    duration_days: durationDays,
+                    price,
+                    currency_code: row.querySelector('[data-plan-price]').dataset.planCurrency
+                }
+            });
+            if (error) throw error;
+            await loadPricingPlans();
+            await loadAuditEvents();
+            showMessage(`${durationDays}-day price saved and audited.`, 'success');
+        } catch (error) {
+            console.error('Unable to save pricing plan:', error);
+            showMessage(error.message || 'Unable to save the pricing plan.');
+        } finally {
+            setBusy(button, false, '');
+        }
+    }
+
     function finishAdminActionDialog(confirmed) {
         const dialog = byId('admin-action-dialog');
         const input = byId('admin-action-dialog-input');
@@ -1506,6 +1556,7 @@
 
         state.summary = summary || {};
         state.subjects = subjects || [];
+        await loadPricingPlans();
         renderOverview();
         renderSubjects();
         populateReferenceSelects();
@@ -1593,6 +1644,10 @@
         });
         byId('logout-button').addEventListener('click', () => void logout());
         byId('subject-form').addEventListener('submit', saveSubject);
+        byId('pricing-plan-form').addEventListener('click', (event) => {
+            const button = event.target.closest('[data-save-plan]');
+            if (button) void savePricingPlan(button);
+        });
         byId('subject-programme').addEventListener('change', () => {
             populateProgrammeSectionSelect(
                 'subject-section',

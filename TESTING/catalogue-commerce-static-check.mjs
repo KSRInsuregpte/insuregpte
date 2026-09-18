@@ -193,8 +193,12 @@ assert.ok(
     'catalogue purchase action must use the server RPC'
 );
 assert.ok(
-    cart.includes("client.rpc('get_my_cart')"),
+    cart.includes("client.rpc('get_my_cart_with_plans')"),
     'cart display must use the server RPC'
+);
+assert.ok(
+    catalogue.includes("p_duration_days: durationDays"),
+    'catalogue must send the selected duration to the server'
 );
 assert.ok(
     testHtml.includes("p.get('mode')==='demo'"),

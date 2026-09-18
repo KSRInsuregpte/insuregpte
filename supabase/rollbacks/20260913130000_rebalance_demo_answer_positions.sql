@@ -1,0 +1,3 @@
+-- The rebalance is data-preserving but intentionally has no blind rollback:
+-- restore from the database backup if the original positions are required.
+-- Do not execute this file as SQL.

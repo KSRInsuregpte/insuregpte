@@ -1,0 +1,4 @@
+-- Restore the previous paid-access gate by reapplying the original learning
+-- module migration function definition before this change.
+-- The full original definition is retained in:
+-- supabase/migrations/20260811150000_build_learning_module.sql

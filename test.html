@@ -42,9 +42,9 @@
     aria-hidden="true"
   >
     <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-      <h2 id="exit-confirmation-title" class="text-2xl font-bold text-slate-900">Finish this attempt?</h2>
+      <h2 id="exit-confirmation-title" class="text-2xl font-bold text-slate-900">Finish this test?</h2>
       <p id="exit-confirmation-message" class="mt-3 text-slate-700">
-        This will finish the attempt. Submitted answers will be scored and unanswered questions will receive zero.
+        Your submitted answers will be scored. Any unanswered questions will receive zero marks.
       </p>
       <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <button id="continue-quiz-button" type="button" class="rounded-xl border border-slate-300 px-5 py-3 font-bold text-slate-700 hover:bg-slate-50">Continue Quiz</button>
@@ -125,7 +125,7 @@
     <h2 class="text-3xl font-bold text-emerald-900">Quiz Completed</h2>
     <p id="final-score" class="mt-3 text-xl text-emerald-900"></p>
     <p class="mt-3 text-emerald-800">Your completed attempt has been recorded.</p>
-    <button id="return-dashboard-button" type="button" class="mt-6 inline-block rounded-xl bg-emerald-700 px-6 py-3 font-bold text-white hover:bg-emerald-800">Return to Subject Selection</button>
+    <button id="return-dashboard-button" type="button" class="mt-6 inline-block rounded-xl bg-emerald-700 px-6 py-3 font-bold text-white hover:bg-emerald-800">Proceed to My Practice</button>
   </section>
 </main>
 
@@ -136,10 +136,19 @@
 
 let totalQuestions=50,sessionLimitSeconds=7200;
 const PROGRESS_CIRCUMFERENCE=301.59,RPC_TIMEOUT_MS=20000;
-let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,currentTestMode='practice',questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false,pendingExitAction=null,lastExitTrigger=null;
+let currentAttemptId=null,currentAttemptNumber=null,currentSubjectId=null,currentSubjectCode=null,currentTestMode='practice',questions=[],currentQuestionIndex=0,answeredCount=0,currentScore=0,attemptInProgress=false,attemptStartedAt=null,sessionTimerInterval=null,questionTimerInterval=null,questionStartedAt=null,isFinalising=false,pendingExitAction=null,lastExitTrigger=null,cooldownInterval=null;
 const selectedAnswers={},answerResults={},reviewQuestions=new Set();
 
 function selectedSubject(){const p=new URLSearchParams(location.search),id=p.get('subject_id'),code=p.get('subject_code'),mode=p.get('mode')==='demo'?'demo':'practice',n=Number(id);return id&&code&&Number.isInteger(n)&&n>0?{id:n,code,mode}:null}
+function applyInitialMode(){
+  const s=selectedSubject();
+  if(!s)return;
+  const demo=s.mode==='demo';
+  document.getElementById('subject-heading').innerText=`${s.code} · ${demo?'Free Advanced Demo':'Practice Quiz'}`;
+  document.getElementById('start-heading').innerText=`Ready to begin ${s.code} ${demo?'demo':'practice'}?`;
+  document.getElementById('start-description').innerText=`You will receive ${demo?'10 advanced questions':'50 random questions'}. Each correct answer carries 1 mark. An attempt is counted when you click the button below.`;
+  document.getElementById('start-panel').style.visibility='visible';
+}
 async function redirectForInactiveSession(error){
   return sessionControl.handleInactiveSessionError(error);
 }
@@ -182,7 +191,7 @@ async function initialisePage(){
 }
 
 async function callRpcWithTimeout(functionName,parameters){let timeoutId;const timeout=new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error(`${functionName} did not respond within ${RPC_TIMEOUT_MS/1000} seconds.`)),RPC_TIMEOUT_MS)});try{return await Promise.race([client.rpc(functionName,parameters),timeout])}finally{clearTimeout(timeoutId)}}
-function quizStartError(error,stage){const detail=String(error?.message||'');const safePatterns=[/did not respond within/i,/not active/i,/does not contain enough/i,/maximum permitted/i,/not currently available/i,/configuration is invalid/i,/did not return the required/i,/start time is invalid/i,/purchase or obtain access/i,/free demo is not available/i,/active advanced questions/i];return safePatterns.some(pattern=>pattern.test(detail))?detail:`${stage} failed. Please try again.`}
+function quizStartError(error,stage){const detail=String(error?.message||'');const safePatterns=[/did not respond within/i,/not active/i,/does not contain enough/i,/maximum permitted/i,/not currently available/i,/configuration is invalid/i,/did not return the required/i,/start time is invalid/i,/purchase or obtain access/i,/free demo is not available/i,/active advanced questions/i,/completed recently/i,/try again after/i];return safePatterns.some(pattern=>pattern.test(detail))?detail:`${stage} failed. Please try again.`}
 
 async function startQuiz(){
   const button=document.getElementById('start-button');
@@ -240,7 +249,9 @@ async function startQuiz(){
   }catch(error){
     console.error(`${stage} error:`,error);
     if(await redirectForInactiveSession(error))return;
-    msg(quizStartError(error,stage),'error');
+    const startError=quizStartError(error,stage);
+    if(/completed recently.*after/i.test(startError))showCooldownMessage(startError);
+    else msg(startError,'error');
     button.disabled=false;
     button.innerText='Start This Attempt';
   }
@@ -249,7 +260,7 @@ async function startQuiz(){
 function buildPalette(){const p=document.getElementById('question-palette');p.innerHTML='';questions.forEach((q,i)=>{const b=document.createElement('button');b.type='button';b.innerText=i+1;b.className='qbtn';b.dataset.index=i;b.onclick=()=>{currentQuestionIndex=i;renderQuestion()};p.appendChild(b)});refreshPalette()}
 function renderQuestion(){const q=questions[currentQuestionIndex];if(!q)return;questionStartedAt=Date.now();startQuestionTimer();document.getElementById('question-position').innerText=`Question ${currentQuestionIndex+1} of ${totalQuestions}`;document.getElementById('question-text').innerText=q.question_text;const r=answerResults[q.question_id],sel=selectedAnswers[q.question_id];document.getElementById('question-status').innerText=r?'Answered and recorded':reviewQuestions.has(q.question_id)?'Marked for review':'Not answered';const opts=[q.option_a,q.option_b,q.option_c,q.option_d],c=document.getElementById('options-container');c.innerHTML='';opts.forEach((o,i)=>{const v=o||'',lab=document.createElement('label');lab.className='opt flex cursor-pointer items-start gap-3 rounded-xl border border-slate-300 p-4';if(sel===v)lab.classList.add('selected');if(r)lab.classList.add('locked');const radio=document.createElement('input');radio.type='radio';radio.name='current-question';radio.value=v;radio.disabled=!!r;radio.checked=sel===v;radio.className='mt-1';radio.onchange=()=>{selectedAnswers[q.question_id]=v;renderQuestion()};const t=document.createElement('span');t.innerHTML=`<strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(v||'Option not set')}`;lab.append(radio,t);c.appendChild(lab)});renderFeedback(q.question_id);document.getElementById('submit-answer-button').disabled=!!r||!selectedAnswers[q.question_id];document.getElementById('previous-button').disabled=currentQuestionIndex===0;document.getElementById('next-button').disabled=currentQuestionIndex===questions.length-1;updateReviewButton(q.question_id);refreshPalette()}
 function renderFeedback(id){const b=document.getElementById('feedback-box'),r=answerResults[id];if(!r){b.classList.add('hidden');b.innerHTML='';return}b.classList.remove('hidden');if(r.is_correct){b.className='mt-5 rounded-xl bg-green-100 p-4 text-green-900';b.innerHTML=`<p class="font-bold">Correct! +1 mark</p><p class="mt-2">${escapeHtml(r.explanation||'')}</p>`}else{b.className='mt-5 rounded-xl bg-red-100 p-4 text-red-900';b.innerHTML=`<p class="font-bold">Incorrect. 0 marks</p><p class="mt-2"><strong>Correct Answer:</strong> ${escapeHtml(r.correct_answer||'')}</p><p class="mt-2">${escapeHtml(r.explanation||'')}</p>`}}
-async function submitAnswer(){const q=questions[currentQuestionIndex],ans=selectedAnswers[q.question_id];if(!ans){msg('Please select an answer before submitting.','error');return}const b=document.getElementById('submit-answer-button');b.disabled=true;b.innerText='Recording...';try{const{data,error}=await client.rpc('submit_quiz_answer',{p_attempt_id:currentAttemptId,p_question_id:q.question_id,p_selected_answer:ans});if(error)throw error;if(!data?.length)throw new Error('No result was returned.');const r=data[0];answerResults[q.question_id]=r;answeredCount=r.answered_count;currentScore=r.score;reviewQuestions.delete(q.question_id);saveReview();updateScore();renderQuestion();if(r.completed){attemptInProgress=false;clearReview();showFinal()}}catch(e){console.error(e);if(await redirectForInactiveSession(e))return;msg(e.message||'Unable to record this answer.','error')}finally{b.innerText='Submit Answer';if(!answerResults[q.question_id])b.disabled=false}}
+async function submitAnswer(){const q=questions[currentQuestionIndex],ans=selectedAnswers[q.question_id];if(!ans){msg('Please select an answer before submitting.','error');return}const b=document.getElementById('submit-answer-button');b.disabled=true;b.innerText='Recording...';try{const{data,error}=await client.rpc('submit_quiz_answer',{p_attempt_id:currentAttemptId,p_question_id:q.question_id,p_selected_answer:ans});if(error)throw error;if(!data?.length)throw new Error('No result was returned.');const r=data[0];answerResults[q.question_id]=r;answeredCount=r.answered_count;currentScore=r.score;reviewQuestions.delete(q.question_id);saveReview();updateScore();renderQuestion();if(r.completed){document.getElementById('finish-attempt-button').innerText=currentTestMode==='demo'?'Finish Demo and View Score':'Finish Test and View Score';msg('Last answer recorded. Review the explanation above, then finish the test to view your score.','success')}}catch(e){console.error(e);if(await redirectForInactiveSession(e))return;msg(e.message||'Unable to record this answer.','error')}finally{b.innerText='Submit Answer';if(!answerResults[q.question_id])b.disabled=false}}
 function prev(){if(currentQuestionIndex>0){currentQuestionIndex--;renderQuestion()}}function next(){if(currentQuestionIndex<questions.length-1){currentQuestionIndex++;renderQuestion()}}
 function toggleReview(){const q=questions[currentQuestionIndex];reviewQuestions.has(q.question_id)?reviewQuestions.delete(q.question_id):reviewQuestions.add(q.question_id);saveReview();renderQuestion()}
 function updateReviewButton(id){const b=document.getElementById('review-button'),m=reviewQuestions.has(id);b.innerText=m?'Remove Review Mark':'Mark for Review';b.className=m?'rounded-xl border border-red-500 bg-red-100 px-4 py-2 font-semibold text-red-800 hover:bg-red-200':'rounded-xl border border-red-300 bg-red-50 px-4 py-2 font-semibold text-red-700 hover:bg-red-100'}
@@ -258,10 +269,13 @@ function updateScore(){document.getElementById('answered-count').innerText=`${an
 function showFinal(){
   clearTimers();
   attemptInProgress=false;
+  hideMsg();
   updateExitActions();
   document.getElementById('quiz-layout').classList.add('hidden');
   document.getElementById('quiz-layout').classList.remove('grid');
   document.getElementById('start-panel').classList.add('hidden');
+  document.getElementById('finish-attempt-button').innerText='Finish Attempt Now';
+  document.getElementById('return-dashboard-button').innerText=currentTestMode==='demo'?'Proceed to Subject Catalogue':'Proceed to My Practice';
   document.getElementById('final-score').innerText=
     'You answered '+answeredCount+' of '+totalQuestions+
     ' questions and scored '+currentScore+' out of '+totalQuestions+'.';
@@ -271,7 +285,7 @@ function showFinal(){
 }
 function navigateToDashboard(){
   sessionControl.releasePageControl();
-  window.location.replace('dashboard.html');
+  window.location.replace(currentTestMode==='demo'?'catalogue.html':'dashboard.html');
 }
 function updateExitActions(){
   const returnLabel=attemptInProgress?'Finish Attempt & Return':'← Back';
@@ -287,8 +301,18 @@ function setExitActionsBusy(busy){
 function showExitConfirmation(action,trigger){
   pendingExitAction=action;
   lastExitTrigger=trigger||document.activeElement;
-  document.getElementById('exit-confirmation-title').innerText=action==='logout'?'Finish attempt and logout?':'Finish attempt and return?';
-  document.getElementById('confirm-exit-button').innerText=action==='logout'?'Finish Attempt & Logout':'Finish Attempt & Return';
+  const title=document.getElementById('exit-confirmation-title');
+  const message=document.getElementById('exit-confirmation-message');
+  const confirmButton=document.getElementById('confirm-exit-button');
+  if(action==='finish'){
+    title.innerText=currentTestMode==='demo'?'Finish this demo?':'Finish this practice test?';
+    message.innerText='Your submitted answers will be scored. Any unanswered questions will receive zero marks.';
+    confirmButton.innerText=currentTestMode==='demo'?'Finish Demo and View Score':'Finish Test and View Score';
+  }else{
+    title.innerText=action==='logout'?'Finish attempt and logout?':'Finish attempt and return?';
+    message.innerText='Your submitted answers will be scored. Any unanswered questions will receive zero marks.';
+    confirmButton.innerText=action==='logout'?'Finish Attempt & Logout':'Finish Attempt & Return';
+  }
   const confirmation=document.getElementById('exit-confirmation');
   confirmation.classList.remove('hidden');
   confirmation.classList.add('flex');
@@ -337,6 +361,13 @@ async function finaliseAttempt(message,showResult=true){
   }catch(e){
     console.error(e);
     if(await redirectForInactiveSession(e))return false;
+    if(/invalid or already completed|already completed|quiz attempt is invalid/i.test(String(e?.message||''))){
+      attemptInProgress=false;
+      clearTimers();
+      clearReview();
+      if(showResult)showFinal();
+      return true;
+    }
     msg(e.message||'Unable to finish the attempt.','error');
     return false;
   }finally{
@@ -348,7 +379,25 @@ function clearTimers(){if(sessionTimerInterval)clearInterval(sessionTimerInterva
 function formatMMSS(t){const m=Math.floor(t/60),s=t%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
 function formatHHMMSS(t){const h=Math.floor(t/3600),m=Math.floor((t%3600)/60),s=t%60;return[h,m,s].map(v=>String(v).padStart(2,'0')).join(':')}
 function key(){return`insuregpte-review-${currentAttemptId}`}function saveReview(){if(currentAttemptId)localStorage.setItem(key(),JSON.stringify([...reviewQuestions]))}function restoreReview(){try{JSON.parse(localStorage.getItem(key())||'[]').forEach(id=>reviewQuestions.add(Number(id)))}catch(e){console.error(e)}}function clearReview(){if(currentAttemptId)localStorage.removeItem(key());reviewQuestions.clear()}
-function msg(m,t){const b=document.getElementById('message-box');b.innerText=m;b.className=t==='error'?'mb-4 rounded-xl bg-red-100 p-4 text-red-800':'mb-4 rounded-xl bg-blue-100 p-4 text-blue-800';b.classList.remove('hidden')}function hideMsg(){document.getElementById('message-box').classList.add('hidden')}
+function msg(m,t){const b=document.getElementById('message-box');b.innerText=m;b.className=t==='error'?'mb-4 rounded-xl bg-red-100 p-4 text-red-800':'mb-4 rounded-xl bg-blue-100 p-4 text-blue-800';b.classList.remove('hidden')}
+function showCooldownMessage(message){
+  const match=String(message).match(/after\s+(\d{2}):(\d{2}):(\d{2})/i);
+  if(!match){msg(message,'error');return}
+  const now=new Date(),retryAt=new Date(now);
+  retryAt.setHours(Number(match[1]),Number(match[2]),Number(match[3]),0);
+  if(retryAt<=now)retryAt.setDate(retryAt.getDate()+1);
+  if(cooldownInterval)clearInterval(cooldownInterval);
+  const update=()=>{
+    const remaining=Math.max(0,Math.ceil((retryAt.getTime()-Date.now())/1000));
+    const minutes=String(Math.floor(remaining/60)).padStart(2,'0');
+    const seconds=String(remaining%60).padStart(2,'0');
+    if(remaining===0){clearInterval(cooldownInterval);msg('The demo is available again. You can start a new attempt.','success');return}
+    msg(`This demo was completed recently. Please try again in ${minutes}:${seconds}.`,'error');
+  };
+  update();
+  cooldownInterval=setInterval(update,1000);
+}
+function hideMsg(){if(cooldownInterval)clearInterval(cooldownInterval);document.getElementById('message-box').classList.add('hidden')}
 async function logoutWithoutFinalising(){
   setExitActionsBusy(true);
   const result=await sessionControl.logoutEverywhere(client);
@@ -371,8 +420,9 @@ async function confirmExit(){
   const action=pendingExitAction;
   if(!action)return;
   closeExitConfirmation(false);
-  const finalised=await finaliseAttempt(null,false);
+  const finalised=await finaliseAttempt(null,action==='finish');
   if(!finalised)return;
+  if(action==='finish')return;
   if(action==='logout'){
     const loggedOut=await logoutWithoutFinalising();
     if(!loggedOut)showFinal();
@@ -383,7 +433,7 @@ async function confirmExit(){
 function escapeHtml(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}
 function appendCalc(v){document.getElementById('calculator-display').value+=v}function clearCalc(){document.getElementById('calculator-display').value=''}function backCalc(){const d=document.getElementById('calculator-display');d.value=d.value.slice(0,-1)}function equals(){const d=document.getElementById('calculator-display'),x=d.value.trim();if(!x)return;if(!/^[0-9+\-*/.()\s]+$/.test(x)){d.value='Error';return}try{const r=Function('"use strict";return('+x+')')();d.value=Number.isFinite(r)?String(r):'Error'}catch(e){d.value='Error'}}
 
-document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('back-button').onclick=requestDashboardExit;document.getElementById('dashboard-exit-button').onclick=requestDashboardExit;document.getElementById('logout-button').onclick=logout;document.getElementById('continue-quiz-button').onclick=()=>closeExitConfirmation();document.getElementById('confirm-exit-button').onclick=confirmExit;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=async()=>{if(confirm('Finish this attempt now? Your score will be calculated using only the answers already submitted.'))await finaliseAttempt()};window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers();updateExitActions()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});initialisePage();
+document.getElementById('start-button').onclick=startQuiz;document.getElementById('submit-answer-button').onclick=submitAnswer;document.getElementById('previous-button').onclick=prev;document.getElementById('next-button').onclick=next;document.getElementById('review-button').onclick=toggleReview;document.getElementById('back-button').onclick=requestDashboardExit;document.getElementById('dashboard-exit-button').onclick=requestDashboardExit;document.getElementById('logout-button').onclick=logout;document.getElementById('continue-quiz-button').onclick=()=>closeExitConfirmation();document.getElementById('confirm-exit-button').onclick=confirmExit;document.getElementById('return-dashboard-button').onclick=navigateToDashboard;document.querySelectorAll('[data-calc]').forEach(b=>b.onclick=()=>appendCalc(b.dataset.calc));document.getElementById('calculator-clear').onclick=clearCalc;document.getElementById('calculator-backspace').onclick=backCalc;document.getElementById('calculator-equals').onclick=equals;document.getElementById('finish-attempt-button').onclick=()=>showExitConfirmation('finish',document.activeElement);window.addEventListener('insuregpte:session-inactive',()=>{attemptInProgress=false;isFinalising=false;clearTimers();updateExitActions()});window.addEventListener('beforeunload',e=>{if(attemptInProgress){e.preventDefault();e.returnValue=''}});applyInitialMode();initialisePage();
 </script>
 </body>
 </html>
