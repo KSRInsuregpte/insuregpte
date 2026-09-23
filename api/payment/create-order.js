@@ -7,9 +7,16 @@ function json(res, status, body) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed.' });
   const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  const clientId = String(req.headers['x-insuregpte-client-id'] || '');
   if (!token) return json(res, 401, { error: 'Authentication is required.' });
+  if (!clientId) return json(res, 401, { error: 'Active login verification is required.' });
   try {
-    const rows = await supabaseRpc('create_payment_order', { p_provider: 'razorpay' }, token);
+    const rows = await supabaseRpc(
+      'create_payment_order',
+      { p_provider: 'razorpay' },
+      token,
+      { 'x-insuregpte-client-id': clientId }
+    );
     const order = Array.isArray(rows) ? rows[0] : rows;
     if (!order?.order_id || !order.amount || order.currency_code !== 'INR') {
       throw new Error('The server did not return a valid payment order.');

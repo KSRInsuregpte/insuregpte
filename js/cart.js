@@ -102,7 +102,10 @@
             if (!session?.access_token) throw new Error('Your session has expired.');
             const response = await fetch('/api/payment/create-order', {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${session.access_token}` }
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                    'x-insuregpte-client-id': sessionControl.getClientId()
+                }
             });
             const order = await response.json();
             if (!response.ok) throw new Error(order.error || 'Unable to start checkout.');

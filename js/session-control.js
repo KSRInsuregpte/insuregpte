@@ -80,6 +80,10 @@
         };
     }
 
+    function getClientId() {
+        return clientId;
+    }
+
     function readPageLock() {
         try {
             const rawValue = windowObject.localStorage.getItem(PAGE_LOCK_KEY);
@@ -810,6 +814,7 @@
         activateAfterSignIn,
         activateProtectedPage,
         clientOptions,
+        getClientId,
         handleInactiveSessionError,
         isInactiveSessionError,
         isRestrictedAccountError,

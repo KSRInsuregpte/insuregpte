@@ -7,14 +7,15 @@ function requireConfig() {
   }
 }
 
-async function supabaseRpc(name, body, accessToken) {
+async function supabaseRpc(name, body, accessToken, extraHeaders = {}) {
   requireConfig();
   const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
     method: 'POST',
     headers: {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
       Authorization: `Bearer ${accessToken || SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      ...extraHeaders
     },
     body: JSON.stringify(body)
   });
